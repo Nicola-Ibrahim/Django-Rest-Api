@@ -1,6 +1,6 @@
 import django_filters.rest_framework as filters
 
-from ..models import DeliveryWorker, Doctor, User, Warehouse
+from ...models.models import DeliveryWorker, Doctor, User, Warehouse
 
 
 class UserFilter(filters.FilterSet):

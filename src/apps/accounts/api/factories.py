@@ -1,11 +1,18 @@
-from abc import ABC, abstractmethod
-
 import django_filters.rest_framework as filters
 
-from ..models import DeliveryWorker, Doctor, User, Warehouse
-from .exceptions import UserFilterNotFound, UserModelNotFound, UserSerializerNotFound
-from .filters import DeliveryWorkerFilter, DoctorFilter, UserFilter, WarehouseFilter
-from .serializers import (
+from ..models.models import DeliveryWorker, Doctor, User, Warehouse
+from .exceptions import (
+    UserFilterNotFound,
+    UserModelNotFound,
+    UserSerializerNotFound,
+)
+from .filters.filters import (
+    DeliveryWorkerFilter,
+    DoctorFilter,
+    UserFilter,
+    WarehouseFilter,
+)
+from .serializers.serializers import (
     DeliveryWorkerUserSerializer,
     DoctorUserSerializer,
     UserSerializer,
@@ -13,7 +20,7 @@ from .serializers import (
 )
 
 
-class UserTypeModelFactory(ModelFactory):
+class UserTypeModelFactory:
     def get_suitable_model(self, type: str) -> User:  # type:ignore # noqa: A002
         """Get the suitable serializer for user relying on its type
 
@@ -120,5 +127,3 @@ class UserTypeFilterFactory(filters.DjangoFilterBackend):
                 )
 
             return filterset_class
-
-

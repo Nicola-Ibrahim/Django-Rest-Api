@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
-
-from .models import (
+from .models.models import (
     Admin,
     BaseAccountant,
     DeliveryWorker,
@@ -12,7 +11,7 @@ from .models import (
     Warehouse,
     WarehouseAccountant,
 )
-from .profiles import (
+from .models.profiles import (
     AdminProfile,
     BaseAccountantProfile,
     DeliveryWorkerAccountantProfile,

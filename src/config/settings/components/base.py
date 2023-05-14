@@ -21,7 +21,6 @@ INSTALLED_APPS = [
     "django_filters",
     # Created apps
     "apps.accounts",
-  
 ]
 
 MIDDLEWARE = [

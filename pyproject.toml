@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "medical-equipment-store"
+name = "django-auth"
 version = "0.1.0"
 description = ""
 authors = ["Nicola Ibrahim <nicolaibrahim969@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "medical_equipment_store"}]
+packages = [{include = "django_auth"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -36,7 +36,7 @@ django-debug-toolbar = "^4.0.0"
 django-extensions = "^3.2.1"
 
 [tool.black]
-line-length = 100
+line-length = 82
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -54,13 +54,13 @@ exclude = '''
 
 [tool.isort]
 multi_line_output = 5
-line_length = 119
+line_length = 82
 
 [tool.yapf]
 based_on_style = "google"
 align_closing_bracket_with_visual_indent = true
 coalesce_brackets = true
-column_limit = 119
+column_limit = 82
 dedent_closing_brackets = true
 
 [build-system]

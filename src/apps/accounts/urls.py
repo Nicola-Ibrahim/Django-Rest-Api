@@ -1,9 +1,10 @@
 from django.urls import path
 
 from .api.views import (
+    LoginView,
+    LogoutView,
     UserDeleteView,
     UserDetailsView,
-    UserLoginView,
     UserSignView,
     UsersListView,
     UserUpdateView,
@@ -13,7 +14,8 @@ from .api.views import (
 app_name = "accounts"
 
 urlpatterns = [
-    path("login/", UserLoginView.as_view(), name="login"),
+    path("login/", LoginView.as_view(), name="login"),
+    path("login/", LogoutView.as_view(), name="logout"),
     path("verify_email/", VerifyEmail.as_view(), name="email-verify"),
     path("list/<str:user_type>/", UsersListView.as_view(), name="list"),
     path("details/", UserDetailsView.as_view(), name="details"),

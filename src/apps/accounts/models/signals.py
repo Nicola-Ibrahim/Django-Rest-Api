@@ -8,7 +8,7 @@ from django.contrib.auth.models import Group
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .api.permissions import PermissionGroupsName
+from ..api.permissions.permissions import PermissionGroupsName
 from .models import Doctor, Warehouse
 
 
@@ -18,7 +18,9 @@ def assign_group(sender, instance, **kwargs):
 
     try:
         # Get the warehouse permission groups
-        perm_group = Group.objects.get(name=PermissionGroupsName.WAREHOUSE_GROUP.value)
+        perm_group = Group.objects.get(
+            name=PermissionGroupsName.WAREHOUSE_GROUP.value
+        )
 
     except Group.DoesNotExist:
         pass
@@ -34,7 +36,9 @@ def assign_group(sender, instance, **kwargs):  # noqa:F811
 
     try:
         # Get the warehouse permission groups
-        perm_group = Group.objects.get(name=PermissionGroupsName.DOCTOR_GROUP.value)
+        perm_group = Group.objects.get(
+            name=PermissionGroupsName.DOCTOR_GROUP.value
+        )
 
     except Group.DoesNotExist:
         pass

@@ -24,17 +24,9 @@ EMAIL_HOST_PASSWORD = NotImplemented
 # The subject of the email sent to a new user when they register on the platform.
 EMAIL_REGISTER_SUBJECT = "Welcome"
 
-# The message of the email sent to a new user when they register on the platform.
-EMAIL_REGISTER_MESSAGE = "Hey there! Welcome to our platform."
 
 # The subject of the email sent to a user when they request to reset their password.
 EMAIL_RESETPASSWORD_SUBJECT = "OTP number for resetting password"
 
-# The message of the email sent to a user when they request to reset their password.
-EMAIL_RESETPASSWORD_MESSAGE = "Hello, \n Use OTP number below to reset your password"
-
 # The subject of the email sent to a user when they verify their account
 EMAIL_EMAIL_VERIFICATION_SUBJECT = "Verification email"
-
-# The message of the email sent to a user when verify their account.
-EMAIL_EMAIL_VERIFICATION_MESSAGE = "Hello, \n Use the following link to verify your account."

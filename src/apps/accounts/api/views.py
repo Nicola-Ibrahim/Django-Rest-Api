@@ -7,12 +7,15 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .queryset import mixins
-
 from .. import mailers
-from ..models import models
-from . import exceptions, responses, serializers
-from 
+from ..models.models import OTPNumber
+from . import exceptions, responses
+from .permissions.mixins import IsAuthenticatedMixin, PermissionMixin
+from .queryset.mixins import InUserTypeQuerySetMixin, KwargUserTypeQuerySetMixin
+from .serializers.mixins import (
+    InUserTypeSerializerMixin,
+    KwargUserTypeSerializerMixin,
+)
 
 
 class VerifyEmail(APIView):
@@ -36,7 +39,9 @@ class VerifyEmail(APIView):
         token = request.GET.get("token")
         try:
             # Decode the token coming with the request
-            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"], type=jwt)
+            payload = jwt.decode(
+                token, settings.SECRET_KEY, algorithms=["HS256"], type=jwt
+            )
 
             # Get the use id from the payload
             user = get_user_model().objects.get(id=payload["user_id"])
@@ -46,7 +51,9 @@ class VerifyEmail(APIView):
                 user.is_verified = True
                 user.save()
 
-            return Response({"email": "Successfully activated"}, status=status.HTTP_200_OK)
+            return Response(
+                {"email": "Successfully activated"}, status=status.HTTP_200_OK
+            )
 
         except jwt.ExpiredSignatureError:
             return Response(
@@ -54,10 +61,12 @@ class VerifyEmail(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except jwt.exceptions.DecodeError:
-            return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
-class UserSignView(mixins.KwargUserTypeSerializerMixin, generics.CreateAPIView):
+class UserSignView(KwargUserTypeSerializerMixin, generics.CreateAPIView):
     """View for adding a new user"""
 
     permission_classes = (AllowAny,)
@@ -69,7 +78,9 @@ class UserSignView(mixins.KwargUserTypeSerializerMixin, generics.CreateAPIView):
             Response: rest framework response with user data
         """
         user_data = request.data
-        serializer = self.get_serializer(data=user_data, context={"request": request})
+        serializer = self.get_serializer(
+            data=user_data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -81,9 +92,9 @@ class UserSignView(mixins.KwargUserTypeSerializerMixin, generics.CreateAPIView):
 
 
 class UserDetailsView(
-    mixins.InUserTypeQuerySetMixin,
-    mixins.InUserTypeSerializerMixin,
-    mixins.PermissionMixin,
+    InUserTypeQuerySetMixin,
+    InUserTypeSerializerMixin,
+    PermissionMixin,
     generics.RetrieveAPIView,
 ):
     """
@@ -100,17 +111,19 @@ class UserDetailsView(
             Response: rest framework response with user data
         """
 
-        serializer = self.get_serializer(request.user, context={"request": request})
+        serializer = self.get_serializer(
+            request.user, context={"request": request}
+        )
         return Response(serializer.data)
 
 
 class UserUpdateView(
-    mixins.InUserTypeQuerySetMixin,
-    # mixins.InUserTypeSerializerMixin,
-    mixins.PermissionMixin,
+    InUserTypeQuerySetMixin,
+    # InUserTypeSerializerMixin,
+    PermissionMixin,
     generics.UpdateAPIView,
 ):
-    serializer_class = serializers.UserSerializer
+    serializer_class = UserSerializer
 
     def get_object(self):
         """
@@ -129,7 +142,9 @@ class UserUpdateView(
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=partial
+        )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
@@ -142,9 +157,9 @@ class UserUpdateView(
 
 
 class UserDeleteView(
-    mixins.InUserTypeQuerySetMixin,
-    mixins.InUserTypeSerializerMixin,
-    mixins.DeleteUserPermissionMixin,
+    InUserTypeQuerySetMixin,
+    InUserTypeSerializerMixin,
+    DeleteUserPermissionMixin,
     generics.DestroyAPIView,
 ):
     def get_object(self):
@@ -188,10 +203,10 @@ class UserDeleteView(
 
 
 class UsersListView(
-    mixins.KwargUserTypeQuerySetMixin,
-    mixins.KwargUserTypeSerializerMixin,
-    mixins.FilterMixin,
-    mixins.PermissionMixin,
+    KwargUserTypeQuerySetMixin,
+    KwargUserTypeSerializerMixin,
+    FilterMixin,
+    PermissionMixin,
     generics.ListAPIView,
 ):
     pass
@@ -225,19 +240,21 @@ class LoginView(APIView):
                 raise exceptions.CredentialsError()
 
             if not user.is_password_changed:
-                otp_number = models.OTPNumber.get_number()
+                otp_number = OTPNumber.get_number()
                 user.otp_number.update_or_create(defaults={"number": otp_number})
-                mailers.OTPMailer(to_email=user.email, otp_number=otp_number).send_email()
+                mailers.OTPMailer(
+                    to_email=user.email, otp_number=otp_number
+                ).send_email()
 
                 return responses.FirstTimePasswordError(user=user)
 
             return responses.LoginResponse(user=user)
 
 
-class LogoutView(mixins.IsAuthenticatedMixin, generics.GenericAPIView):
+class LogoutView(IsAuthenticatedMixin, generics.GenericAPIView):
     """View for user logout"""
 
-    serializer_class = serializers.LogoutSerializer
+    serializer_class = LogoutSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -247,16 +264,16 @@ class LogoutView(mixins.IsAuthenticatedMixin, generics.GenericAPIView):
         return responses.LogoutResponse()
 
 
-class UserListCreateView(mixins.GrantedAdminPermissionMixin, generics.ListCreateAPIView):
+class UserListCreateView(GrantedAdminPermissionMixin, generics.ListCreateAPIView):
     """View for adding a new user"""
 
     queryset = get_user_model().objects.all()
 
     def get_serializer_class(self):
         if self.request.method == "POST":
-            return serializers.UserCreateSerializer
+            return UserCreateSerializer
 
-        return serializers.UserListSerializer
+        return UserListSerializer
 
     def post(self, request, *args, **kwargs) -> Response:
         """Override post method to control the behavior of inserting a new user
@@ -264,7 +281,9 @@ class UserListCreateView(mixins.GrantedAdminPermissionMixin, generics.ListCreate
             Response: rest framework response with user data
         """
         user_data = request.data
-        serializer = self.get_serializer(data=user_data, context={"request": request})
+        serializer = self.get_serializer(
+            data=user_data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
@@ -274,13 +293,18 @@ class UserListCreateView(mixins.GrantedAdminPermissionMixin, generics.ListCreate
         user.save(update_fields=["password"])
 
         # Send welcome email
-        mailers.RegisterMailer(to_email=user.email, password=password).send_email()
-
+        # mailers.RegisterMailer(
+        #     to_email=user.email, password=password
+        # ).send_email()
+        mailers.VerificationMailer(
+            token=user.tokens()["access"], to_emails=[user.email], request=request
+        )
         return responses.UserCreateResponse()
 
 
 class UserDetailsUpdateDestroyView(
-    permissions.IsOwnerOrAdminPermissionMixin, generics.RetrieveUpdateDestroyAPIView
+    permissions.IsOwnerOrAdminPermissionMixin,
+    generics.RetrieveUpdateDestroyAPIView,
 ):
     queryset = get_user_model().objects.all()
     lookup_field = "slug"
@@ -288,11 +312,11 @@ class UserDetailsUpdateDestroyView(
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:
             if self.request.user.is_granted_group:
-                return serializers.UserAdminUpdateSerializer
+                return UserAdminUpdateSerializer
             else:
-                return serializers.UserNotAdminUpdateSerializer
+                return UserNotAdminUpdateSerializer
 
-        return serializers.UserDetailSerializer
+        return UserDetailSerializer
 
     def get_object(self):
         """
@@ -310,7 +334,8 @@ class UserDetailsUpdateDestroyView(
         assert lookup_url_kwarg in self.kwargs, (
             "Expected view %s to be called with a URL keyword argument "
             'named "%s". Fix your URL conf, or set the `.lookup_field` '
-            "attribute on the view correctly." % (self.__class__.__name__, lookup_url_kwarg)
+            "attribute on the view correctly."
+            % (self.__class__.__name__, lookup_url_kwarg)
         )
 
         filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
@@ -337,10 +362,12 @@ class UserDetailsUpdateDestroyView(
 class ForgetPasswordRequestView(generics.GenericAPIView):
     """View for sending a number to the user's email for resetting password"""
 
-    serializer_class = serializers.ForgetPasswordRequestSerializer
+    serializer_class = ForgetPasswordRequestSerializer
 
     def post(self, request):
-        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -358,10 +385,12 @@ class ForgetPasswordRequestView(generics.GenericAPIView):
 class VerifyOTPNumberView(generics.GenericAPIView):
     """View for checking the generated opt token for the user who wants to reset password."""
 
-    serializer_class = serializers.VerifyOTPNumberSerializer
+    serializer_class = VerifyOTPNumberSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -379,7 +408,9 @@ class ResetPasswordView(generics.GenericAPIView):
         abstract = True
 
     def patch(self, request):
-        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -389,10 +420,10 @@ class ResetPasswordView(generics.GenericAPIView):
 class ChangePasswordView(ResetPasswordView):
     """View for changing the forgotten password"""
 
-    serializer_class = serializers.ChangePasswordSerializer
+    serializer_class = ChangePasswordSerializer
 
 
 class FirstTimePasswordView(ResetPasswordView):
     """View for changing the forgotten password"""
 
-    serializer_class = serializers.FirstTimePasswordSerializer
+    serializer_class = FirstTimePasswordSerializer

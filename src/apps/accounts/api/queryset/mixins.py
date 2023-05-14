@@ -8,7 +8,9 @@ class KwargUserTypeQuerySetMixin:
         """
 
         # Get the model
-        model = UserTypeModelFactory().get_suitable_model(self.kwargs["user_type"])
+        model = UserTypeModelFactory().get_suitable_model(
+            self.kwargs["user_type"]
+        )
         queryset = model.objects.all()
         return queryset
 
@@ -20,6 +22,8 @@ class InUserTypeQuerySetMixin:
         """
 
         # Get the model
-        model = UserTypeModelFactory().get_suitable_model(self.request.user.type.lower())
+        model = UserTypeModelFactory().get_suitable_model(
+            self.request.user.type.lower()
+        )
         queryset = model.objects.all()
         return queryset

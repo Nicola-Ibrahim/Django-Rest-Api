@@ -14,7 +14,8 @@ from django.db import models
 from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from . import managers, utils
+from .. import utils
+from . import managers
 
 
 class User(AbstractUser):
@@ -38,7 +39,9 @@ class User(AbstractUser):
     first_name = None
     last_name = None
 
-    email = models.EmailField(("email address"), unique=True, validators=[validate_email])
+    email = models.EmailField(
+        ("email address"), unique=True, validators=[validate_email]
+    )
     USERNAME_FIELD = "email"  # Set email field as a username
     REQUIRED_FIELDS = ["password"]  # Remove email from required fields
 
@@ -48,10 +51,16 @@ class User(AbstractUser):
     street = models.CharField(max_length=50, null=True, blank=True)
     zipcode = models.IntegerField(null=True, blank=True)
     identification = models.IntegerField(null=True, blank=True)
-    type = models.CharField(max_length=50, choices=Type.choices, blank=True, default=Type.ADMIN)
+    type = models.CharField(
+        max_length=50, choices=Type.choices, blank=True, default=Type.ADMIN
+    )
     is_verified = models.BooleanField(default=False)
-    manager = models.ForeignKey("Admin", on_delete=models.SET_NULL, null=True, blank=True)
-    subscription = models.ForeignKey("Subscription", null=True, on_delete=models.DO_NOTHING)
+    manager = models.ForeignKey(
+        "Admin", on_delete=models.SET_NULL, null=True, blank=True
+    )
+    subscription = models.ForeignKey(
+        "Subscription", null=True, on_delete=models.DO_NOTHING
+    )
 
     def __str__(self) -> str:
         return self.email
@@ -180,7 +189,9 @@ class OTPNumber(models.Model):
     )
 
     def save(self, *args, **kwargs) -> None:
-        self.valid_until = timezone.now() + timedelta(seconds=settings.OTP_EXPIRATION)
+        self.valid_until = timezone.now() + timedelta(
+            seconds=settings.OTP_EXPIRATION
+        )
         return super().save(*args, **kwargs)
 
     def __str__(self) -> str:
@@ -197,7 +208,11 @@ class OTPNumber(models.Model):
         """
         _now = timezone.now()
 
-        if (self.number is not None) and (number == self.number) and (_now < self.valid_until):
+        if (
+            (self.number is not None)
+            and (number == self.number)
+            and (_now < self.valid_until)
+        ):
             # self.number = None
             self.valid_until = _now
             self.save()

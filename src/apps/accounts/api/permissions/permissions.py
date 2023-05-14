@@ -4,7 +4,7 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.status import HTTP_403_FORBIDDEN
 
-from ...models import User
+from ...models.models import User
 from ..exceptions import DeleteMultipleUsers, UpdateMultipleUsers
 
 SAFE_METHODS = ("GET", "HEAD", "OPTIONS")

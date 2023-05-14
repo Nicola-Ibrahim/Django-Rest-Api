@@ -1,6 +1,10 @@
 from rest_framework import serializers
 
-from ...profiles import DeliveryWorkerProfile, DoctorProfile, WarehouseProfile
+from ...models.profiles import (
+    DeliveryWorkerProfile,
+    DoctorProfile,
+    WarehouseProfile,
+)
 
 
 class WarehouseProfileSerializer(serializers.ModelSerializer):

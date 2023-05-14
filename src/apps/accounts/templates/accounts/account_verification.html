@@ -1,0 +1,12 @@
+<html>
+    <head>
+        <style>
+            {% comment %} /* Add some CSS styles here */ {% endcomment %}
+        </style>
+    </head>
+    <body>
+        <p>Hi {{ email|safe }}!</p>
+        Use the link below to verify your email
+        <p>{{ link|safe }}</p>
+    </body>
+</html>
