@@ -1,5 +1,12 @@
+import enum
+
 from rest_framework import status
 from rest_framework.exceptions import APIException, _get_error_details
+
+
+class ErrorCode(enum.Enum):
+    Not_Authenticated = "not_authenticated"
+    Permission_Denied = "permission_denied"
 
 
 class BaseExceptions(APIException):
@@ -34,3 +41,21 @@ class BaseExceptions(APIException):
     def update_data(self, **kwargs):
         """Update the data dictionary in The Response"""
         pass
+
+
+class NotAuthenticated(BaseExceptions):
+    detail_ = {
+        "error": True,
+        "error_code": ErrorCode.Not_Authenticated.value,
+        "detail": "Authentication credentials were not provided.",
+    }
+    status_code = status.HTTP_401_UNAUTHORIZED
+
+
+class PermissionDenied(BaseExceptions):
+    detail_ = {
+        "error": True,
+        "error_code": ErrorCode.Permission_Denied.value,
+        "detail": "You do not have permission to perform this action.",
+    }
+    status_code = status.HTTP_403_FORBIDDEN

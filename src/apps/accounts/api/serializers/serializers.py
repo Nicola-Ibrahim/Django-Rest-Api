@@ -3,7 +3,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.validators import ValidationError
 
-from ...models.models import DeliveryWorker, Doctor, Warehouse
+from ...models.models import DeliveryWorker, Doctor, OTPNumber, Warehouse
 from .. import exceptions, tokens
 from .profile_serializers import (
     DeliveryWorkerProfileSerializer,
@@ -198,6 +198,31 @@ class BaseSerializer(serializers.Serializer):
         return not bool(self._errors)
 
 
+class AccountVerificationSerializer(BaseSerializer):
+    token = serializers.CharField()
+
+    def validate(self, attrs):
+        # Get the use id from the payload
+        user = tokens.CustomAccessToken(attrs.get("token"), verify=True)[
+            "user_id"
+        ]
+
+        # Add the user instance to validated data
+        attrs["user"] = user
+        return attrs
+
+    def create(self, validated_data):
+        """Update the user's password"""
+        user = validated_data.get("user")
+
+        # Check if the user is not verified
+        if not user.is_verified:
+            user.is_verified = True
+            user.save()
+
+        return user
+
+
 class LogoutSerializer(BaseSerializer):
     refresh = serializers.CharField()
 
@@ -228,7 +253,7 @@ class ForgetPasswordRequestSerializer(BaseSerializer):
         user = get_user_model().objects.filter(email=email)
 
         if not user.exists():
-            raise exceptions.UserNotExistsError()
+            raise exceptions.UserNotExists()
 
         user = user.first()
 
@@ -259,11 +284,11 @@ class VerifyOTPNumberSerializer(BaseSerializer):
 
         # Check if the OTP number does not exists
         if not OTPNumber.objects.filter(user=user).exists():
-            raise exceptions.OTPNotExistsError()
+            raise exceptions.OTPNotExists()
 
         # If the OTP number is expired
         if not OTPNumber.objects.get(user=user).check_num(otp):
-            raise exceptions.OTPExpiredError()
+            raise exceptions.OTPExpired()
 
         return attrs
 
@@ -285,6 +310,56 @@ class VerifyOTPNumberSerializer(BaseSerializer):
 class ChangePasswordSerializer(BaseSerializer):
     """This serializer is responsible for setting a new password of the user"""
 
+    old_password = serializers.CharField(
+        max_length=128, write_only=True, required=True
+    )
+    new_password = serializers.CharField(
+        max_length=128, write_only=True, required=True
+    )
+    confirmed_password = serializers.CharField(
+        max_length=128, write_only=True, required=True
+    )
+
+    def validate(self, attrs: dict):
+        """Validate the inserted data, passwords and otp number"""
+
+        # Validate the if the old password is correct for the request user
+        user = self.context["request"].user
+        if not user.check_password(attrs["old_password"]):
+            raise exceptions.WrongPassword()
+
+        # Check if the two inserted password are similar
+        if attrs["new_password"] != attrs["confirmed_password"]:
+            raise exceptions.NotSimilarPasswords()
+
+        # Validate the password if it meets all validator requirements
+        password_validation.validate_password(
+            attrs["new_password"], self.context["request"].user
+        )
+
+        return attrs
+
+    def create(self, validated_data):
+        """Update the user's password"""
+
+        # Get user from the request
+        user = self.context["request"].user
+
+        # Set the new password for the user
+        password = validated_data.get("new_password")
+        user.set_password(password)
+
+        # Delete otp number for the user
+        OTPNumber.objects.filter(user=user).delete()
+
+        user.save()
+
+        return user
+
+
+class ForgetPasswordSerializer(BaseSerializer):
+    """This serializer is responsible for setting a new password of the user"""
+
     new_password = serializers.CharField(
         max_length=128, write_only=True, required=True
     )
@@ -302,11 +377,11 @@ class ChangePasswordSerializer(BaseSerializer):
             user=self.context["request"].user, number=otp
         )
         if not otp_instance.exists():
-            raise exceptions.OTPNotExistsError()
+            raise exceptions.OTPNotExists()
 
         # Check if the user OTP number is verified
         if not otp_instance[0].is_verified:
-            raise exceptions.OTPVerifiedError()
+            raise exceptions.OTPNotVerified()
 
         # Check if the two inserted password are similar
         if attrs["new_password"] != attrs["confirmed_password"]:
@@ -353,7 +428,7 @@ class FirstTimePasswordSerializer(BaseSerializer):
         # Get the access token from request's header
         request = self.context["request"]
         if not request.headers.get("Authorization"):
-            raise exceptions.JWTTokenNotExistsError()
+            raise exceptions.JWTAccessTokenNotExists()
 
         access_token = request.headers.get("Authorization")
         token_type, access_token = access_token.split(" ")
@@ -382,9 +457,9 @@ class FirstTimePasswordSerializer(BaseSerializer):
         user.set_password(password)
 
         # Set password changed to true
-        if not user.profile.is_password_changed:
-            user.profile.is_password_changed = True
-            user.profile.save()
+        if not user.is_password_changed:
+            user.is_password_changed = True
+            user.save()
 
         user.save()
         return user

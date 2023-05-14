@@ -11,7 +11,6 @@ from apps.core.api.exceptions import BaseExceptions
 
 class ErrorCode(enum.Enum):
     Not_Exists = "not_exists"
-    Not_Found = "not_found"
     Expired_OTP = "expired_OTP"
     Not_Authenticated = "not_authenticated"
     Permission_Denied = "permission_denied"
@@ -19,6 +18,7 @@ class ErrorCode(enum.Enum):
     User_Not_Active = "user_not_active"
     Verified_OTP = "verified_OTP"
     Not_Similar_Passwords = "not_similar_passwords"
+    Wrong_Password = "wrong_password"
     Field_Error = "field_error"
     JWT_No_Type = "JWT_no_type"
     JWT_No_Id = "JWT_no_id"
@@ -27,7 +27,7 @@ class ErrorCode(enum.Enum):
     Bad_Authorization_Header = "bad_authorization_header"
 
 
-class UserNotExistsException(BaseExceptions):
+class UserNotExists(BaseExceptions):
     detail_ = {
         "error": True,
         "error_code": ErrorCode.Not_Exists.value,
@@ -36,7 +36,7 @@ class UserNotExistsException(BaseExceptions):
     status_code = status.HTTP_404_NOT_FOUND
 
 
-class CredentialsException(BaseExceptions):
+class WrongCredentials(BaseExceptions):
     detail_ = {
         "error": True,
         "error_code": ErrorCode.Credential_Error.value,
@@ -162,29 +162,20 @@ class OTPNotVerified(BaseExceptions):
     status_code = status.HTTP_406_NOT_ACCEPTABLE
 
 
-class NotAuthenticated(BaseExceptions):
-    detail_ = {
-        "error": True,
-        "error_code": ErrorCode.Not_Authenticated.value,
-        "detail": "Authentication credentials were not provided.",
-    }
-    status_code = status.HTTP_401_UNAUTHORIZED
-
-
-class PermissionDenied(BaseExceptions):
-    detail_ = {
-        "error": True,
-        "error_code": ErrorCode.Permission_Denied.value,
-        "detail": "You do not have permission to perform this action.",
-    }
-    status_code = status.HTTP_403_FORBIDDEN
-
-
 class NotSimilarPasswords(BaseExceptions):
     detail_ = {
         "error": True,
         "error_code": ErrorCode.Not_Similar_Passwords.value,
         "detail": "The two password fields didn't match.",
+    }
+    status_code = status.HTTP_400_BAD_REQUEST
+
+
+class WrongPassword(BaseExceptions):
+    detail_ = {
+        "error": True,
+        "error_code": ErrorCode.Wrong_Password.value,
+        "detail": "The current password is wrong.",
     }
     status_code = status.HTTP_400_BAD_REQUEST
 

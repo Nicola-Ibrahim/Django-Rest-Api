@@ -3,70 +3,58 @@ from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
+from rest_framework.mixins import (
+    CreateModelMixin,
+    DestroyModelMixin,
+    ListModelMixin,
+    RetrieveModelMixin,
+    UpdateModelMixin,
+)
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.core.api.views import CustomGenericAPIView
+
 from .. import mailers
 from ..models.models import OTPNumber
 from . import exceptions, responses
-from .permissions.mixins import IsAuthenticatedMixin, PermissionMixin
+from .filters.mixins import FilterMixin
+from .permissions.mixins import BasePermissionMixin
 from .queryset.mixins import InUserTypeQuerySetMixin, KwargUserTypeQuerySetMixin
 from .serializers.mixins import (
     InUserTypeSerializerMixin,
     KwargUserTypeSerializerMixin,
 )
+from .serializers.serializers import (
+    AccountVerificationSerializer,
+    ChangePasswordSerializer,
+    FirstTimePasswordSerializer,
+    ForgetPasswordRequestSerializer,
+    ForgetPasswordSerializer,
+    UserSerializer,
+    VerifyOTPNumberSerializer,
+)
 
 
-class VerifyEmail(APIView):
+class VerifyAccount(CustomGenericAPIView):
     """Verify the user by the token send it to the email"""
 
     permission_classes = (AllowAny,)
+    serializer_class = AccountVerificationSerializer
 
-    def get(self, request) -> Response:
-        """Override get method to verify the new registered user via email
-
-        Args:
-            request: the incoming request
-
-        Raises:
-            jwt.ExpiredSignatureError | jwt.exceptions.DecodeError: jwt exceptions
-
-        Returns:
-            Response | Exception: rest framework response with verified message or exception
-        """
-
-        token = request.GET.get("token")
-        try:
-            # Decode the token coming with the request
-            payload = jwt.decode(
-                token, settings.SECRET_KEY, algorithms=["HS256"], type=jwt
-            )
-
-            # Get the use id from the payload
-            user = get_user_model().objects.get(id=payload["user_id"])
-
-            # Check if the user is not verified
-            if not user.is_verified:
-                user.is_verified = True
-                user.save()
-
-            return Response(
-                {"email": "Successfully activated"}, status=status.HTTP_200_OK
-            )
-
-        except jwt.ExpiredSignatureError:
-            return Response(
-                {"error": "Activation Expired"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        except jwt.exceptions.DecodeError:
-            return Response(
-                {"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST
-            )
+    def get(self, request):
+        serializer = self.get_serializer(
+            request.GET.get("token"), context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return responses.ActivatedAccount()
 
 
-class UserSignView(KwargUserTypeSerializerMixin, generics.CreateAPIView):
+class UserSignView(
+    KwargUserTypeSerializerMixin, CreateModelMixin, CustomGenericAPIView
+):
     """View for adding a new user"""
 
     permission_classes = (AllowAny,)
@@ -85,8 +73,12 @@ class UserSignView(KwargUserTypeSerializerMixin, generics.CreateAPIView):
         serializer.save()
 
         user_data = serializer.data
+
+        user = user_data.get("user")
         # Send verification message to user's email
-        mailers.VerificationMailer()
+        mailers.VerificationMailer(
+            token=user.tokens()["access"], to_emails=[user.email], request=request
+        )
 
         return Response(user_data, status=status.HTTP_201_CREATED)
 
@@ -94,7 +86,7 @@ class UserSignView(KwargUserTypeSerializerMixin, generics.CreateAPIView):
 class UserDetailsView(
     InUserTypeQuerySetMixin,
     InUserTypeSerializerMixin,
-    PermissionMixin,
+    BasePermissionMixin,
     generics.RetrieveAPIView,
 ):
     """
@@ -120,7 +112,7 @@ class UserDetailsView(
 class UserUpdateView(
     InUserTypeQuerySetMixin,
     # InUserTypeSerializerMixin,
-    PermissionMixin,
+    BasePermissionMixin,
     generics.UpdateAPIView,
 ):
     serializer_class = UserSerializer
@@ -159,7 +151,6 @@ class UserUpdateView(
 class UserDeleteView(
     InUserTypeQuerySetMixin,
     InUserTypeSerializerMixin,
-    DeleteUserPermissionMixin,
     generics.DestroyAPIView,
 ):
     def get_object(self):
@@ -206,7 +197,7 @@ class UsersListView(
     KwargUserTypeQuerySetMixin,
     KwargUserTypeSerializerMixin,
     FilterMixin,
-    PermissionMixin,
+    BasePermissionMixin,
     generics.ListAPIView,
 ):
     pass
@@ -223,11 +214,11 @@ class LoginView(APIView):
             # Check if the user is inactive
             user = get_user_model().objects.filter(email=email)
             if not user.exists():
-                raise exceptions.UserNotExistsError()
+                raise exceptions.UserNotExists()
 
             user = user.first()
             if not user.is_active:
-                raise exceptions.UserNotActiveResponse()
+                raise exceptions.UserNotActive()
 
             # Authenticate the user
             user = authenticate(
@@ -237,13 +228,13 @@ class LoginView(APIView):
             )
 
             if not user:
-                raise exceptions.CredentialsError()
+                raise exceptions.WrongCredentials()
 
             if not user.is_password_changed:
                 otp_number = OTPNumber.get_number()
                 user.otp_number.update_or_create(defaults={"number": otp_number})
                 mailers.OTPMailer(
-                    to_email=user.email, otp_number=otp_number
+                    otp_number=otp_number, to_emails=[user.email]
                 ).send_email()
 
                 return responses.FirstTimePasswordError(user=user)
@@ -251,7 +242,7 @@ class LoginView(APIView):
             return responses.LoginResponse(user=user)
 
 
-class LogoutView(IsAuthenticatedMixin, generics.GenericAPIView):
+class LogoutView(BasePermissionMixin, CustomGenericAPIView):
     """View for user logout"""
 
     serializer_class = LogoutSerializer
@@ -264,7 +255,9 @@ class LogoutView(IsAuthenticatedMixin, generics.GenericAPIView):
         return responses.LogoutResponse()
 
 
-class UserListCreateView(GrantedAdminPermissionMixin, generics.ListCreateAPIView):
+class UserListCreateView(
+    BasePermissionMixin, ListModelMixin, CreateModelMixin, CustomGenericAPIView
+):
     """View for adding a new user"""
 
     queryset = get_user_model().objects.all()
@@ -303,8 +296,11 @@ class UserListCreateView(GrantedAdminPermissionMixin, generics.ListCreateAPIView
 
 
 class UserDetailsUpdateDestroyView(
-    permissions.IsOwnerOrAdminPermissionMixin,
-    generics.RetrieveUpdateDestroyAPIView,
+    BasePermissionMixin,
+    RetrieveModelMixin,
+    UpdateModelMixin,
+    DestroyModelMixin,
+    CustomGenericAPIView,
 ):
     queryset = get_user_model().objects.all()
     lookup_field = "slug"
@@ -359,8 +355,8 @@ class UserDetailsUpdateDestroyView(
         return responses.UserDestroyResponse()
 
 
-class ForgetPasswordRequestView(generics.GenericAPIView):
-    """View for sending a number to the user's email for resetting password"""
+class ForgetPasswordRequestView(CustomGenericAPIView):
+    """View for sending an OTP number to the user's email for changing the password"""
 
     serializer_class = ForgetPasswordRequestSerializer
 
@@ -369,11 +365,14 @@ class ForgetPasswordRequestView(generics.GenericAPIView):
             data=request.data, context={"request": request}
         )
 
+        # Validate user's email and check existence
         serializer.is_valid(raise_exception=True)
+
+        # Create OTP number for the user
         serializer.save()
 
-        # Send reset password message to user's email
-        mailers.OTPMailer(
+        # Send reset password message with OTP to user's email
+        services.OTPMailer(
             to_email=serializer.validated_data.get("email"),
             otp_number=serializer.validated_data.get("otp"),
         ).send_email()
@@ -382,8 +381,8 @@ class ForgetPasswordRequestView(generics.GenericAPIView):
         return responses.ForgetPasswordRequestResponse(user=user)
 
 
-class VerifyOTPNumberView(generics.GenericAPIView):
-    """View for checking the generated opt token for the user who wants to reset password."""
+class VerifyOTPNumberView(BasePermissionMixin, CustomGenericAPIView):
+    """View for verifying the generated OTP number for the user who wants to change password."""
 
     serializer_class = VerifyOTPNumberSerializer
 
@@ -397,7 +396,7 @@ class VerifyOTPNumberView(generics.GenericAPIView):
         return responses.VerifyOTPResponse()
 
 
-class ResetPasswordView(generics.GenericAPIView):
+class BaseResetPasswordView(BasePermissionMixin, CustomGenericAPIView):
     """
     Abstract base view for setting new password
     This model implements patch method, so the
@@ -417,13 +416,19 @@ class ResetPasswordView(generics.GenericAPIView):
         return responses.ResetPasswordResponse()
 
 
-class ChangePasswordView(ResetPasswordView):
-    """View for changing the forgotten password"""
+class ForgetPasswordView(BaseResetPasswordView):
+    """View for resetting the forgotten password"""
+
+    serializer_class = ForgetPasswordSerializer
+
+
+class ChangePasswordView(BaseResetPasswordView):
+    """View for changing password"""
 
     serializer_class = ChangePasswordSerializer
 
 
-class FirstTimePasswordView(ResetPasswordView):
-    """View for changing the forgotten password"""
+class FirstTimePasswordView(BaseResetPasswordView):
+    """View for setting the first time password"""
 
     serializer_class = FirstTimePasswordSerializer

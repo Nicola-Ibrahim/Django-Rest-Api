@@ -22,6 +22,7 @@ class OperationCode(enum.Enum):
     Reset_Password = "reset_password"
     Forget_Password = "forget_password"
     Verified_OTP = "verified_OTP"
+    Activated_Account = "activated_account"
 
 
 class LoginResponse(BaseResponse):
@@ -159,6 +160,17 @@ class ResetPasswordResponse(BaseResponse):
         "operation_code": OperationCode.Reset_Password.value,
         "data": {
             "message": "The password reset successfully",
+        },
+    }
+    status_ = status.HTTP_200_OK
+
+
+class ActivatedAccount(BaseResponse):
+    data_ = {
+        "error": False,
+        "operation_code": OperationCode.Activated_Account.value,
+        "data": {
+            "message": "The account has been activated successfully.",
         },
     }
     status_ = status.HTTP_200_OK
