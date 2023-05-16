@@ -1,85 +1,70 @@
-# Medical equipment store website
+# Django authentication RestAPI
 
-### Django-Rest framework
-
-#### The project is an online medical equipment store for selling and buying medical equipment.
-
-#### The website handles all necessary processes for buying and displaying products.
-
-#### For who:
-
-- Medical warehouses that want to sell their products.
-- Doctors that want to buy products.
-- Delivery workers that want work as middler between warehouses and doctors.
-
-#### The main entities are:
-
-- Admins.
-- Doctors.
-- warehouses.
-- staff:
-  - Accountant (For various external users).
-  - Statistician.
-
-# Project setup
+## Project setup
 
 Project setup instruction here.
 
-Clone the project
+- Cloning the repo:
 
-```bash
-  git clone https://github.com/Nicola-Ibrahim/Medical-Equipment-Store.git
-```
+  ```bash
+    git clone https://github.com/Nicola-Ibrahim/django-auth.git
+  ```
 
-Go to the project directory
+- Go to the project directory
 
-```bash
-  cd Medical-Equipment-Store
-```
+  ```bash
+    cd django-auth
+  ```
 
-In Powershell: install poetry for package management using
+- Install poetry
 
-```bash
-  (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -
-```
+  - Windows:
 
-Add poetry to system environment
+    In Powershell: install poetry for package management using
 
-```bash
-  setx path "%path%;C:\Users\{%user_name%}\AppData\Roaming\Python\Scripts"
-```
+    ```bash
+      (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -
+    ```
 
-Change the virtualenv directory to current directory
+- Add poetry to system environment
 
-```bash
-  poetry config virtualenvs.in-project true
-```
+  ```bash
+    setx path "%path%;C:\Users\{%user_name%}\AppData\Roaming\Python\Scripts"
+  ```
 
-Install dependencies using poetry
+- Edit the poetry configuration to create virtualenv in the root directory
 
-```bash
-  poetry install
-```
+  ```bash
+    poetry config virtualenvs.in-project true
+  ```
 
-Activate the created environment
+- Install all dependencies (++ development) using poetry
 
-```bash
-  .venv\Scripts\activate
-```
+  ```bash
+    poetry install
+  ```
 
-Create local directory to create custom settings
+- Activate the created environment
 
-```bash
-  mkdir local
-```
+  ```bash
+    .venv\Scripts\activate
+  ```
 
-Copy settings.dev.py to local directory for further modification
+- Custom dev settings:
 
-```bash
-  copy core\home\settings\templates\settings.dev.py .\local\settings.dev.py
-```
+  If want to create custom settings.dev.py, create local directory in the root
 
-Start the server
+  ```bash
+    mkdir local
+  ```
+
+  Copy settings.dev.py to local directory for further modification
+
+  ```bash
+    copy core\home\settings\templates\settings.dev.py .\local\settings.dev.py
+  ```
+
+## Start the server
 
 - with make
 
@@ -90,5 +75,5 @@ Start the server
 - with poetry
 
 ```bash
-  poetry run python -m core.manage runserver 127.0.0.1:8000
+  poetry run python src\manage.py runserver 127.0.0.1:8000
 ```
