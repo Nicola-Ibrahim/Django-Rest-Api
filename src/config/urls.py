@@ -3,12 +3,9 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-# from rest_framework.schemas import get_schema_view
-# from rest_framework.documentation import include_docs_urls
-
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/accounts/", include("apps.accounts.urls"), name="accounts"),
+    path("api/auth/", include("apps.authentication.api.urls"), name="auth"),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,4 +1,4 @@
-from ..factories import UserTypeSerializerFactory
+from .factories import UserTypeSerializerFactory
 
 
 class KwargUserTypeSerializerMixin:
@@ -8,9 +8,7 @@ class KwargUserTypeSerializerMixin:
         """
 
         # Get the serializer
-        serializer_class = UserTypeSerializerFactory().get_suitable_serializer(
-            self.kwargs["user_type"]
-        )
+        serializer_class = UserTypeSerializerFactory().get_suitable_serializer(self.request.GET.get["user_type"])
 
         return serializer_class
 
@@ -22,8 +20,6 @@ class InUserTypeSerializerMixin:
         """
 
         # Get the serializer
-        serializer_class = UserTypeSerializerFactory().get_suitable_serializer(
-            self.request.user.type.lower()
-        )
+        serializer_class = UserTypeSerializerFactory().get_suitable_serializer(self.request.user.type.lower())
 
         return serializer_class

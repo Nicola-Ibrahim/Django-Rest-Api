@@ -15,19 +15,15 @@ from .profile_serializers import (
 class UserSerializer(serializers.ModelSerializer):
     """Serializer is responsible for creation and updating an instance"""
 
-    manager_name = serializers.ReadOnlyField(
-        source="manager.admin_profile.first_name"
-    )
+    manager_name = serializers.ReadOnlyField(source="manager.admin_profile.first_name")
 
     groups = serializers.ReadOnlyField(source="groups.all.values")
 
-    password = serializers.CharField(
-        write_only=True, required=True, validators=[validate_password]
-    )
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     confirm_password = serializers.CharField(write_only=True, required=True)
 
     # url = serializers.HyperlinkedIdentityField(
-    #     view_name="accounts:details", read_only=True
+    #     view_name="auth:details", read_only=True
     # )
 
     class Meta:
@@ -77,9 +73,7 @@ class UserSerializer(serializers.ModelSerializer):
             user data: the user data after validation
         """
         if attrs["password"] != attrs["confirm_password"]:
-            raise serializers.ValidationError(
-                {"password": "Password fields didn't match."}
-            )
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
         return attrs
 
     def update(self, instance, validated_data):
@@ -203,9 +197,7 @@ class AccountVerificationSerializer(BaseSerializer):
 
     def validate(self, attrs):
         # Get the use id from the payload
-        user = tokens.CustomAccessToken(attrs.get("token"), verify=True)[
-            "user_id"
-        ]
+        user = tokens.CustomAccessToken(attrs.get("token"), verify=True)["user_id"]
 
         # Add the user instance to validated data
         attrs["user"] = user
@@ -232,9 +224,7 @@ class LogoutSerializer(BaseSerializer):
         return attrs
 
     def create(self, validated_data):
-        tokens.CustomRefreshToken(
-            validated_data.get("refresh"), verify=True
-        ).blacklist()
+        tokens.CustomRefreshToken(validated_data.get("refresh"), verify=True).blacklist()
         return True
 
 
@@ -296,9 +286,7 @@ class VerifyOTPNumberSerializer(BaseSerializer):
         """Update the is_verified field after validate the otp number assigned to user"""
 
         # Get the OTP number of the user
-        instance = OTPNumber.objects.get(
-            user=self.context["request"].user, number=validated_data.get("otp")
-        )
+        instance = OTPNumber.objects.get(user=self.context["request"].user, number=validated_data.get("otp"))
 
         # Set OTP number to be verified
         instance.is_verified = True
@@ -310,15 +298,9 @@ class VerifyOTPNumberSerializer(BaseSerializer):
 class ChangePasswordSerializer(BaseSerializer):
     """This serializer is responsible for setting a new password of the user"""
 
-    old_password = serializers.CharField(
-        max_length=128, write_only=True, required=True
-    )
-    new_password = serializers.CharField(
-        max_length=128, write_only=True, required=True
-    )
-    confirmed_password = serializers.CharField(
-        max_length=128, write_only=True, required=True
-    )
+    old_password = serializers.CharField(max_length=128, write_only=True, required=True)
+    new_password = serializers.CharField(max_length=128, write_only=True, required=True)
+    confirmed_password = serializers.CharField(max_length=128, write_only=True, required=True)
 
     def validate(self, attrs: dict):
         """Validate the inserted data, passwords and otp number"""
@@ -333,9 +315,7 @@ class ChangePasswordSerializer(BaseSerializer):
             raise exceptions.NotSimilarPasswords()
 
         # Validate the password if it meets all validator requirements
-        password_validation.validate_password(
-            attrs["new_password"], self.context["request"].user
-        )
+        password_validation.validate_password(attrs["new_password"], self.context["request"].user)
 
         return attrs
 
@@ -360,12 +340,8 @@ class ChangePasswordSerializer(BaseSerializer):
 class ForgetPasswordSerializer(BaseSerializer):
     """This serializer is responsible for setting a new password of the user"""
 
-    new_password = serializers.CharField(
-        max_length=128, write_only=True, required=True
-    )
-    confirmed_password = serializers.CharField(
-        max_length=128, write_only=True, required=True
-    )
+    new_password = serializers.CharField(max_length=128, write_only=True, required=True)
+    confirmed_password = serializers.CharField(max_length=128, write_only=True, required=True)
     otp = serializers.CharField(min_length=1, write_only=True, required=True)
 
     def validate(self, attrs: dict):
@@ -373,9 +349,7 @@ class ForgetPasswordSerializer(BaseSerializer):
 
         otp = attrs.get("otp", "")
 
-        otp_instance = OTPNumber.objects.filter(
-            user=self.context["request"].user, number=otp
-        )
+        otp_instance = OTPNumber.objects.filter(user=self.context["request"].user, number=otp)
         if not otp_instance.exists():
             raise exceptions.OTPNotExists()
 
@@ -388,9 +362,7 @@ class ForgetPasswordSerializer(BaseSerializer):
             raise exceptions.NotSimilarPasswords()
 
         # Validate the password if it meets all validator requirements
-        password_validation.validate_password(
-            attrs["new_password"], self.context["request"].user
-        )
+        password_validation.validate_password(attrs["new_password"], self.context["request"].user)
 
         return attrs
 
@@ -415,12 +387,8 @@ class ForgetPasswordSerializer(BaseSerializer):
 class FirstTimePasswordSerializer(BaseSerializer):
     """This serializer is responsible for setting a first time password of the user"""
 
-    new_password = serializers.CharField(
-        max_length=128, write_only=True, required=True
-    )
-    confirmed_password = serializers.CharField(
-        max_length=128, write_only=True, required=True
-    )
+    new_password = serializers.CharField(max_length=128, write_only=True, required=True)
+    confirmed_password = serializers.CharField(max_length=128, write_only=True, required=True)
 
     def validate(self, attrs: dict):
         """Validate the inserted data, validate passwords and otp number"""
@@ -442,9 +410,7 @@ class FirstTimePasswordSerializer(BaseSerializer):
             raise exceptions.NotSimilarPasswords()
 
         # Validate the password if it meets all validator requirements
-        password_validation.validate_password(
-            attrs["new_password"], self.context["request"].user
-        )
+        password_validation.validate_password(attrs["new_password"], self.context["request"].user)
 
         # Add the user instance to validated data
         attrs["user"] = user

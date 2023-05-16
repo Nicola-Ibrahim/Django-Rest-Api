@@ -18,9 +18,7 @@ def assign_group(sender, instance, **kwargs):
 
     try:
         # Get the warehouse permission groups
-        perm_group = Group.objects.get(
-            name=PermissionGroupsName.WAREHOUSE_GROUP.value
-        )
+        perm_group = Group.objects.get(name=PermissionGroupsName.WAREHOUSE_GROUP.value)
 
     except Group.DoesNotExist:
         pass
@@ -36,9 +34,7 @@ def assign_group(sender, instance, **kwargs):  # noqa:F811
 
     try:
         # Get the warehouse permission groups
-        perm_group = Group.objects.get(
-            name=PermissionGroupsName.DOCTOR_GROUP.value
-        )
+        perm_group = Group.objects.get(name=PermissionGroupsName.DOCTOR_GROUP.value)
 
     except Group.DoesNotExist:
         pass

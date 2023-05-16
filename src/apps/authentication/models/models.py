@@ -15,11 +15,11 @@ from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .. import utils
-from . import managers
+from .managers import CustomUserManager, ProxyUserManger
 
 
 class User(AbstractUser):
-    objects = managers.CustomUserManager()
+    objects = CustomUserManager()
 
     class Type(models.TextChoices):
         DOCTOR = "Doctor", "doctor"
@@ -36,12 +36,10 @@ class User(AbstractUser):
 
     # Set username to none
     username = None
-    first_name = None
-    last_name = None
+    # first_name = None
+    # last_name = None
 
-    email = models.EmailField(
-        ("email address"), unique=True, validators=[validate_email]
-    )
+    email = models.EmailField(("email address"), unique=True, validators=[validate_email])
     USERNAME_FIELD = "email"  # Set email field as a username
     REQUIRED_FIELDS = ["password"]  # Remove email from required fields
 
@@ -51,16 +49,10 @@ class User(AbstractUser):
     street = models.CharField(max_length=50, null=True, blank=True)
     zipcode = models.IntegerField(null=True, blank=True)
     identification = models.IntegerField(null=True, blank=True)
-    type = models.CharField(
-        max_length=50, choices=Type.choices, blank=True, default=Type.ADMIN
-    )
+    type = models.CharField(max_length=50, choices=Type.choices, blank=True, default=Type.ADMIN)
     is_verified = models.BooleanField(default=False)
-    manager = models.ForeignKey(
-        "Admin", on_delete=models.SET_NULL, null=True, blank=True
-    )
-    subscription = models.ForeignKey(
-        "Subscription", null=True, on_delete=models.DO_NOTHING
-    )
+    manager = models.ForeignKey("Admin", on_delete=models.SET_NULL, null=True, blank=True)
+    subscription = models.ForeignKey("Subscription", null=True, on_delete=models.DO_NOTHING)
 
     def __str__(self) -> str:
         return self.email
@@ -77,7 +69,7 @@ class Doctor(User):
     class Meta:
         proxy = True
 
-    objects = managers.ProxyUserManger(User.Type.DOCTOR)
+    objects = ProxyUserManger(User.Type.DOCTOR)
 
     def save(self, *args, **kwargs) -> None:
         self.type = User.Type.DOCTOR
@@ -88,7 +80,7 @@ class DeliveryWorker(User):
     class Meta:
         proxy = True
 
-    objects = managers.ProxyUserManger(User.Type.DELIVERY_WORKER)
+    objects = ProxyUserManger(User.Type.DELIVERY_WORKER)
 
     def save(self, *args, **kwargs) -> None:
         self.type = User.Type.DELIVERY_WORKER
@@ -99,7 +91,7 @@ class Warehouse(User):
     class Meta:
         proxy = True
 
-    objects = managers.ProxyUserManger(User.Type.WAREHOUSE)
+    objects = ProxyUserManger(User.Type.WAREHOUSE)
 
     def save(self, *args, **kwargs) -> None:
         self.type = User.Type.WAREHOUSE
@@ -110,7 +102,7 @@ class WarehouseAccountant(User):
     class Meta:
         proxy = True
 
-    objects = managers.ProxyUserManger(User.Type.WAREHOUSE_ACCOUNTANT)
+    objects = ProxyUserManger(User.Type.WAREHOUSE_ACCOUNTANT)
 
     def save(self, *args, **kwargs) -> None:
         self.type = User.Type.WAREHOUSE_ACCOUNTANT
@@ -121,7 +113,7 @@ class DeliveryWorkerAccountant(User):
     class Meta:
         proxy = True
 
-    objects = managers.ProxyUserManger(User.Type.DELIVERY_WORKER_ACCOUNTANT)
+    objects = ProxyUserManger(User.Type.DELIVERY_WORKER_ACCOUNTANT)
 
     def save(self, *args, **kwargs) -> None:
         self.type = User.Type.DELIVERY_WORKER_ACCOUNTANT
@@ -132,7 +124,7 @@ class BaseAccountant(User):
     class Meta:
         proxy = True
 
-    objects = managers.ProxyUserManger(User.Type.BASE_ACCOUNTANT)
+    objects = ProxyUserManger(User.Type.BASE_ACCOUNTANT)
 
     def save(self, *args, **kwargs) -> None:
         self.type = User.Type.BASE_ACCOUNTANT
@@ -143,7 +135,7 @@ class Statistician(User):
     class Meta:
         proxy = True
 
-    objects = managers.ProxyUserManger(User.Type.STATISTICIAN)
+    objects = ProxyUserManger(User.Type.STATISTICIAN)
 
     def save(self, *args, **kwargs) -> None:
         self.type = User.Type.STATISTICIAN
@@ -154,7 +146,7 @@ class Admin(User):
     class Meta:
         proxy = True
 
-    objects = managers.ProxyUserManger(User.Type.ADMIN)
+    objects = ProxyUserManger(User.Type.ADMIN)
 
     def save(self, *args, **kwargs) -> None:
         self.is_staff = True
@@ -189,9 +181,7 @@ class OTPNumber(models.Model):
     )
 
     def save(self, *args, **kwargs) -> None:
-        self.valid_until = timezone.now() + timedelta(
-            seconds=settings.OTP_EXPIRATION
-        )
+        self.valid_until = timezone.now() + timedelta(seconds=settings.OTP_EXPIRATION)
         return super().save(*args, **kwargs)
 
     def __str__(self) -> str:
@@ -208,11 +198,7 @@ class OTPNumber(models.Model):
         """
         _now = timezone.now()
 
-        if (
-            (self.number is not None)
-            and (number == self.number)
-            and (_now < self.valid_until)
-        ):
+        if (self.number is not None) and (number == self.number) and (_now < self.valid_until):
             # self.number = None
             self.valid_until = _now
             self.save()

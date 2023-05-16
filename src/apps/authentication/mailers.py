@@ -122,9 +122,7 @@ class RegisterMailer(BaseMailer):
 
         context = {"full_name": self.full_name, "password": self.password}
 
-        self.body = render_to_string(
-            template_name="accounts/registration_email.html", context=context
-        )
+        self.body = render_to_string(template_name="authentication/registration_email.html", context=context)
 
 
 class OTPMailer(BaseMailer):
@@ -158,9 +156,7 @@ class OTPMailer(BaseMailer):
         """
         context = {"email": self.to_emails[0], "otp_number": self.otp_number}
 
-        self.body = render_to_string(
-            template_name="accounts/forget_password.html", context=context
-        )
+        self.body = render_to_string(template_name="authentication/forget_password.html", context=context)
 
 
 class VerificationMailer(BaseMailer):
@@ -206,9 +202,7 @@ class VerificationMailer(BaseMailer):
         current_site = get_current_site(self.request).domain
 
         # Get the url of the "email-verify" view
-        relativeLink = reverse(
-            "accounts:email-verify"
-        )  # -> /api/accounts/verify_email/
+        relativeLink = reverse("authentication:email-verify")  # -> /api/authentication/verify_email/
 
         # Sum up the final url for verification
         absurl = "http://" + current_site + relativeLink + "?token=" + str(token)
@@ -218,6 +212,4 @@ class VerificationMailer(BaseMailer):
             "link": absurl,
         }
 
-        self.body = render_to_string(
-            template_name="accounts/account_verification.html", context=context
-        )
+        self.body = render_to_string(template_name="authentication/account_verification.html", context=context)

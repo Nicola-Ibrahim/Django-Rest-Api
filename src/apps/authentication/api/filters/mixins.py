@@ -1,4 +1,4 @@
-from ..factories import UserTypeFilterFactory
+from .factories import UserTypeFilterFactory
 
 
 class FilterMixin:

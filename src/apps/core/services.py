@@ -12,9 +12,7 @@ class BaseEmailService(ABC):
     provide the specific logic for each backend.
     """
 
-    def __init__(
-        self, subject: str, body: str, from_email: str, to: list[str]
-    ) -> None:
+    def __init__(self, subject: str, body: str, from_email: str, to: list[str]) -> None:
         """Initialize the email service with the message details.
 
         Args:
@@ -23,9 +21,7 @@ class BaseEmailService(ABC):
             from_email (str): The sender's email address.
             to (list[str]): A list of recipient's email addresses.
         """
-        self.mail = EmailMessage(
-            subject=subject, body=body, from_email=from_email, to=to
-        )
+        self.mail = EmailMessage(subject=subject, body=body, from_email=from_email, to=to)
 
     @abstractmethod
     def send_email(self):
@@ -71,9 +67,7 @@ class EmailServiceFactory:
     backends, and returns an instance of a subclass of BaseEmailService.
     """
 
-    def __init__(
-        self, subject: str, body: str, from_email: str, to_emails: list[str]
-    ) -> None:
+    def __init__(self, subject: str, body: str, from_email: str, to_emails: list[str]) -> None:
         """Initialize the factory with the email message details.
 
         Args:
@@ -103,10 +97,7 @@ class EmailServiceFactory:
         """
 
         # Email in Gmail
-        if (
-            settings.EMAIL_BACKEND
-            == "django.core.mail.backends.smtp.EmailBackend"
-        ):
+        if settings.EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
             if settings.EMAIL_HOST == "smtp.gmail.com":
                 # Return an instance of GmailService
                 return GmailService(
@@ -117,10 +108,7 @@ class EmailServiceFactory:
                 )
 
         # Email in console
-        elif (
-            settings.EMAIL_BACKEND
-            == "django.core.mail.backends.console.EmailBackend"
-        ):
+        elif settings.EMAIL_BACKEND == "django.core.mail.backends.console.EmailBackend":
             # Return an instance of ConsolEmailService
             return ConsolEmailService(
                 subject=self.subject,

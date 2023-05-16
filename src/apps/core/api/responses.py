@@ -26,9 +26,7 @@ class BaseResponse(Response):
         if not status and self.status_:
             status = self.status_
 
-        super().__init__(
-            data, status, template_name, headers, exception, content_type
-        )
+        super().__init__(data, status, template_name, headers, exception, content_type)
 
     def update_data(self, **kwargs):
         """Update the data dictionary in The Response"""

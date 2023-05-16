@@ -44,16 +44,12 @@ class LoginResponse(BaseResponse):
         content_type=None,
     ):
         self.update_data(user=user)
-        super().__init__(
-            data, status, template_name, headers, exception, content_type
-        )
+        super().__init__(data, status, template_name, headers, exception, content_type)
 
     def update_data(self, **kwargs):
         user = kwargs.get("user", None)
         if user:
-            user_groups = (
-                user.profile.category.name if user.profile.category else ""
-            )
+            user_groups = user.profile.category.name if user.profile.category else ""
             self.data_["data"]["email"] = user.email
             self.data_["data"]["groups"] = user_groups
             self.data_["data"]["tokens"] = {
@@ -95,17 +91,13 @@ class FirstTimePasswordError(BaseResponse):
         content_type=None,
     ):
         self.update_data(user=user)
-        super().__init__(
-            data, status, template_name, headers, exception, content_type
-        )
+        super().__init__(data, status, template_name, headers, exception, content_type)
 
     def update_data(self, **kwargs):
         user = kwargs.get("user", None)
         # Add access token to the data
         if user:
-            self.data_["data"]["access_token"] = user.profile.get_tokens()[
-                "access"
-            ]
+            self.data_["data"]["access_token"] = user.profile.get_tokens()["access"]
 
 
 class ForgetPasswordRequestResponse(BaseResponse):
@@ -129,17 +121,13 @@ class ForgetPasswordRequestResponse(BaseResponse):
         content_type=None,
     ):
         self.update_data(user=user)
-        super().__init__(
-            data, status, template_name, headers, exception, content_type
-        )
+        super().__init__(data, status, template_name, headers, exception, content_type)
 
     def update_data(self, **kwargs):
         user = kwargs.get("user", None)
         # Add access token to the data
         if user:
-            self.data_["data"]["access_token"] = user.profile.get_tokens()[
-                "access"
-            ]
+            self.data_["data"]["access_token"] = user.profile.get_tokens()["access"]
 
 
 class VerifyOTPResponse(BaseResponse):

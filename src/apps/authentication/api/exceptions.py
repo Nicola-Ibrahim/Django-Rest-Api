@@ -11,6 +11,8 @@ from apps.core.api.exceptions import BaseExceptions
 
 class ErrorCode(enum.Enum):
     Not_Exists = "not_exists"
+    Not_Found = "not_found"
+    Not_Allowed = "not_allowed"
     Expired_OTP = "expired_OTP"
     Not_Authenticated = "not_authenticated"
     Permission_Denied = "permission_denied"
@@ -234,7 +236,7 @@ class UserModelNotFound(BaseExceptions):
 class DeleteMultipleUsers(BaseExceptions):
     detail_ = {
         "error": True,
-        "error_code": ErrorCode.Not_Found.value,
+        "error_code": ErrorCode.Not_Allowed.value,
         "detail": "delete multiple user not allowed for non admin user",
         "data": {},
     }
@@ -244,7 +246,7 @@ class DeleteMultipleUsers(BaseExceptions):
 class UpdateMultipleUsers(BaseExceptions):
     detail_ = {
         "error": True,
-        "error_code": ErrorCode.Not_Found.value,
+        "error_code": ErrorCode.Not_Allowed.value,
         "detail": "update multiple user not allowed for non admin user",
         "data": {},
     }

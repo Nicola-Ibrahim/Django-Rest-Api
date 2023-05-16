@@ -1,6 +1,6 @@
 .PHONY: superuser
 superuser:
-	pipenv run python manage makesuperuser.py
+	pipenv run python src\manage.py makesuperuser
 
 .PHONY: lint
 lint:

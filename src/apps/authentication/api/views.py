@@ -1,5 +1,3 @@
-import jwt
-from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
@@ -22,16 +20,14 @@ from . import exceptions, responses
 from .filters.mixins import FilterMixin
 from .permissions.mixins import BasePermissionMixin
 from .queryset.mixins import InUserTypeQuerySetMixin, KwargUserTypeQuerySetMixin
-from .serializers.mixins import (
-    InUserTypeSerializerMixin,
-    KwargUserTypeSerializerMixin,
-)
+from .serializers.mixins import InUserTypeSerializerMixin, KwargUserTypeSerializerMixin
 from .serializers.serializers import (
     AccountVerificationSerializer,
     ChangePasswordSerializer,
     FirstTimePasswordSerializer,
     ForgetPasswordRequestSerializer,
     ForgetPasswordSerializer,
+    LogoutSerializer,
     UserSerializer,
     VerifyOTPNumberSerializer,
 )
@@ -44,17 +40,13 @@ class VerifyAccount(CustomGenericAPIView):
     serializer_class = AccountVerificationSerializer
 
     def get(self, request):
-        serializer = self.get_serializer(
-            request.GET.get("token"), context={"request": request}
-        )
+        serializer = self.get_serializer(request.GET.get("token"), context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return responses.ActivatedAccount()
 
 
-class UserSignView(
-    KwargUserTypeSerializerMixin, CreateModelMixin, CustomGenericAPIView
-):
+class UserSignView(KwargUserTypeSerializerMixin, CreateModelMixin, CustomGenericAPIView):
     """View for adding a new user"""
 
     permission_classes = (AllowAny,)
@@ -66,19 +58,16 @@ class UserSignView(
             Response: rest framework response with user data
         """
         user_data = request.data
-        serializer = self.get_serializer(
-            data=user_data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=user_data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
         user_data = serializer.data
 
         user = user_data.get("user")
+
         # Send verification message to user's email
-        mailers.VerificationMailer(
-            token=user.tokens()["access"], to_emails=[user.email], request=request
-        )
+        mailers.VerificationMailer(token=user.tokens()["access"], to_emails=[user.email], request=request)
 
         return Response(user_data, status=status.HTTP_201_CREATED)
 
@@ -103,15 +92,13 @@ class UserDetailsView(
             Response: rest framework response with user data
         """
 
-        serializer = self.get_serializer(
-            request.user, context={"request": request}
-        )
+        serializer = self.get_serializer(request.user, context={"request": request})
         return Response(serializer.data)
 
 
 class UserUpdateView(
     InUserTypeQuerySetMixin,
-    # InUserTypeSerializerMixin,
+    InUserTypeSerializerMixin,
     BasePermissionMixin,
     generics.UpdateAPIView,
 ):
@@ -134,9 +121,7 @@ class UserUpdateView(
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
-        serializer = self.get_serializer(
-            instance, data=request.data, partial=partial
-        )
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
@@ -196,7 +181,7 @@ class UserDeleteView(
 class UsersListView(
     KwargUserTypeQuerySetMixin,
     KwargUserTypeSerializerMixin,
-    FilterMixin,
+    # FilterMixin,
     BasePermissionMixin,
     generics.ListAPIView,
 ):
@@ -233,9 +218,7 @@ class LoginView(APIView):
             if not user.is_password_changed:
                 otp_number = OTPNumber.get_number()
                 user.otp_number.update_or_create(defaults={"number": otp_number})
-                mailers.OTPMailer(
-                    otp_number=otp_number, to_emails=[user.email]
-                ).send_email()
+                mailers.OTPMailer(otp_number=otp_number, to_emails=[user.email]).send_email()
 
                 return responses.FirstTimePasswordError(user=user)
 
@@ -255,9 +238,7 @@ class LogoutView(BasePermissionMixin, CustomGenericAPIView):
         return responses.LogoutResponse()
 
 
-class UserListCreateView(
-    BasePermissionMixin, ListModelMixin, CreateModelMixin, CustomGenericAPIView
-):
+class UserListCreateView(BasePermissionMixin, ListModelMixin, CreateModelMixin, CustomGenericAPIView):
     """View for adding a new user"""
 
     queryset = get_user_model().objects.all()
@@ -274,9 +255,7 @@ class UserListCreateView(
             Response: rest framework response with user data
         """
         user_data = request.data
-        serializer = self.get_serializer(
-            data=user_data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=user_data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
@@ -289,9 +268,7 @@ class UserListCreateView(
         # mailers.RegisterMailer(
         #     to_email=user.email, password=password
         # ).send_email()
-        mailers.VerificationMailer(
-            token=user.tokens()["access"], to_emails=[user.email], request=request
-        )
+        mailers.VerificationMailer(token=user.tokens()["access"], to_emails=[user.email], request=request)
         return responses.UserCreateResponse()
 
 
@@ -330,8 +307,7 @@ class UserDetailsUpdateDestroyView(
         assert lookup_url_kwarg in self.kwargs, (
             "Expected view %s to be called with a URL keyword argument "
             'named "%s". Fix your URL conf, or set the `.lookup_field` '
-            "attribute on the view correctly."
-            % (self.__class__.__name__, lookup_url_kwarg)
+            "attribute on the view correctly." % (self.__class__.__name__, lookup_url_kwarg)
         )
 
         filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
@@ -361,9 +337,7 @@ class ForgetPasswordRequestView(CustomGenericAPIView):
     serializer_class = ForgetPasswordRequestSerializer
 
     def post(self, request):
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=request.data, context={"request": request})
 
         # Validate user's email and check existence
         serializer.is_valid(raise_exception=True)
@@ -387,9 +361,7 @@ class VerifyOTPNumberView(BasePermissionMixin, CustomGenericAPIView):
     serializer_class = VerifyOTPNumberSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -407,9 +379,7 @@ class BaseResetPasswordView(BasePermissionMixin, CustomGenericAPIView):
         abstract = True
 
     def patch(self, request):
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
