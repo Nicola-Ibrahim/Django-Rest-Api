@@ -1,0 +1,11 @@
+<html>
+    <head>
+        <style>
+            {% comment %} /* Add some CSS styles here */ {% endcomment %}
+        </style>
+    </head>
+    <body>
+        <h1>Hi {{ full_name|safe }}!</h1>
+        <p>{{ password|safe }}</p>
+    </body>
+</html>

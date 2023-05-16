@@ -1,0 +1,136 @@
+[
+  {
+    "model": "accounts.warehouseprofile",
+    "pk": 1,
+    "fields": {
+      "warehouse": 2,
+      "name": "Warehouse1",
+      "working_hours": 1.0,
+      "profit_percentage": 3.0
+    }
+  },
+  {
+    "model": "accounts.warehouseprofile",
+    "pk": 2,
+    "fields": {
+      "warehouse": 3,
+      "name": "Warehouse2",
+      "working_hours": 2.0,
+      "profit_percentage": 3.0
+    }
+  },
+  {
+    "model": "accounts.warehouseprofile",
+    "pk": 3,
+    "fields": {
+      "warehouse": 4,
+      "name": "Warehouse3",
+      "working_hours": 3.0,
+      "profit_percentage": 3.0
+    }
+  },
+  {
+    "model": "accounts.warehouseprofile",
+    "pk": 4,
+    "fields": {
+      "warehouse": 5,
+      "name": "Warehouse4",
+      "working_hours": 4.0,
+      "profit_percentage": 4.0
+    }
+  },
+  {
+    "model": "accounts.warehouseprofile",
+    "pk": 5,
+    "fields": {
+      "warehouse": 6,
+      "name": "Warehouse5",
+      "working_hours": 5.0,
+      "profit_percentage": 5.0
+    }
+  },
+  {
+    "model": "accounts.deliveryworkerprofile",
+    "pk": 6,
+    "fields": {
+      "delivery_worker": 12,
+      "first_name": "delivery1",
+      "last_name": "delivery11",
+      "distance": 2.0,
+      "duration": 1.0,
+      "profit_percentage": 4.0,
+      "is_idle": false
+    }
+  },
+  {
+    "model": "accounts.deliveryworkerprofile",
+    "pk": 7,
+    "fields": {
+      "delivery_worker": 13,
+      "first_name": "delivery2",
+      "last_name": "delivery22",
+      "distance": 2.0,
+      "duration": 2.0,
+      "profit_percentage": 4.0,
+      "is_idle": false
+    }
+  },
+  {
+    "model": "accounts.deliveryworkerprofile",
+    "pk": 8,
+    "fields": {
+      "delivery_worker": 14,
+      "first_name": "delivery3",
+      "last_name": "delivery33",
+      "distance": 3.0,
+      "duration": 3.0,
+      "profit_percentage": 4.0,
+      "is_idle": false
+    }
+  },
+  {
+    "model": "accounts.doctorprofile",
+    "pk": 8,
+    "fields": {
+      "doctor": 7,
+      "first_name": "doctor1",
+      "last_name": "doctor11"
+    }
+  },
+  {
+    "model": "accounts.doctorprofile",
+    "pk": 9,
+    "fields": {
+      "doctor": 8,
+      "first_name": "doctor2",
+      "last_name": "doctor22"
+    }
+  },
+  {
+    "model": "accounts.doctorprofile",
+    "pk": 5,
+    "fields": {
+      "doctor": 9,
+      "first_name": "doctor3",
+      "last_name": "doctor33"
+    }
+  },
+  {
+    "model": "accounts.doctorprofile",
+    "pk": 6,
+    "fields": {
+      "doctor": 10,
+      "first_name": "doctor4",
+      "last_name": "doctor44"
+    }
+  },
+  {
+    "model": "accounts.doctorprofile",
+    "pk": 7,
+    "fields": {
+      "doctor": 11,
+      "first_name": "doctor5",
+      "last_name": "doctor55"
+    }
+  }
+]
