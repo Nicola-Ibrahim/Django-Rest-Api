@@ -1,13 +1,11 @@
 from rest_framework import serializers
 
-from ...models.profiles import (
-    DeliveryWorkerProfile,
-    DoctorProfile,
-    WarehouseProfile,
-)
+from apps.core.api.serializers import BaseModelSerializer
+
+from ...models.profiles import DeliveryWorkerProfile, DoctorProfile, WarehouseProfile
 
 
-class WarehouseProfileSerializer(serializers.ModelSerializer):
+class WarehouseProfileSerializer(BaseModelSerializer):
     class Meta:
         model = WarehouseProfile
         fields = [
@@ -22,7 +20,7 @@ class WarehouseProfileSerializer(serializers.ModelSerializer):
         }
 
 
-class DoctorProfileSerializer(serializers.ModelSerializer):
+class DoctorProfileSerializer(BaseModelSerializer):
     class Meta:
         model = DoctorProfile
         fields = ["first_name", "last_name", "doctor"]
@@ -32,7 +30,7 @@ class DoctorProfileSerializer(serializers.ModelSerializer):
         }
 
 
-class DeliveryWorkerProfileSerializer(serializers.ModelSerializer):
+class DeliveryWorkerProfileSerializer(BaseModelSerializer):
     class Meta:
         model = DeliveryWorkerProfile
         fields = "__all__"

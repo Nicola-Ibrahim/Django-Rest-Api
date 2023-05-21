@@ -2,14 +2,14 @@ from django.contrib.auth import get_user_model, password_validation
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from apps.core.api.serializers import BaseSerializer
+from apps.core.api.serializers import BaseModelSerializer, BaseSerializer
 
 from ...models.models import DeliveryWorker, Doctor, OTPNumber, Warehouse
 from .. import exceptions, tokens
 from .profile_serializers import DeliveryWorkerProfileSerializer, DoctorProfileSerializer, WarehouseProfileSerializer
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(BaseModelSerializer):
     """Serializer is responsible for creation and updating an instance"""
 
     manager_name = serializers.ReadOnlyField(source="manager.admin_profile.first_name")
