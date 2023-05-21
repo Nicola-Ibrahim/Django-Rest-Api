@@ -7,6 +7,7 @@ from rest_framework.exceptions import APIException, _get_error_details
 class ErrorCode(enum.Enum):
     Not_Authenticated = "not_authenticated"
     Permission_Denied = "permission_denied"
+    Field_Error = "field_error"
 
 
 class BaseExceptions(APIException):
@@ -59,3 +60,24 @@ class PermissionDenied(BaseExceptions):
         "detail": "You do not have permission to perform this action.",
     }
     status_code = status.HTTP_403_FORBIDDEN
+
+
+class SerializerFieldsError(BaseExceptions):
+    detail_ = {
+        "error": True,
+        "error_code": ErrorCode.Field_Error.value,
+        "detail": "An error occurred in the fields",
+        "data": {},
+    }
+    status_code = status.HTTP_400_BAD_REQUEST
+
+    def __init__(self, errors, detail=None, code=None, status_code=None):
+        self.update_data(errors=errors)
+        super().__init__(detail, code, status_code)
+
+    def update_data(self, **kwargs):
+        errors = kwargs.get("errors")
+
+        if errors:
+            self.detail_["data"]["errors"] = errors
+        return super().update_data(**kwargs)

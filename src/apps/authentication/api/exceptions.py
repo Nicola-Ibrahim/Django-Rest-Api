@@ -21,7 +21,6 @@ class ErrorCode(enum.Enum):
     Verified_OTP = "verified_OTP"
     Not_Similar_Passwords = "not_similar_passwords"
     Wrong_Password = "wrong_password"
-    Field_Error = "field_error"
     JWT_No_Type = "JWT_no_type"
     JWT_No_Id = "JWT_no_id"
     JWT_Wrong_Type = "JWT_wrong_type"
@@ -180,27 +179,6 @@ class WrongPassword(BaseExceptions):
         "detail": "The current password is wrong.",
     }
     status_code = status.HTTP_400_BAD_REQUEST
-
-
-class SerializerFieldsError(BaseExceptions):
-    detail_ = {
-        "error": True,
-        "error_code": ErrorCode.Field_Error.value,
-        "detail": "An error occurred in the fields",
-        "data": {},
-    }
-    status_code = status.HTTP_400_BAD_REQUEST
-
-    def __init__(self, errors, detail=None, code=None, status_code=None):
-        self.update_data(errors=errors)
-        super().__init__(detail, code, status_code)
-
-    def update_data(self, **kwargs):
-        errors = kwargs.get("errors")
-
-        if errors:
-            self.detail_["data"]["errors"] = errors
-        return super().update_data(**kwargs)
 
 
 class UserSerializerNotFound(BaseExceptions):
