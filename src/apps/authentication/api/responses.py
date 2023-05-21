@@ -35,7 +35,9 @@ class LoginResponse(BaseResponse):
 
     def __init__(
         self,
-        user,
+        email: str,
+        groups: list,
+        tokens: dict,
         data=None,
         status=None,
         template_name=None,
@@ -43,19 +45,16 @@ class LoginResponse(BaseResponse):
         exception=False,
         content_type=None,
     ):
-        self.update_data(user=user)
+        self.update_data(email=email, groups=groups, tokens=tokens)
         super().__init__(data, status, template_name, headers, exception, content_type)
 
     def update_data(self, **kwargs):
-        user = kwargs.get("user", None)
-        if user:
-            user_groups = user.profile.category.name if user.profile.category else ""
-            self.data_["data"]["email"] = user.email
-            self.data_["data"]["groups"] = user_groups
-            self.data_["data"]["tokens"] = {
-                "refresh": user.profile.get_tokens()["refresh"],
-                "access": user.profile.get_tokens()["access"],
-            }
+        self.data_["data"]["email"] = kwargs.get("email", None)
+        self.data_["data"]["groups"] = kwargs.get("groups", None)
+        self.data_["data"]["tokens"] = {
+            "refresh": kwargs.get("tokens")["refresh"],
+            "access": kwargs.get("tokens")["access"],
+        }
 
 
 class LogoutResponse(BaseResponse):
@@ -82,7 +81,7 @@ class FirstTimePasswordError(BaseResponse):
 
     def __init__(
         self,
-        user,
+        access_token,
         data=None,
         status=None,
         template_name=None,
@@ -90,14 +89,12 @@ class FirstTimePasswordError(BaseResponse):
         exception=False,
         content_type=None,
     ):
-        self.update_data(user=user)
+        self.update_data(access_token=access_token)
         super().__init__(data, status, template_name, headers, exception, content_type)
 
     def update_data(self, **kwargs):
-        user = kwargs.get("user", None)
         # Add access token to the data
-        if user:
-            self.data_["data"]["access_token"] = user.profile.get_tokens()["access"]
+        self.data_["data"]["access_token"] = kwargs.get("access_token", None)
 
 
 class ForgetPasswordRequestResponse(BaseResponse):
@@ -112,7 +109,7 @@ class ForgetPasswordRequestResponse(BaseResponse):
 
     def __init__(
         self,
-        user,
+        access_token,
         data=None,
         status=None,
         template_name=None,
@@ -120,14 +117,12 @@ class ForgetPasswordRequestResponse(BaseResponse):
         exception=False,
         content_type=None,
     ):
-        self.update_data(user=user)
+        self.update_data(access_token=access_token)
         super().__init__(data, status, template_name, headers, exception, content_type)
 
     def update_data(self, **kwargs):
-        user = kwargs.get("user", None)
         # Add access token to the data
-        if user:
-            self.data_["data"]["access_token"] = user.profile.get_tokens()["access"]
+        self.data_["data"]["access_token"] = kwargs.get("access_token", None)
 
 
 class VerifyOTPResponse(BaseResponse):

@@ -220,9 +220,13 @@ class LoginView(APIView):
                 user.otp_number.update_or_create(defaults={"number": otp_number})
                 mailers.OTPMailer(otp_number=otp_number, to_emails=[user.email]).send_email()
 
-                return responses.FirstTimePasswordError(user=user)
+                access_token = user.tokens()["access_token"]
+                return responses.FirstTimePasswordError(access_token)
 
-            return responses.LoginResponse(user=user)
+            else:
+                groups = user.groups.values_list("name") if user.groups else ""
+                tokens = user.tokens()
+                return responses.LoginResponse(email=email, groups=groups, tokens=tokens)
 
 
 class LogoutView(BasePermissionMixin, CustomGenericAPIView):
@@ -352,7 +356,8 @@ class ForgetPasswordRequestView(CustomGenericAPIView):
         ).send_email()
 
         user = serializer.validated_data.get("user")
-        return responses.ForgetPasswordRequestResponse(user=user)
+        access_token = user.tokens()["access_token"]
+        return responses.ForgetPasswordRequestResponse(access_token=access_token)
 
 
 class VerifyOTPNumberView(BasePermissionMixin, CustomGenericAPIView):
