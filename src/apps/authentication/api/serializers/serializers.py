@@ -5,6 +5,7 @@ from rest_framework import serializers
 from apps.core.api.serializers import BaseModelSerializer, BaseSerializer
 
 from ...models.models import DeliveryWorker, Doctor, OTPNumber, Warehouse
+from ...utils import get_user_from_access_token
 from .. import exceptions, tokens
 from .profile_serializers import DeliveryWorkerProfileSerializer, DoctorProfileSerializer, WarehouseProfileSerializer
 
@@ -167,7 +168,7 @@ class AccountVerificationSerializer(BaseSerializer):
 
     def validate(self, attrs):
         # Get the use id from the payload
-        user = tokens.CustomAccessToken(attrs.get("token"), verify=True)["user_id"]
+        user = get_user_from_access_token(attrs.get("token"))
 
         # Add the user instance to validated data
         attrs["user"] = user
@@ -372,8 +373,7 @@ class FirstTimePasswordSerializer(BaseSerializer):
         token_type, access_token = access_token.split(" ")
 
         # Get the user from access token
-        user_id = tokens.CustomAccessToken(access_token, verify=True)["user_id"]
-        user = get_user_model().objects.get(pk=user_id)
+        user = get_user_from_access_token(attrs.get("token"))
 
         # Check if the two inserted password are similar
         if attrs["new_password"] != attrs["confirmed_password"]:
