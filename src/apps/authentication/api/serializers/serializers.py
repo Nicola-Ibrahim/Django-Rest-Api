@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model, password_validation
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
@@ -6,8 +6,13 @@ from apps.core.api.serializers import BaseModelSerializer, BaseSerializer
 
 from ...models.models import DeliveryWorker, Doctor, OTPNumber, Warehouse
 from ...utils import get_user_from_access_token
+from ...validators import user_validate_password
 from .. import exceptions, tokens
-from .profile_serializers import DeliveryWorkerProfileSerializer, DoctorProfileSerializer, WarehouseProfileSerializer
+from .profile_serializers import (
+    DeliveryWorkerProfileSerializer,
+    DoctorProfileSerializer,
+    WarehouseProfileSerializer,
+)
 
 
 class UserSerializer(BaseModelSerializer):
@@ -163,6 +168,44 @@ class DeliveryWorkerUserSerializer(UserSerializer):
         profile_serializer = DeliveryWorkerProfileSerializer
 
 
+class LoginSerializer(BaseSerializer):
+    email = serializers.CharField()
+    password = serializers.CharField()
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+
+        email = attrs["email"]
+        password = attrs["password"]
+
+        if email and password:
+            # Check if the user is inactive
+            user = get_user_model().objects.filter(email=email)
+            if not user.exists():
+                raise exceptions.UserNotExists()
+
+            user = user.first()
+
+            if not user.is_active:
+                raise exceptions.UserNotActive()
+
+            # Authenticate the user
+            user = authenticate(
+                request=self.context["request"],
+                username=email,
+                password=password,
+            )
+
+            if not user:
+                raise exceptions.CredentialsNotValid()
+
+            if not user.is_password_changed:
+                raise exceptions.FirstTimePasswordError(user=user)
+
+            attrs["user"] = user
+        return attrs
+
+
 class AccountVerificationSerializer(BaseSerializer):
     token = serializers.CharField()
 
@@ -230,6 +273,7 @@ class ForgetPasswordRequestSerializer(BaseSerializer):
             defaults={
                 "number": validated_data.get("otp"),
                 "user": validated_data.get("user"),
+                "is_verified": False,
             }
         )
         return instance
@@ -242,13 +286,14 @@ class VerifyOTPNumberSerializer(BaseSerializer):
         otp = attrs.get("otp", "")
 
         user = self.context["request"].user
+        otp_instance = OTPNumber.objects.filter(user=user, number=otp)
 
         # Check if the OTP number does not exists
-        if not OTPNumber.objects.filter(user=user).exists():
-            raise exceptions.OTPNotExists()
+        if not otp_instance.exists():
+            raise exceptions.WrongOTP()
 
         # If the OTP number is expired
-        if not OTPNumber.objects.get(user=user).check_num(otp):
+        if not otp_instance.first().check_num(otp):
             raise exceptions.OTPExpired()
 
         return attrs
@@ -286,7 +331,7 @@ class ChangePasswordSerializer(BaseSerializer):
             raise exceptions.NotSimilarPasswords()
 
         # Validate the password if it meets all validator requirements
-        password_validation.validate_password(attrs["new_password"], self.context["request"].user)
+        user_validate_password(attrs["new_password"], self.context["request"].user)
 
         return attrs
 
@@ -320,12 +365,15 @@ class ForgetPasswordSerializer(BaseSerializer):
 
         otp = attrs.get("otp", "")
 
-        otp_instance = OTPNumber.objects.filter(user=self.context["request"].user, number=otp)
+        user = self.context["request"].user
+        otp_instance = OTPNumber.objects.filter(user=user, number=otp)
+
+        # Check if the OTP number does not exists
         if not otp_instance.exists():
-            raise exceptions.OTPNotExists()
+            raise exceptions.WrongOTP()
 
         # Check if the user OTP number is verified
-        if not otp_instance[0].is_verified:
+        if not otp_instance.first().is_verified:
             raise exceptions.OTPNotVerified()
 
         # Check if the two inserted password are similar
@@ -333,7 +381,7 @@ class ForgetPasswordSerializer(BaseSerializer):
             raise exceptions.NotSimilarPasswords()
 
         # Validate the password if it meets all validator requirements
-        password_validation.validate_password(attrs["new_password"], self.context["request"].user)
+        user_validate_password(attrs["new_password"], self.context["request"].user)
 
         return attrs
 
@@ -364,31 +412,18 @@ class FirstTimePasswordSerializer(BaseSerializer):
     def validate(self, attrs: dict):
         """Validate the inserted data, validate passwords and otp number"""
 
-        # Get the access token from request's header
-        request = self.context["request"]
-        if not request.headers.get("Authorization"):
-            raise exceptions.JWTAccessTokenNotExists()
-
-        access_token = request.headers.get("Authorization")
-        token_type, access_token = access_token.split(" ")
-
-        # Get the user from access token
-        user = get_user_from_access_token(attrs.get("token"))
-
         # Check if the two inserted password are similar
         if attrs["new_password"] != attrs["confirmed_password"]:
             raise exceptions.NotSimilarPasswords()
 
         # Validate the password if it meets all validator requirements
-        password_validation.validate_password(attrs["new_password"], self.context["request"].user)
+        user_validate_password(attrs["new_password"], self.context["request"].user)
 
-        # Add the user instance to validated data
-        attrs["user"] = user
         return attrs
 
     def create(self, validated_data):
         """Update the user's password"""
-        user = validated_data.get("user")
+        user = self.context["request"].user
         password = validated_data.get("new_password")
         user.set_password(password)
 
