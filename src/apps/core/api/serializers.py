@@ -1,3 +1,5 @@
+import datetime
+
 from rest_framework import serializers
 from rest_framework.validators import ValidationError
 
@@ -74,4 +76,4 @@ class HourTimeField(serializers.TimeField):
             raise serializers.ValidationError("Invalid hour value. Expected between 0 and 23.")
 
         # Convert the hour to a datetime.time object
-        return time(hour=hour)
+        return datetime.time(hour=hour)

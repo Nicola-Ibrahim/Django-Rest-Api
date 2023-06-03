@@ -46,8 +46,7 @@ class BaseExceptions(APIException):
 
 class NotAuthenticated(BaseExceptions):
     detail_ = {
-        "error": True,
-        "error_code": ErrorCode.Not_Authenticated.value,
+        "code": ErrorCode.Not_Authenticated.value,
         "detail": "Authentication credentials were not provided.",
     }
     status_code = status.HTTP_401_UNAUTHORIZED
@@ -55,8 +54,7 @@ class NotAuthenticated(BaseExceptions):
 
 class PermissionDenied(BaseExceptions):
     detail_ = {
-        "error": True,
-        "error_code": ErrorCode.Permission_Denied.value,
+        "code": ErrorCode.Permission_Denied.value,
         "detail": "You do not have permission to perform this action.",
     }
     status_code = status.HTTP_403_FORBIDDEN
@@ -64,8 +62,7 @@ class PermissionDenied(BaseExceptions):
 
 class SerializerFieldsError(BaseExceptions):
     detail_ = {
-        "error": True,
-        "error_code": ErrorCode.Field_Error.value,
+        "code": ErrorCode.Field_Error.value,
         "detail": "An error occurred in the fields",
         "data": {},
     }
@@ -76,8 +73,15 @@ class SerializerFieldsError(BaseExceptions):
         super().__init__(detail, code, status_code)
 
     def update_data(self, **kwargs):
-        errors = kwargs.get("errors")
+        field = list(kwargs.get("errors").keys())[0]
+        error_detail = list(kwargs.get("errors").values())[0][0]
 
-        if errors:
-            self.detail_["data"]["errors"] = errors
-        return super().update_data(**kwargs)
+        if hasattr(error_detail, "code"):
+            self.detail_["code"] = error_detail.code
+        else:
+            self.detail_["code"] = self.default_code
+
+        if isinstance(error_detail, (list, tuple)):
+            error_detail = error_detail[0]
+
+        self.detail_["detail"] = "Error in " + field + " : " + error_detail.replace('"', "")
