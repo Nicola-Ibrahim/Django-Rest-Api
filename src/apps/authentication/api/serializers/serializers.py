@@ -4,15 +4,11 @@ from rest_framework import serializers
 
 from apps.core.api.serializers import BaseModelSerializer, BaseSerializer
 
-from ...models.models import DeliveryWorker, Doctor, OTPNumber, Warehouse
+from ...models.models import OTPNumber, Student, Teacher
 from ...utils import get_user_from_access_token
 from ...validators import user_validate_password
 from .. import exceptions, tokens
-from .profile_serializers import (
-    DeliveryWorkerProfileSerializer,
-    DoctorProfileSerializer,
-    WarehouseProfileSerializer,
-)
+from .profile_serializers import StudentProfileSerializer, TeacherProfileSerializer
 
 
 class UserSerializer(BaseModelSerializer):
@@ -88,7 +84,7 @@ class UserSerializer(BaseModelSerializer):
             setattr(instance, attr, value)
 
         # Update profile data of the user
-        profile = instance.warehouse_profile
+        profile = instance.teacher_profile
         for attr, value in profile_data.items():
             setattr(profile, attr, value)
 
@@ -114,7 +110,7 @@ class UserSerializer(BaseModelSerializer):
         # Remove confirm_password field value from the inserted data
         validated_data.pop("confirm_password")
 
-        # Create a new warehouse user without saving
+        # Create a new teacher user without saving
         user = super().create(validated_data)
 
         # Create profile data for the user
@@ -131,41 +127,30 @@ class UserSerializer(BaseModelSerializer):
         return user
 
 
-class WarehouseUserSerializer(UserSerializer):
+class TeacherUserSerializer(UserSerializer):
     """
-    A subclass of UserSerializer for handling warehouse users
+    A subclass of UserSerializer for handling teacher users
     """
 
-    profile = WarehouseProfileSerializer(source="warehouse_profile")
+    profile = TeacherProfileSerializer(source="teacher_profile")
 
     class Meta(UserSerializer.Meta):
-        model = Warehouse
+        model = Teacher
         fields = UserSerializer.Meta.fields + ["profile"]
-        profile_related_name = "warehouse_profile"
-        profile_relation_field = "warehouse"
-        profile_serializer = WarehouseProfileSerializer
+        profile_related_name = "teacher_profile"
+        profile_relation_field = "teacher"
+        profile_serializer = TeacherProfileSerializer
 
 
-class DoctorUserSerializer(UserSerializer):
-    profile = DoctorProfileSerializer(source="doctor_profile")
+class StudentUserSerializer(UserSerializer):
+    profile = StudentProfileSerializer(source="student_profile")
 
     class Meta(UserSerializer.Meta):
-        model = Doctor
+        model = Student
         fields = UserSerializer.Meta.fields + ["profile"]
-        profile_related_name = "doctor_profile"
-        profile_relation_field = "doctor"
-        profile_serializer = DoctorProfileSerializer
-
-
-class DeliveryWorkerUserSerializer(UserSerializer):
-    profile = DeliveryWorkerProfileSerializer(source="delivery_worker_profile")
-
-    class Meta(UserSerializer.Meta):
-        model = DeliveryWorker
-        fields = UserSerializer.Meta.fields + ["profile"]
-        profile_related_name = "delivery_worker_profile"
-        profile_relation_field = "delivery_worker"
-        profile_serializer = DeliveryWorkerProfileSerializer
+        profile_related_name = "student_profile"
+        profile_relation_field = "student"
+        profile_serializer = StudentProfileSerializer
 
 
 class LoginSerializer(BaseSerializer):

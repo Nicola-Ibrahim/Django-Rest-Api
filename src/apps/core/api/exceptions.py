@@ -10,7 +10,7 @@ class ErrorCode(enum.Enum):
     Field_Error = "field_error"
 
 
-class BaseExceptions(APIException):
+class BaseException(APIException):
     """
     Base class for exceptions.
     Subclasses should provide `.detail_` and `.status_code` properties.
@@ -44,7 +44,7 @@ class BaseExceptions(APIException):
         pass
 
 
-class NotAuthenticated(BaseExceptions):
+class NotAuthenticated(BaseException):
     detail_ = {
         "code": ErrorCode.Not_Authenticated.value,
         "detail": "Authentication credentials were not provided.",
@@ -52,7 +52,7 @@ class NotAuthenticated(BaseExceptions):
     status_code = status.HTTP_401_UNAUTHORIZED
 
 
-class PermissionDenied(BaseExceptions):
+class PermissionDenied(BaseException):
     detail_ = {
         "code": ErrorCode.Permission_Denied.value,
         "detail": "You do not have permission to perform this action.",
@@ -60,7 +60,7 @@ class PermissionDenied(BaseExceptions):
     status_code = status.HTTP_403_FORBIDDEN
 
 
-class SerializerFieldsError(BaseExceptions):
+class SerializerFieldsError(BaseException):
     detail_ = {
         "code": ErrorCode.Field_Error.value,
         "detail": "An error occurred in the fields",

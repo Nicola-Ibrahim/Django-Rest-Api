@@ -1,6 +1,6 @@
 import django_filters.rest_framework as filters
 
-from ...models.models import DeliveryWorker, Doctor, User, Warehouse
+from ...models.models import Student, Teacher, User
 
 
 class UserFilter(filters.FilterSet):
@@ -21,60 +21,47 @@ class UserFilter(filters.FilterSet):
         }
 
 
-class WarehouseFilter(filters.FilterSet):
-    """A FilterSet subclass for filtering Warehouse model instances.
+class TeacherFilter(filters.FilterSet):
+    """A FilterSet subclass for filtering Teacher model instances.
 
     This class defines the fields and lookup expressions that can be used to filter
-    the Warehouse queryset by warehouse profile name and section name.
+    the Teacher queryset by warehouse profile name and section name.
 
     Attributes:
         Meta: A class that contains the model and fields information for the FilterSet.
     """
 
     class Meta:
-        model = Warehouse
+        model = Teacher
         fields = {
-            "warehouse_profile__name": ["icontains"],  # Case-insensitive containment match
-            "warehouse_profile__sections__name": [
-                "icontains",
-                "exact",
-            ],  # Case-insensitive containment match or exact match
+            # "teacher_profile__name": [
+            #     "icontains"
+            # ],  # Case-insensitive containment match
+            # "teacher_profile__sections__name": [
+            #     "icontains",
+            #     "exact",
+            # ],  # Case-insensitive containment match or exact match
         }
 
 
-class DoctorFilter(filters.FilterSet):
-    """A FilterSet subclass for filtering Doctor model instances.
+class StudentFilter(filters.FilterSet):
+    """A FilterSet subclass for filtering Student model instances.
 
     This class defines the fields and lookup expressions that can be used to filter
-    the Doctor queryset by doctor profile first name, last name and subscription name.
+    the Student queryset by doctor profile first name, last name and subscription name.
 
     Attributes:
         Meta: A class that contains the model and fields information for the FilterSet.
     """
 
     class Meta:
-        model = Doctor
+        model = Student
         fields = {
-            "doctor_profile__first_name": ["icontains"],  # Case-insensitive containment match
-            "doctor_profile__last_name": ["icontains"],  # Case-insensitive containment match
-            # "doctor_profile__subscription__name": ["icontains"],  # Case-insensitive containment match
-        }
-
-
-class DeliveryWorkerFilter(filters.FilterSet):
-    """A FilterSet subclass for filtering DeliveryWorker model instances.
-
-    This class defines the fields and lookup expressions that can be used to filter
-    the DeliveryWorker queryset by delivery worker profile first name, last name and idle status.
-
-    Attributes:
-        Meta: A class that contains the model and fields information for the FilterSet.
-    """
-
-    class Meta:
-        model = DeliveryWorker
-        fields = {
-            "delivery_worker_profile__first_name": ["icontains"],  # Case-insensitive containment match
-            "delivery_worker_profile__last_name": ["icontains"],  # Case-insensitive containment match
-            "delivery_worker_profile__is_idle": ["exact"],  # Exact match
+            # "student_profile__first_name": [
+            #     "icontains"
+            # ],  # Case-insensitive containment match
+            # "student_profile__last_name": [
+            #     "icontains"
+            # ],  # Case-insensitive containment match
+            # "student_profile__subscription__name": ["icontains"],  # Case-insensitive containment match
         }

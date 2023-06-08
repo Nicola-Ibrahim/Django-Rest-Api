@@ -1,7 +1,7 @@
 import django_filters.rest_framework as filters
 
 from .. import exceptions
-from .filters import DeliveryWorkerFilter, DoctorFilter, UserFilter, WarehouseFilter
+from .filters import StudentFilter, TeacherFilter, UserFilter
 
 
 class UserTypeFilterFactory(filters.DjangoFilterBackend):
@@ -16,9 +16,8 @@ class UserTypeFilterFactory(filters.DjangoFilterBackend):
 
     filters_classes = {
         "user": UserFilter,
-        "warehouse": WarehouseFilter,
-        "doctor": DoctorFilter,
-        "delivery_worker": DeliveryWorkerFilter,
+        "warehouse": TeacherFilter,
+        "doctor": StudentFilter,
     }
 
     def get_suitable_filter(self, type: str) -> filters.FilterSet:

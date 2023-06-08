@@ -1,5 +1,5 @@
 from ..api import exceptions
-from ..models.models import DeliveryWorker, Doctor, User, Warehouse
+from ..models.models import Student, Teacher, User
 
 
 class UserTypeModelFactory:
@@ -19,9 +19,8 @@ class UserTypeModelFactory:
         models_classes = {
             "user": User,
             "admin": User,
-            "warehouse": Warehouse,
-            "doctor": Doctor,
-            "delivery_worker": DeliveryWorker,
+            "warehouse": Teacher,
+            "doctor": Student,
         }
         model = models_classes.get(type, None)
 

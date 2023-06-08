@@ -1,5 +1,5 @@
 from ..exceptions import UserSerializerNotFound
-from .serializers import DeliveryWorkerUserSerializer, DoctorUserSerializer, UserSerializer, WarehouseUserSerializer
+from .serializers import StudentUserSerializer, TeacherUserSerializer, UserSerializer
 
 
 class UserTypeSerializerFactory:
@@ -32,9 +32,8 @@ class UserTypeSerializerFactory:
         serializers_classes = {
             "user": UserSerializer,
             "admin": UserSerializer,
-            "warehouse": WarehouseUserSerializer,
-            "doctor": DoctorUserSerializer,
-            "delivery_worker": DeliveryWorkerUserSerializer,
+            "warehouse": TeacherUserSerializer,
+            "doctor": StudentUserSerializer,
         }
 
         # Get the serializer from the dictionary

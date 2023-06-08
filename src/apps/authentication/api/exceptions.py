@@ -198,3 +198,11 @@ class FirstTimePasswordError(BaseException):
         # Add access token to the data
         if user:
             self.detail_["data"]["access_token"] = user.get_tokens()["access"]
+
+
+class UserSerializerNotFound(BaseException):
+    detail_ = {
+        "code": ErrorCode.Not_Exists.value,
+        "detail": _("The type of the user serializer is not found"),
+    }
+    status_code = status.HTTP_200_OK
