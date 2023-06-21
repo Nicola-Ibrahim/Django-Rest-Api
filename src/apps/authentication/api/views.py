@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.mixins import (
@@ -10,12 +10,10 @@ from rest_framework.mixins import (
 )
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
-from apps.core.api.views import CustomGenericAPIView
+from apps.core.api.views import BaseApiView, BaseGenericApiView
 
 from .. import mailers
-from ..models.models import OTPNumber
 from . import exceptions, responses
 from .filters.mixins import FilterMixin
 from .permissions.mixins import BasePermissionMixin
@@ -27,13 +25,14 @@ from .serializers.serializers import (
     FirstTimePasswordSerializer,
     ForgetPasswordRequestSerializer,
     ForgetPasswordSerializer,
+    LoginSerializer,
     LogoutSerializer,
     UserSerializer,
     VerifyOTPNumberSerializer,
 )
 
 
-class VerifyAccount(CustomGenericAPIView):
+class VerifyAccount(BaseGenericApiView):
     """Verify the user by the token send it to the email"""
 
     permission_classes = (AllowAny,)
@@ -46,7 +45,7 @@ class VerifyAccount(CustomGenericAPIView):
         return responses.ActivatedAccount()
 
 
-class UserSignView(KwargUserTypeSerializerMixin, CreateModelMixin, CustomGenericAPIView):
+class UserSignView(KwargUserTypeSerializerMixin, CreateModelMixin, BaseGenericApiView):
     """View for adding a new user"""
 
     permission_classes = (AllowAny,)
@@ -188,57 +187,7 @@ class UsersListView(
     pass
 
 
-class LoginView(APIView):
-    """View for user logging"""
-
-    def post(self, request, *args, **kwargs):
-        email = request.data.get("email", "")
-        password = request.data.get("password", "")
-
-        if email and password:
-            # Check if the user is inactive
-            user = get_user_model().objects.filter(email=email)
-            if not user.exists():
-                raise exceptions.UserNotExists()
-
-            user = user.first()
-            if not user.is_active:
-                raise exceptions.UserNotActive()
-
-            # Authenticate the user
-            user = authenticate(
-                request=request,
-                username=email,
-                password=password,
-            )
-
-            if not user:
-                raise exceptions.WrongCredentials()
-
-            if not user.is_password_changed:
-                otp_number = OTPNumber.get_number()
-                user.otp_number.update_or_create(defaults={"number": otp_number})
-                mailers.OTPMailer(otp_number=otp_number, to_emails=[user.email]).send_email()
-
-                return responses.FirstTimePasswordError(user=user)
-
-            return responses.LoginResponse(user=user)
-
-
-class LogoutView(BasePermissionMixin, CustomGenericAPIView):
-    """View for user logout"""
-
-    serializer_class = LogoutSerializer
-
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return responses.LogoutResponse()
-
-
-class UserListCreateView(BasePermissionMixin, ListModelMixin, CreateModelMixin, CustomGenericAPIView):
+class UserListCreateView(BasePermissionMixin, ListModelMixin, CreateModelMixin, BaseGenericApiView):
     """View for adding a new user"""
 
     queryset = get_user_model().objects.all()
@@ -277,7 +226,7 @@ class UserDetailsUpdateDestroyView(
     RetrieveModelMixin,
     UpdateModelMixin,
     DestroyModelMixin,
-    CustomGenericAPIView,
+    BaseGenericApiView,
 ):
     queryset = get_user_model().objects.all()
     lookup_field = "slug"
@@ -331,7 +280,35 @@ class UserDetailsUpdateDestroyView(
         return responses.UserDestroyResponse()
 
 
-class ForgetPasswordRequestView(CustomGenericAPIView):
+class LoginView(BaseGenericApiView):
+    """View for user logging"""
+
+    serializer_class = LoginSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={"request": request})
+
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.validated_data.get("user")
+
+        return responses.LoginResponse(user=user)
+
+
+class LogoutView(BasePermissionMixin, BaseGenericApiView):
+    """View for user logout"""
+
+    serializer_class = LogoutSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return responses.LogoutResponse()
+
+
+class ForgetPasswordRequestView(BaseGenericApiView):
     """View for sending an OTP number to the user's email for changing the password"""
 
     serializer_class = ForgetPasswordRequestSerializer
@@ -346,7 +323,7 @@ class ForgetPasswordRequestView(CustomGenericAPIView):
         serializer.save()
 
         # Send reset password message with OTP to user's email
-        services.OTPMailer(
+        mailers.OTPMailer(
             to_email=serializer.validated_data.get("email"),
             otp_number=serializer.validated_data.get("otp"),
         ).send_email()
@@ -355,7 +332,7 @@ class ForgetPasswordRequestView(CustomGenericAPIView):
         return responses.ForgetPasswordRequestResponse(user=user)
 
 
-class VerifyOTPNumberView(BasePermissionMixin, CustomGenericAPIView):
+class VerifyOTPNumberView(BasePermissionMixin, BaseGenericApiView):
     """View for verifying the generated OTP number for the user who wants to change password."""
 
     serializer_class = VerifyOTPNumberSerializer
@@ -368,7 +345,7 @@ class VerifyOTPNumberView(BasePermissionMixin, CustomGenericAPIView):
         return responses.VerifyOTPResponse()
 
 
-class BaseResetPasswordView(BasePermissionMixin, CustomGenericAPIView):
+class BaseResetPasswordView(BasePermissionMixin, BaseGenericApiView):
     """
     Abstract base view for setting new password
     This model implements patch method, so the
@@ -402,3 +379,11 @@ class FirstTimePasswordView(BaseResetPasswordView):
     """View for setting the first time password"""
 
     serializer_class = FirstTimePasswordSerializer
+
+
+class CheckJWTTokenView(BasePermissionMixin, BaseApiView):
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_password_changed:
+            raise exceptions.FirstTimePasswordError(user=request.user)
+
+        return responses.CheckJWTTokenResponse(user=request.user)

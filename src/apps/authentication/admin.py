@@ -1,39 +1,14 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
-from .models.models import (
-    Admin,
-    BaseAccountant,
-    DeliveryWorker,
-    DeliveryWorkerAccountant,
-    Doctor,
-    Subscription,
-    User,
-    Warehouse,
-    WarehouseAccountant,
-)
-from .models.profiles import (
-    AdminProfile,
-    BaseAccountantProfile,
-    DeliveryWorkerAccountantProfile,
-    DeliveryWorkerProfile,
-    DoctorProfile,
-    StatisticianProfile,
-    WarehouseAccountantProfile,
-    WarehouseProfile,
-)
+
+from .models.models import Admin, User
 
 # from django.utils.translation import ugettext_lazy as _
 
 
 @admin.register(
     User,
-    Warehouse,
-    DeliveryWorker,
-    Doctor,
     Admin,
-    BaseAccountant,
-    WarehouseAccountant,
-    DeliveryWorkerAccountant,
 )
 class UserAdmin(DjangoUserAdmin):
     """Define admin model for custom User model."""
@@ -112,42 +87,3 @@ class UserAdmin(DjangoUserAdmin):
             return False
 
         return super().has_delete_permission(request, obj)
-
-
-# class SectionsInlineAdmin(admin.TabularInline):
-#     model = Section
-#     # fields = ['name', 'warehouse']
-
-# class ServicesInLineAdmin(admin.TabularInline):
-#     model = Service
-
-
-@admin.register(WarehouseProfile)
-class WarehouseProfileAdmin(admin.ModelAdmin):
-    """Define admin model for Warehouse User model."""
-
-    list_display = [
-        "name",
-    ]
-    readonly_fields = [
-        "name",
-    ]
-    raw_id_fields = [
-        "warehouse",
-    ]
-
-    # inlines = [SectionsInlineAdmin, ServicesInLineAdmin]
-
-
-admin.site.register(
-    [
-        DoctorProfile,
-        DeliveryWorkerProfile,
-        BaseAccountantProfile,
-        DeliveryWorkerAccountantProfile,
-        WarehouseAccountantProfile,
-        AdminProfile,
-        StatisticianProfile,
-        Subscription,
-    ]
-)

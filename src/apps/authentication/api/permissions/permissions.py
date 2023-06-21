@@ -5,14 +5,13 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_403_FORBIDDEN
 
 from ...models.models import User
-from ..exceptions import DeleteMultipleUsers, UpdateMultipleUsers
 
 SAFE_METHODS = ("GET", "HEAD", "OPTIONS")
 
 
 class PermissionGroupsName(enum.Enum):
-    WAREHOUSE_GROUP = "warehouses_group"
-    DOCTOR_GROUP = "doctors_group"
+    TEACHER_GROUP = "warehouses_group"
+    STUDENT_GROUP = "doctors_group"
 
 
 class BasePermission(permissions.DjangoModelPermissions):

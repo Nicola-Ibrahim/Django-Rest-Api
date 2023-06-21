@@ -1,42 +1,28 @@
-from rest_framework import serializers
+from apps.core.api.serializers import BaseModelSerializer
 
-from ...models.profiles import (
-    DeliveryWorkerProfile,
-    DoctorProfile,
-    WarehouseProfile,
-)
+from ...models.profiles import StudentProfile, TeacherProfile
 
 
-class WarehouseProfileSerializer(serializers.ModelSerializer):
+class TeacherProfileSerializer(BaseModelSerializer):
     class Meta:
-        model = WarehouseProfile
+        model = TeacherProfile
         fields = [
             "name",
             "working_hours",
             "profit_percentage",
-            "warehouse",
+            "teacher",
         ]
 
         extra_kwargs = {
-            "warehouse": {"write_only": True},
+            "teacher": {"write_only": True},
         }
 
 
-class DoctorProfileSerializer(serializers.ModelSerializer):
+class StudentProfileSerializer(BaseModelSerializer):
     class Meta:
-        model = DoctorProfile
-        fields = ["first_name", "last_name", "doctor"]
+        model = StudentProfile
+        fields = ["first_name", "last_name", "student"]
 
         extra_kwargs = {
-            "doctor": {"write_only": True},
-        }
-
-
-class DeliveryWorkerProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DeliveryWorkerProfile
-        fields = "__all__"
-
-        extra_kwargs = {
-            "delivery_worker": {"write_only": True},
+            "student": {"write_only": True},
         }

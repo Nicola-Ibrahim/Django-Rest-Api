@@ -1,7 +1,10 @@
 import random
 import string
 
+from django.contrib.auth import get_user_model
 from django.utils.text import slugify
+
+from .api.tokens import JWTAccessToken
 
 
 def slugify_instance_name(instance, new_slug=None):
@@ -45,3 +48,10 @@ def generate_random_number(length=6) -> str:
         digits = (rand.choice(string.digits) for i in range(length))
 
     return "".join(digits)
+
+
+def get_user_from_access_token(access_token_str):
+    access_token_obj = JWTAccessToken(access_token_str, verify=True)
+    user_id = access_token_obj["user_id"]
+    user = get_user_model().objects.get(id=user_id)
+    return user

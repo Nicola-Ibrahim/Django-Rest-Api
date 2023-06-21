@@ -1,10 +1,10 @@
 from rest_framework_simplejwt.settings import api_settings
-from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken, BlacklistMixin, RefreshToken
 
 from . import exceptions
 
 
-class CustomAccessToken(AccessToken):
+class JWTAccessToken(AccessToken):
     """Extended AccessToken class for overriding token validation errors"""
 
     def verify(self):
