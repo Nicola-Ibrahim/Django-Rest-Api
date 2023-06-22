@@ -8,7 +8,7 @@ from django.template.loader import render_to_string
 from rest_framework.reverse import reverse
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from apps.core.services import BaseEmailService, EmailServiceFactory
+from src.apps.core.services import BaseEmailService, EmailServiceFactory
 
 
 class BaseMailer(ABC):

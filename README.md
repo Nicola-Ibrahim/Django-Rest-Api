@@ -61,7 +61,7 @@ Project setup instruction here.
   Copy settings.dev.py to local directory for further modification
 
   ```bash
-    copy core\home\settings\templates\settings.dev.py .\local\settings.dev.py
+    copy src\config\settings\environments\settings.dev.py.template .\local\settings.dev.py
   ```
 
 ## Start the server

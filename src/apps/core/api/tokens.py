@@ -1,7 +1,7 @@
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import AccessToken, BlacklistMixin, RefreshToken
 
-from . import exceptions
+from ...authentication.api import exceptions
 
 
 class JWTAccessToken(AccessToken):

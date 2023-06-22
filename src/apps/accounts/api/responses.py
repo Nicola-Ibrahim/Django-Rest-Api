@@ -20,7 +20,6 @@ class OperationCode(enum.Enum):
     Verified_OTP = _("verified_OTP")
     JWT_Checked = _("JWT_checked")
     Activated_Account = _("activated_account")
-    First_Time_Password = _("first_time_password")
 
 
 class LoginResponse(BaseResponse):

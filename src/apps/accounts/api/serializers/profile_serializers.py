@@ -1,4 +1,4 @@
-from apps.core.api.serializers import BaseModelSerializer
+from src.apps.core.api.serializers import BaseModelSerializer
 
 from ...models.profiles import StudentProfile, TeacherProfile
 

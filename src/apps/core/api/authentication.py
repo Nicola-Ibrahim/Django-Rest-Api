@@ -1,10 +1,12 @@
 from django.contrib.auth import get_user_model
 from rest_framework import HTTP_HEADER_ENCODING
-from rest_framework_simplejwt.authentication import JWTAuthentication as SimpleJWTAuthentication
+from rest_framework_simplejwt.authentication import (
+    JWTAuthentication as SimpleJWTAuthentication,
+)
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.settings import api_settings
 
-from . import exceptions
+from ...authentication.api import exceptions
 
 AUTH_HEADER_TYPES = api_settings.AUTH_HEADER_TYPES
 AUTH_HEADER_TYPE_BYTES = {h.encode(HTTP_HEADER_ENCODING) for h in AUTH_HEADER_TYPES}

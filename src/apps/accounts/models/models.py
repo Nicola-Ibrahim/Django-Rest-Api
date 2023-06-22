@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .. import utils
+from . import utils
 from .managers import CustomUserManager, ProxyUserManger
 
 

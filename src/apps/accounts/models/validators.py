@@ -1,6 +1,18 @@
 from django.contrib.auth.password_validation import get_default_password_validators
 from django.core.exceptions import ValidationError
-from apps.core.api import exceptions
+from django.core.validators import RegexValidator
+
+from ..api import exceptions
+
+
+class NameRegexValidator(RegexValidator):
+    """Custom name regex validator that validates if the name value starts by a character"""
+
+    regex = "^[a-zA-Z]{1,}[a-zA-Z0-9]*$"
+    message = "name must start by Alphabets"
+
+
+validate_name = NameRegexValidator()
 
 
 def user_validate_password(password, user=None, password_validators=None):
