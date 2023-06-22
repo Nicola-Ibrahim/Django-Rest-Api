@@ -8,7 +8,6 @@ from src.apps.core.api import tokens
 from src.apps.core.api.serializers import BaseSerializer
 
 from .. import exceptions as authentication_exceptions
-from ..utils import get_user_from_access_token
 
 
 class LoginSerializer(BaseSerializer):
@@ -47,29 +46,6 @@ class LoginSerializer(BaseSerializer):
 
             attrs["user"] = user
         return attrs
-
-
-class AccountVerificationSerializer(BaseSerializer):
-    token = serializers.CharField()
-
-    def validate(self, attrs):
-        # Get the use id from the payload
-        user = get_user_from_access_token(attrs.get("token"))
-
-        # Add the user instance to validated data
-        attrs["user"] = user
-        return attrs
-
-    def create(self, validated_data):
-        """Update the user's password"""
-        user = validated_data.get("user")
-
-        # Check if the user is not verified
-        if not user.is_verified:
-            user.is_verified = True
-            user.save()
-
-        return user
 
 
 class LogoutSerializer(BaseSerializer):

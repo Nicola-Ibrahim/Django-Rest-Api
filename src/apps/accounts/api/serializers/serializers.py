@@ -2,9 +2,10 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from src.apps.core.api.serializers import BaseModelSerializer
+from src.apps.core.api.serializers import BaseModelSerializer, BaseSerializer
 
 from ...models.models import Student, Teacher
+from ..utils import get_user_from_access_token
 from .profile_serializers import StudentProfileSerializer, TeacherProfileSerializer
 
 
@@ -148,3 +149,26 @@ class StudentUserSerializer(UserSerializer):
         profile_related_name = "student_profile"
         profile_relation_field = "student"
         profile_serializer = StudentProfileSerializer
+
+
+class AccountVerificationSerializer(BaseSerializer):
+    token = serializers.CharField()
+
+    def validate(self, attrs):
+        # Get the use id from the payload
+        user = get_user_from_access_token(attrs.get("token"))
+
+        # Add the user instance to validated data
+        attrs["user"] = user
+        return attrs
+
+    def create(self, validated_data):
+        """Update the user's password"""
+        user = validated_data.get("user")
+
+        # Check if the user is not verified
+        if not user.is_verified:
+            user.is_verified = True
+            user.save()
+
+        return user

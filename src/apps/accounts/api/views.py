@@ -11,25 +11,16 @@ from rest_framework.mixins import (
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from src.apps.core.api.views import BaseApiView, BaseGenericApiView
+from src.apps.core import mailers
+from src.apps.core.api.views import BaseGenericApiView
 
-from .. import mailers
-from . import exceptions, responses
+from . import exceptions as accounts_exceptions
+from . import responses as accounts_responses
 from .filters.mixins import FilterMixin
 from .permissions.mixins import BasePermissionMixin
 from .queryset.mixins import InUserTypeQuerySetMixin, KwargUserTypeQuerySetMixin
 from .serializers.mixins import InUserTypeSerializerMixin, KwargUserTypeSerializerMixin
-from .serializers.serializers import (
-    AccountVerificationSerializer,
-    ChangePasswordSerializer,
-    FirstTimePasswordSerializer,
-    ForgetPasswordRequestSerializer,
-    ForgetPasswordSerializer,
-    LoginSerializer,
-    LogoutSerializer,
-    UserSerializer,
-    VerifyOTPNumberSerializer,
-)
+from .serializers.serializers import AccountVerificationSerializer, UserSerializer
 
 
 class VerifyAccount(BaseGenericApiView):
@@ -42,7 +33,7 @@ class VerifyAccount(BaseGenericApiView):
         serializer = self.get_serializer(request.GET.get("token"), context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return responses.ActivatedAccount()
+        return accounts_responses.ActivatedAccount()
 
 
 class UserSignView(KwargUserTypeSerializerMixin, CreateModelMixin, BaseGenericApiView):
@@ -218,7 +209,7 @@ class UserListCreateView(BasePermissionMixin, ListModelMixin, CreateModelMixin, 
         #     to_email=user.email, password=password
         # ).send_email()
         mailers.VerificationMailer(token=user.tokens()["access"], to_emails=[user.email], request=request)
-        return responses.UserCreateResponse()
+        return accounts_responses.UserCreateResponse()
 
 
 class UserDetailsUpdateDestroyView(
@@ -262,7 +253,7 @@ class UserDetailsUpdateDestroyView(
         filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
         obj = queryset.filter(**filter_kwargs)
         if not obj.exists():
-            raise exceptions.UserNotExistsException()
+            raise accounts_exceptions.UserNotExists()
 
         obj = obj.first()
 
@@ -273,8 +264,8 @@ class UserDetailsUpdateDestroyView(
 
     def update(self, request, *args, **kwargs):
         super().update(request, *args, **kwargs)
-        return responses.UserUpdateResponse()
+        return accounts_responses.UserUpdateResponse()
 
     def destroy(self, request, *args, **kwargs):
         super().destroy(request, *args, **kwargs)
-        return responses.UserDestroyResponse()
+        return accounts_responses.UserDestroyResponse()

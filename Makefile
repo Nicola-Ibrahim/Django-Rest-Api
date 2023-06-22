@@ -50,3 +50,8 @@ check-deploy:
 .PHONY: db-graph
 db-graph:
 	poetry run python -m src.manage graph_models.py -a -g -o lineup_models_visualized.png
+
+
+.PHONY: test
+test:
+	poetry run pytest -v -rs -n auto --show-capture=no

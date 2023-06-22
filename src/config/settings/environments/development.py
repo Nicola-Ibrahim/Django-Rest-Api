@@ -7,17 +7,28 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "standard": {"format": "%(asctime)s %(levelname)s %(name)s %(message)s"},
+        "colored": {
+            "()": "colorlog.ColoredFormatter",
+            "format": "%(log_color)s%(asctime)s %(levelname)s %(name)s %(bold_white)s%(message)s",
+        },
     },
     "handlers": {
         "console": {
             "level": "INFO",
-            "class": "logging.StreamHandler",
-            "formatter": "standard",
+            "class": "colorlog.StreamHandler",
+            "formatter": "colored",
             "filters": [],
+        },
+        "file": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler",
+            "filename": "/logging/django.log",
+            "formatter": "colored",
         },
     },
     "loggers": {
         logger_name: {
+            "handlers": ["console", "file"],
             "level": "WARNING",
             "propagate": True,
         }
@@ -33,9 +44,10 @@ LOGGING = {
     },
     "root": {
         "level": "DEBUG",
-        "handlers": ["console"],
+        "handlers": ["console", "file"],
     },
 }
+
 
 # Model graph configurations
 GRAPH_MODELS = {
@@ -82,4 +94,12 @@ SWAGGER_SETTINGS = {
 
 REDOC_SETTINGS = {
     "LAZY_RENDERING": False,
+}
+
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "dauth.sqlite3",
+    }
 }

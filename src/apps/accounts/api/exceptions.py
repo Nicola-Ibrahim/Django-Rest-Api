@@ -26,7 +26,6 @@ class ErrorCode(enum.Enum):
     JWT_Wrong_Type = _("JWT_wrong_type")
     JWT_token_not_valid = _("token_not_valid")
     Bad_Authorization_Header = _("bad_authorization_header")
-    First_Time_Password = _("first_time_password")
 
 
 class UserNotExists(BaseException):
@@ -125,30 +124,6 @@ class JWTAuthenticationFailed(BaseException):
     status_code = status.HTTP_401_UNAUTHORIZED
 
 
-class WrongOTP(BaseException):
-    detail_ = {
-        "code": ErrorCode.OTP_Wrong.value,
-        "detail": _("The OTP number is wrong"),
-    }
-    status_code = status.HTTP_404_NOT_FOUND
-
-
-class OTPExpired(BaseException):
-    detail_ = {
-        "code": ErrorCode.OTP_Expired.value,
-        "detail": _("The OTP number has been expired, please resubmit your credential again."),
-    }
-    status_code = status.HTTP_406_NOT_ACCEPTABLE
-
-
-class OTPNotVerified(BaseException):
-    detail_ = {
-        "code": ErrorCode.OTP_Not_Verified.value,
-        "detail": _("The OTP number must be verified, please verify it first."),
-    }
-    status_code = status.HTTP_406_NOT_ACCEPTABLE
-
-
 class NotAuthenticated(BaseException):
     detail_ = {
         "code": ErrorCode.Not_Authenticated.value,
@@ -179,25 +154,6 @@ class WrongPassword(BaseException):
         "detail": _("The old password is wrong."),
     }
     status_code = status.HTTP_400_BAD_REQUEST
-
-
-class FirstTimePasswordError(BaseException):
-    detail_ = {
-        "code": ErrorCode.First_Time_Password.value,
-        "detail": _("Please change your default generated password"),
-        "data": [],
-    }
-    status_code = status.HTTP_200_OK
-
-    def __init__(self, user, detail=None, code=None, status_code=None):
-        self.update_data(user=user)
-        super().__init__(detail=detail, code=code, status_code=status_code)
-
-    def update_data(self, **kwargs):
-        user = kwargs.get("user")
-        # Add access token to the data
-        if user:
-            self.detail_["data"]["access_token"] = user.get_tokens()["access"]
 
 
 class UserSerializerNotFound(BaseException):
