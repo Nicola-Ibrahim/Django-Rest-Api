@@ -54,4 +54,4 @@ db-graph:
 
 .PHONY: test
 test:
-	poetry run pytest -v -rs -n auto --show-capture=no
+	poetry run python -m pytest -v -rs -n auto --show-capture=no
