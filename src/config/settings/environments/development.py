@@ -19,16 +19,16 @@ LOGGING = {
             "formatter": "colored",
             "filters": [],
         },
-        "file": {
-            "level": "DEBUG",
-            "class": "logging.FileHandler",
-            "filename": "/logging/django.log",
-            "formatter": "colored",
-        },
+        # "file": {
+        #     "level": "DEBUG",
+        #     "class": "logging.FileHandler",
+        #     "filename": "/logging/django.log",
+        #     "formatter": "colored",
+        # },
     },
     "loggers": {
         logger_name: {
-            "handlers": ["console", "file"],
+            "handlers": ["console"],
             "level": "WARNING",
             "propagate": True,
         }
@@ -44,7 +44,7 @@ LOGGING = {
     },
     "root": {
         "level": "DEBUG",
-        "handlers": ["console", "file"],
+        "handlers": ["console"],
     },
 }
 
