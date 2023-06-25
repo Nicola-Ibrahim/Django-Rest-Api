@@ -1,7 +1,7 @@
 from ...models.factories import UserTypeModelFactory
 
 
-class KwargUserTypeQuerySetMixin:
+class QueryParamUserTypeQuerySetMixin:
     """A mixin class that provides a get_queryset method based on the user type in the view kwargs.
 
     This class assumes that the view has a user_type attribute in its kwargs dictionary,

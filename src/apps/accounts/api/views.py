@@ -17,9 +17,12 @@ from src.apps.core.api.views import BaseGenericApiView
 from . import exceptions as accounts_exceptions
 from . import responses as accounts_responses
 from .filters.mixins import FilterMixin
-from .permissions.mixins import BasePermissionMixin
-from .queryset.mixins import InUserTypeQuerySetMixin, KwargUserTypeQuerySetMixin
-from .serializers.mixins import InUserTypeSerializerMixin, KwargUserTypeSerializerMixin
+from .permissions import mixins as permissions_mixin
+from .queryset.mixins import InUserTypeQuerySetMixin, QueryParamUserTypeSerializerMixin
+from .serializers.mixins import (
+    InUserTypeSerializerMixin,
+    QueryParamUserTypeQuerySetMixin,
+)
 from .serializers.serializers import AccountVerificationSerializer, UserSerializer
 
 
@@ -36,36 +39,10 @@ class VerifyAccount(BaseGenericApiView):
         return accounts_responses.ActivatedAccount()
 
 
-class UserSignView(KwargUserTypeSerializerMixin, CreateModelMixin, BaseGenericApiView):
-    """View for adding a new user"""
-
-    permission_classes = (AllowAny,)
-
-    def post(self, request, *args, **kwargs) -> Response:
-        """Override post method to control the behavior of inserting a new user
-
-        Returns:
-            Response: rest framework response with user data
-        """
-        user_data = request.data
-        serializer = self.get_serializer(data=user_data, context={"request": request})
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        user_data = serializer.data
-
-        user = user_data.get("user")
-
-        # Send verification message to user's email
-        mailers.VerificationMailer(token=user.tokens()["access"], to_emails=[user.email], request=request)
-
-        return Response(user_data, status=status.HTTP_201_CREATED)
-
-
 class UserDetailsView(
     InUserTypeQuerySetMixin,
     InUserTypeSerializerMixin,
-    BasePermissionMixin,
+    permissions_mixin.BasePermissionMixin,
     generics.RetrieveAPIView,
 ):
     """
@@ -89,7 +66,7 @@ class UserDetailsView(
 class UserUpdateView(
     InUserTypeQuerySetMixin,
     InUserTypeSerializerMixin,
-    BasePermissionMixin,
+    permissions_mixin.BasePermissionMixin,
     generics.UpdateAPIView,
 ):
     serializer_class = UserSerializer
@@ -168,26 +145,19 @@ class UserDeleteView(
         return users_deleted
 
 
-class UsersListView(
-    KwargUserTypeQuerySetMixin,
-    KwargUserTypeSerializerMixin,
+class UsersListCreateView(
+    QueryParamUserTypeQuerySetMixin,
+    QueryParamUserTypeSerializerMixin,
     # FilterMixin,
-    BasePermissionMixin,
-    generics.ListAPIView,
+    permissions_mixin.ListCreateUserPermissionMixin,
+    ListModelMixin,
+    CreateModelMixin,
+    BaseGenericApiView,
 ):
-    pass
 
-
-class UserListCreateView(BasePermissionMixin, ListModelMixin, CreateModelMixin, BaseGenericApiView):
-    """View for adding a new user"""
+    """View for listing and adding a new user"""
 
     queryset = get_user_model().objects.all()
-
-    def get_serializer_class(self):
-        if self.request.method == "POST":
-            return UserCreateSerializer
-
-        return UserListSerializer
 
     def post(self, request, *args, **kwargs) -> Response:
         """Override post method to control the behavior of inserting a new user
@@ -213,7 +183,7 @@ class UserListCreateView(BasePermissionMixin, ListModelMixin, CreateModelMixin, 
 
 
 class UserDetailsUpdateDestroyView(
-    BasePermissionMixin,
+    permissions_mixin.BasePermissionMixin,
     RetrieveModelMixin,
     UpdateModelMixin,
     DestroyModelMixin,

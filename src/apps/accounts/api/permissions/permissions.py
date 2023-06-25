@@ -14,7 +14,7 @@ class PermissionGroupsName(enum.Enum):
     STUDENT_GROUP = "doctors_group"
 
 
-class BasePermission(permissions.DjangoModelPermissions):
+class BasePermission(permissions.DjangoObjectPermissions):
     perms_map = {
         "GET": ["%(app_label)s.view_%(model_name)s"],
         "OPTIONS": [],
@@ -26,19 +26,18 @@ class BasePermission(permissions.DjangoModelPermissions):
     }
 
 
-class UserPermission(permissions.DjangoObjectPermissions):
-    perms_map = {
-        "GET": ["%(app_label)s.view_%(model_name)s"],
-        "OPTIONS": [],
-        "HEAD": [],
-        "POST": ["%(app_label)s.add_%(model_name)s"],
-        "PUT": ["%(app_label)s.change_%(model_name)s"],
-        "PATCH": ["%(app_label)s.change_%(model_name)s"],
-        "DELETE": ["%(app_label)s.delete_%(model_name)s"],
-    }
+class ListCreateUserPermission(BasePermission):
+    def has_permission(self, request, view):
+        if request.method == "GET" and request.user and request.user.is_authenticated:
+            return True
+
+        if request.method == "POST":
+            return True
+
+        return False
 
 
-class DeleteUserPermission(UserPermission):
+class DeleteUserPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         """Override the has_object_permission for adding more constraints on users
 
@@ -94,7 +93,7 @@ class DeleteUserPermission(UserPermission):
         return True
 
 
-class UpdateUserPermission(UserPermission):
+class UpdateUserPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         """Override the has_object_permission for adding more constraints on users
 

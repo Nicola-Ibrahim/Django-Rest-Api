@@ -2,46 +2,35 @@ from ..exceptions import UserSerializerNotFound
 from .serializers import StudentUserSerializer, TeacherUserSerializer, UserSerializer
 
 
-class UserTypeSerializerFactory:
-    """A factory class that returns the suitable serializer class based on the user type.
+def get_suitable_serializer(user_type: str) -> UserSerializer:
+    """Get the suitable serializer for user relying on its type
 
-    This class defines a method that takes a user type as an argument and returns the corresponding
-    UserSerializer subclass for registering a user of that type.
+    This method uses a dictionary of serializers_classes to get the UserSerializer subclass
+    that matches the given user type. If no serializer is found, it raises a UserSerializerNotFound exception.
 
-    Attributes:
-        serializers_classes (dict): A mapping of user types to their corresponding UserSerializer subclasses.
+    Args:
+        user_type (str): the type of serializer
+
+    Raises:
+        UserSerializerNotFound: serializer not found error
+
+    Returns:
+        UserSerializer: serializer for register a user
     """
 
-    def get_suitable_serializer(self, type: str) -> UserSerializer:
-        """Get the suitable serializer for user relying on its type
+    # Define the serializers_classes dictionary
+    serializers_classes = {
+        "user": UserSerializer,
+        "admin": UserSerializer,
+        "teacher": TeacherUserSerializer,
+        "student": StudentUserSerializer,
+    }
 
-        This method uses a dictionary of serializers_classes to get the UserSerializer subclass
-        that matches the given user type. If no serializer is found, it raises a UserSerializerNotFound exception.
+    # Get the serializer from the dictionary
+    serializer = serializers_classes.get(user_type, None)
 
-        Args:
-            type (str): the type of serializer
+    if not serializer:
+        return UserSerializer
 
-        Raises:
-            UserSerializerNotFound: serializer not found error
-
-        Returns:
-            UserSerializer: serializer for register a user
-        """
-
-        # Define the serializers_classes dictionary
-        serializers_classes = {
-            "user": UserSerializer,
-            "admin": UserSerializer,
-            "warehouse": TeacherUserSerializer,
-            "doctor": StudentUserSerializer,
-        }
-
-        # Get the serializer from the dictionary
-        serializer = serializers_classes.get(type, None)
-
-        # Raise an exception if no serializer is found
-        if not serializer:
-            raise UserSerializerNotFound()
-
-        # Return the serializer
-        return serializer
+    # Return the serializer
+    return serializer

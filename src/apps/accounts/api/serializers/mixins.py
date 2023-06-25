@@ -1,16 +1,20 @@
-from .factories import UserTypeSerializerFactory
+from ..serializers.serializers import UserSerializer
+from .factories import get_suitable_serializer
 
 
-class KwargUserTypeSerializerMixin:
+class QueryParamUserTypeSerializerMixin:
     def get_serializer_class(self):
         """
         Override method to get serializer_class depending on the url kwargs
         """
 
-        # Get the serializer
-        serializer_class = UserTypeSerializerFactory().get_suitable_serializer(self.request.GET.get["user_type"])
+        print(self.request.method)
+        if self.request.method == "GET":
+            return UserSerializer
 
-        return serializer_class
+        if self.request.method == "POST":
+            serializer_class = get_suitable_serializer(self.request.query_params.get("user_type"))
+            return serializer_class
 
 
 class InUserTypeSerializerMixin:
@@ -20,6 +24,6 @@ class InUserTypeSerializerMixin:
         """
 
         # Get the serializer
-        serializer_class = UserTypeSerializerFactory().get_suitable_serializer(self.request.user.type.lower())
+        serializer_class = get_suitable_serializer(self.request.user.type.lower())
 
         return serializer_class

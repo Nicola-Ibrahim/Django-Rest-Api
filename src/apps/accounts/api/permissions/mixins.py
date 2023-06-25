@@ -1,6 +1,11 @@
 from rest_framework.permissions import IsAuthenticated
 
-from .permissions import BasePermission, DeleteUserPermission, UpdateUserPermission
+from .permissions import (
+    BasePermission,
+    DeleteUserPermission,
+    ListCreateUserPermission,
+    UpdateUserPermission,
+)
 
 
 class IsAuthenticatedMixin:
@@ -9,6 +14,10 @@ class IsAuthenticatedMixin:
 
 class BasePermissionMixin:
     permission_classes = [BasePermission, IsAuthenticated]
+
+
+class ListCreateUserPermissionMixin:
+    permission_classes = [ListCreateUserPermission]
 
 
 class DeleteUserPermissionMixin:

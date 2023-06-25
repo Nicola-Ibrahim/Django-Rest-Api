@@ -161,4 +161,4 @@ class UserSerializerNotFound(BaseException):
         "code": ErrorCode.Not_Exists.value,
         "detail": _("The type of the user serializer is not found"),
     }
-    status_code = status.HTTP_200_OK
+    status_code = status.HTTP_400_BAD_REQUEST
