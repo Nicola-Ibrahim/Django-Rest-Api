@@ -100,6 +100,11 @@ REDOC_SETTINGS = {
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "dauth.sqlite3",
+        "NAME": "db.sqlite3",
     }
 }
+
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://nicola-ibrahim-upgraded-garbanzo-75gq9g4r9p9fp45r-8000.preview.app.github.dev",
+]
