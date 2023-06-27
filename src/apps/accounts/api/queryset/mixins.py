@@ -1,4 +1,4 @@
-from ...models.factories import UserTypeModelFactory
+from ...models import factories as model_factories
 
 
 class QueryParamUserTypeQuerySetMixin:
@@ -20,7 +20,7 @@ class QueryParamUserTypeQuerySetMixin:
         """
 
         # Get the model
-        model = UserTypeModelFactory().get_suitable_model(self.request.GET.get("user_type"))
+        model = model_factories.get_model(self.request.GET.get("user_type"))
         queryset = model.objects.all()
         return queryset
 
@@ -44,6 +44,6 @@ class InUserTypeQuerySetMixin:
         """
 
         # Get the model
-        model = UserTypeModelFactory().get_suitable_model(self.request.user.type.lower())
+        model = model_factories.get_model(self.request.user.type.lower())
         queryset = model.objects.all()
         return queryset

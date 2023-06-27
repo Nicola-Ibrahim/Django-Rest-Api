@@ -1,3 +1,4 @@
+import uuid
 from datetime import timedelta
 
 from django.conf import settings
@@ -24,6 +25,8 @@ class User(AbstractUser):
     username = None
     # first_name = None
     # last_name = None
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     email = models.EmailField(("email address"), unique=True, validators=[validate_email])
     USERNAME_FIELD = "email"  # Set email field as a username

@@ -54,7 +54,7 @@ class UserAdmin(DjangoUserAdmin):
             },
         ),
     )
-    list_display = ("email", "is_staff")
+    list_display = ("id", "email", "is_staff")
     search_fields = ("email",)
     ordering = ("email",)
 

@@ -2,7 +2,7 @@ from ..exceptions import UserSerializerNotFound
 from .serializers import StudentUserSerializer, TeacherUserSerializer, UserSerializer
 
 
-def get_suitable_serializer(user_type: str) -> UserSerializer:
+def get_serializer(user_type: str) -> UserSerializer:
     """Get the suitable serializer for user relying on its type
 
     This method uses a dictionary of serializers_classes to get the UserSerializer subclass

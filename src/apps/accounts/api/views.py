@@ -18,10 +18,11 @@ from . import exceptions as accounts_exceptions
 from . import responses as accounts_responses
 from .filters.mixins import FilterMixin
 from .permissions import mixins as permissions_mixin
-from .queryset.mixins import InUserTypeQuerySetMixin, QueryParamUserTypeSerializerMixin
+from .queryset.mixins import InUserTypeQuerySetMixin, QueryParamUserTypeQuerySetMixin
+from .serializers import factories as serializer_factory
 from .serializers.mixins import (
     InUserTypeSerializerMixin,
-    QueryParamUserTypeQuerySetMixin,
+    QueryParamUserTypeSerializerMixin,
 )
 from .serializers.serializers import AccountVerificationSerializer, UserSerializer
 
@@ -145,34 +146,47 @@ class UserDeleteView(
         return users_deleted
 
 
-class UsersListCreateView(
-    QueryParamUserTypeQuerySetMixin,
-    QueryParamUserTypeSerializerMixin,
+class UserListView(
     # FilterMixin,
-    permissions_mixin.ListCreateUserPermissionMixin,
+    # permissions_mixin.ListCreateUserPermissionMixin,
     ListModelMixin,
-    CreateModelMixin,
     BaseGenericApiView,
 ):
 
     """View for listing and adding a new user"""
 
     queryset = get_user_model().objects.all()
+    serializer_class = UserSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+
+class UserCreateView(
+    QueryParamUserTypeQuerySetMixin,
+    QueryParamUserTypeSerializerMixin,
+    # FilterMixin,
+    # permissions_mixin.ListCreateUserPermissionMixin,
+    CreateModelMixin,
+    BaseGenericApiView,
+):
+
+    """View for creating a user.
+    It supports creating different user types.
+    """
 
     def post(self, request, *args, **kwargs) -> Response:
         """Override post method to control the behavior of inserting a new user
         Returns:
             Response: rest framework response with user data
         """
-        user_data = request.data
-        serializer = self.get_serializer(data=user_data, context={"request": request})
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
 
-        # Create random password for user
-        password = get_user_model().objects.make_random_password()
-        user.set_password(password)
-        user.save(update_fields=["password"])
+        # Get appropriate serializer depending on the user_type kwarg
+        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+
+        # Create the user
+        user = serializer.save()
 
         # Send welcome email
         # mailers.RegisterMailer(
@@ -183,7 +197,7 @@ class UsersListCreateView(
 
 
 class UserDetailsUpdateDestroyView(
-    permissions_mixin.BasePermissionMixin,
+    # permissions_mixin.BasePermissionMixin,
     RetrieveModelMixin,
     UpdateModelMixin,
     DestroyModelMixin,
@@ -191,15 +205,6 @@ class UserDetailsUpdateDestroyView(
 ):
     queryset = get_user_model().objects.all()
     lookup_field = "slug"
-
-    def get_serializer_class(self):
-        if self.request.method in ["PUT", "PATCH"]:
-            if self.request.user.is_granted_group:
-                return UserAdminUpdateSerializer
-            else:
-                return UserNotAdminUpdateSerializer
-
-        return UserDetailSerializer
 
     def get_object(self):
         """
@@ -221,21 +226,40 @@ class UserDetailsUpdateDestroyView(
         )
 
         filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
-        obj = queryset.filter(**filter_kwargs)
-        if not obj.exists():
+        user_obj = queryset.filter(**filter_kwargs)
+        if not user_obj.exists():
             raise accounts_exceptions.UserNotExists()
 
-        obj = obj.first()
+        user_obj = user_obj.first()
 
         # May raise a permission denied
-        self.check_object_permissions(self.request, obj)
+        self.check_object_permissions(self.request, user_obj)
 
-        return obj
+        return user_obj
 
-    def update(self, request, *args, **kwargs):
-        super().update(request, *args, **kwargs)
+    def get_serializer(self, *args, **kwargs):
+        serializer_class = serializer_factory.get_serializer(user_type=self.request.user.type)
+        return serializer_class
+
+    def get(self, request, *args, **kwargs) -> Response:
+        serializer = self.get_serializer(request.user, context={"request": request})
+        return Response(serializer.data)
+
+    def put(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, "_prefetched_objects_cache", None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
         return accounts_responses.UserUpdateResponse()
 
-    def destroy(self, request, *args, **kwargs):
-        super().destroy(request, *args, **kwargs)
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
         return accounts_responses.UserDestroyResponse()
