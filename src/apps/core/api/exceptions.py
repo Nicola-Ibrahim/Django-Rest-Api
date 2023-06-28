@@ -63,25 +63,40 @@ class PermissionDenied(BaseException):
 class SerializerFieldsError(BaseException):
     detail_ = {
         "code": ErrorCode.Field_Error.value,
-        "detail": "An error occurred in the fields",
-        "data": {},
+        "detail": [],
     }
     status_code = status.HTTP_400_BAD_REQUEST
+    default_code = "invalid"
 
     def __init__(self, errors, detail=None, code=None, status_code=None):
         self.update_data(errors=errors)
         super().__init__(detail, code, status_code)
 
     def update_data(self, **kwargs):
-        field = list(kwargs.get("errors").keys())[0]
-        error_detail = list(kwargs.get("errors").values())[0][0]
+        def _get_error_code(error_detail):
+            """Get the error code associated with the occurred error"""
+            if hasattr(error_detail, "code"):
+                error_code = error_detail.code
+            else:
+                error_code = self.default_code
 
-        if hasattr(error_detail, "code"):
-            self.detail_["code"] = error_detail.code
-        else:
-            self.detail_["code"] = self.default_code
+            return error_code
 
-        if isinstance(error_detail, (list, tuple)):
-            error_detail = error_detail[0]
+        def _get_error_message(error_detail):
+            """Get the error message associated with the occurred error"""
+            
+            return error_detail[0]
 
-        self.detail_["detail"] = "Error in " + field + " : " + error_detail.replace('"', "")
+        def _create_error_list(errors: dict):
+            # loop on all field that have wrong inputs
+            for field, error in errors.items():
+                if isinstance(error, list):
+                    error_message = _get_error_message(error_detail=error)
+
+                    self.detail_["code"] = _get_error_code(error_detail=error[0])
+                    self.detail_["detail"].append(f"Error in {field} : {error_message}")
+
+                if isinstance(error, dict):
+                    return _create_error_list(error)
+
+        _create_error_list(kwargs.get("errors"))
