@@ -40,112 +40,6 @@ class VerifyAccount(BaseGenericApiView):
         return accounts_responses.ActivatedAccount()
 
 
-class UserDetailsView(
-    InUserTypeQuerySetMixin,
-    InUserTypeSerializerMixin,
-    permissions_mixin.BasePermissionMixin,
-    generics.RetrieveAPIView,
-):
-    """
-    Class based view to Get User Details using Token Authentication
-    """
-
-    def get(self, request, *args, **kwargs) -> Response:
-        """Override get method to obtain details depending on login user type
-
-        Args:
-            request: incoming request
-
-        Returns:
-            Response: rest framework response with user data
-        """
-
-        serializer = self.get_serializer(request.user, context={"request": request})
-        return Response(serializer.data)
-
-
-class UserUpdateView(
-    InUserTypeQuerySetMixin,
-    InUserTypeSerializerMixin,
-    permissions_mixin.BasePermissionMixin,
-    generics.UpdateAPIView,
-):
-    serializer_class = UserSerializer
-
-    def get_object(self):
-        """
-        Returns the object the view is displaying.
-        """
-        queryset = self.filter_queryset(self.get_queryset())
-
-        filter_kwargs = {self.lookup_field: self.request.user.id}
-        obj = get_object_or_404(queryset, **filter_kwargs)
-
-        # May raise a permission denied
-        self.check_object_permissions(self.request, obj)
-
-        return obj
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop("partial", False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        if getattr(instance, "_prefetched_objects_cache", None):
-            # If 'prefetch_related' has been applied to a queryset, we need to
-            # forcibly invalidate the prefetch cache on the instance.
-            instance._prefetched_objects_cache = {}
-
-        return Response(serializer.data)
-
-
-class UserDeleteView(
-    InUserTypeQuerySetMixin,
-    InUserTypeSerializerMixin,
-    generics.DestroyAPIView,
-):
-    def get_object(self):
-        """
-        Returns the object the view is displaying.
-        """
-        queryset = self.filter_queryset(self.get_queryset())
-
-        filter_kwargs = {self.lookup_field: self.request.user.id}
-        obj = get_object_or_404(queryset, **filter_kwargs)
-
-        # May raise a permission denied
-        self.check_object_permissions(self.request, obj)
-
-        return obj
-
-    def destroy(self, request, *args, **kwargs):
-        """Override destroy method to handle deleting for multiple users
-
-        Args:
-            request: incoming request
-        """
-
-        # Get the users to be deleted
-        ids = request.data["ids"]
-
-        # Get the user who perform the delete action
-        _ = self.get_object()
-
-        # Execute delete the ids
-        users_deleted = self.perform_destroy(ids)
-
-        msg = {"details": f"Deleted the users: {users_deleted}"}
-        return Response(data=msg, status=status.HTTP_204_NO_CONTENT)
-
-    def perform_destroy(self, ids):
-        queryset = self.filter_queryset(self.get_queryset())
-        filter_kwargs = {"pk__in": ids}
-        users_deleted = queryset.filter(**filter_kwargs).delete()
-        return users_deleted
-
-
 class UserListView(
     # FilterMixin,
     # permissions_mixin.ListCreateUserPermissionMixin,
@@ -155,18 +49,12 @@ class UserListView(
 
     """View for listing and adding a new user"""
 
-    queryset = get_user_model().objects.all()
-    serializer_class = UserSerializer
 
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
-
-
-class UserCreateView(
+class UserListCreateView(
     QueryParamUserTypeQuerySetMixin,
-    QueryParamUserTypeSerializerMixin,
     # FilterMixin,
     # permissions_mixin.ListCreateUserPermissionMixin,
+    ListModelMixin,
     CreateModelMixin,
     BaseGenericApiView,
 ):
@@ -175,12 +63,17 @@ class UserCreateView(
     It supports creating different user types.
     """
 
-    def post(self, request, *args, **kwargs) -> Response:
-        """Override post method to control the behavior of inserting a new user
-        Returns:
-            Response: rest framework response with user data
+    def get_serializer_class(self):
         """
+        Get the appropriate serializer depending on the url user_type param
+        """
+        serializer_class = serializer_factory.get_serializer(self.request.GET.get("user_type"))
+        return serializer_class
 
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs) -> Response:
         # Get appropriate serializer depending on the user_type kwarg
         serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
@@ -204,7 +97,7 @@ class UserDetailsUpdateDestroyView(
     BaseGenericApiView,
 ):
     queryset = get_user_model().objects.all()
-    lookup_field = "slug"
+    lookup_field = "id"
 
     def get_object(self):
         """

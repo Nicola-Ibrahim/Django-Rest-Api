@@ -2,7 +2,7 @@ from ..api import exceptions
 from ..models.models import Student, Teacher, User
 
 
-def get_model(self, user_type: str) -> User:  # type:ignore # noqa: A002
+def get_model(user_type: str) -> User:  # type:ignore # noqa: A002
     """Get the suitable serializer for user relying on its type
 
     Args:

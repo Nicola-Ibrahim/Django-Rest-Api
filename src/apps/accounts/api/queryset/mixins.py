@@ -20,7 +20,7 @@ class QueryParamUserTypeQuerySetMixin:
         """
 
         # Get the model
-        model = model_factories.get_model(self.request.GET.get("user_type"))
+        model = model_factories.get_model(user_type=self.request.GET.get("user_type"))
         queryset = model.objects.all()
         return queryset
 
