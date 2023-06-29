@@ -4,8 +4,8 @@ from rest_framework import serializers
 from src.apps.accounts.api import exceptions as accounts_exceptions
 from src.apps.accounts.models.models import OTPNumber
 from src.apps.accounts.models.validators import user_validate_password
-from src.apps.core.api import tokens
-from src.apps.core.api.serializers import BaseSerializer
+from src.apps.core.base_api import tokens
+from src.apps.core.base_api.serializers import BaseSerializer
 
 from .. import exceptions as authentication_exceptions
 
@@ -57,7 +57,9 @@ class LogoutSerializer(BaseSerializer):
         return attrs
 
     def create(self, validated_data):
-        tokens.CustomRefreshToken(validated_data.get("refresh"), verify=True).blacklist()
+        tokens.CustomRefreshToken(
+            validated_data.get("refresh"), verify=True
+        ).blacklist()
         return True
 
 
@@ -121,7 +123,9 @@ class VerifyOTPNumberSerializer(BaseSerializer):
         """Update the is_verified field after validate the otp number assigned to user"""
 
         # Get the OTP number of the user
-        instance = OTPNumber.objects.get(user=self.context["request"].user, number=validated_data.get("otp"))
+        instance = OTPNumber.objects.get(
+            user=self.context["request"].user, number=validated_data.get("otp")
+        )
 
         # Set OTP number to be verified
         instance.is_verified = True
@@ -135,7 +139,9 @@ class ChangePasswordSerializer(BaseSerializer):
 
     old_password = serializers.CharField(max_length=128, write_only=True, required=True)
     new_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    confirmed_password = serializers.CharField(max_length=128, write_only=True, required=True)
+    confirmed_password = serializers.CharField(
+        max_length=128, write_only=True, required=True
+    )
 
     def validate(self, attrs: dict):
         """Validate the inserted data, passwords and otp number"""
@@ -176,7 +182,9 @@ class ForgetPasswordSerializer(BaseSerializer):
     """This serializer is responsible for setting a new password of the user"""
 
     new_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    confirmed_password = serializers.CharField(max_length=128, write_only=True, required=True)
+    confirmed_password = serializers.CharField(
+        max_length=128, write_only=True, required=True
+    )
     otp = serializers.CharField(min_length=1, write_only=True, required=True)
 
     def validate(self, attrs: dict):
@@ -226,7 +234,9 @@ class FirstTimePasswordSerializer(BaseSerializer):
     """This serializer is responsible for setting a first time password of the user"""
 
     new_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    confirmed_password = serializers.CharField(max_length=128, write_only=True, required=True)
+    confirmed_password = serializers.CharField(
+        max_length=128, write_only=True, required=True
+    )
 
     def validate(self, attrs: dict):
         """Validate the inserted data, validate passwords and otp number"""

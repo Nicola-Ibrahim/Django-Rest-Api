@@ -12,7 +12,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from src.apps.core import mailers
-from src.apps.core.api.views import BaseGenericApiView
+from src.apps.core.base_api.views import BaseGenericAPIView
 
 from . import exceptions as accounts_exceptions
 from . import responses as accounts_responses
@@ -27,14 +27,16 @@ from .serializers.mixins import (
 from .serializers.serializers import AccountVerificationSerializer, UserSerializer
 
 
-class VerifyAccount(BaseGenericApiView):
+class VerifyAccount(BaseGenericAPIView):
     """Verify the user by the token send it to the email"""
 
     permission_classes = (AllowAny,)
     serializer_class = AccountVerificationSerializer
 
     def get(self, request):
-        serializer = self.get_serializer(request.GET.get("token"), context={"request": request})
+        serializer = self.get_serializer(
+            request.GET.get("token"), context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return accounts_responses.ActivatedAccount()
@@ -44,7 +46,7 @@ class UserListView(
     # FilterMixin,
     # permissions_mixin.ListCreateUserPermissionMixin,
     ListModelMixin,
-    BaseGenericApiView,
+    BaseGenericAPIView,
 ):
 
     """View for listing and adding a new user"""
@@ -56,7 +58,7 @@ class UserListCreateView(
     # permissions_mixin.ListCreateUserPermissionMixin,
     ListModelMixin,
     CreateModelMixin,
-    BaseGenericApiView,
+    BaseGenericAPIView,
 ):
 
     """View for creating a user.
@@ -67,7 +69,9 @@ class UserListCreateView(
         """
         Get the appropriate serializer depending on the url user_type param
         """
-        serializer_class = serializer_factory.get_serializer(self.request.GET.get("user_type"))
+        serializer_class = serializer_factory.get_serializer(
+            self.request.GET.get("user_type")
+        )
         return serializer_class
 
     def get(self, request, *args, **kwargs):
@@ -75,7 +79,9 @@ class UserListCreateView(
 
     def post(self, request, *args, **kwargs) -> Response:
         # Get appropriate serializer depending on the user_type kwarg
-        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
 
         # Create the user
@@ -85,7 +91,9 @@ class UserListCreateView(
         # mailers.RegisterMailer(
         #     to_email=user.email, password=password
         # ).send_email()
-        mailers.VerificationMailer(token=user.tokens()["access"], to_emails=[user.email], request=request)
+        mailers.VerificationMailer(
+            token=user.tokens()["access"], to_emails=[user.email], request=request
+        )
         return accounts_responses.UserCreateResponse()
 
 
@@ -94,7 +102,7 @@ class UserDetailsUpdateDestroyView(
     RetrieveModelMixin,
     UpdateModelMixin,
     DestroyModelMixin,
-    BaseGenericApiView,
+    BaseGenericAPIView,
 ):
     queryset = get_user_model().objects.all()
     lookup_field = "id"
@@ -115,7 +123,8 @@ class UserDetailsUpdateDestroyView(
         assert lookup_url_kwarg in self.kwargs, (
             "Expected view %s to be called with a URL keyword argument "
             'named "%s". Fix your URL conf, or set the `.lookup_field` '
-            "attribute on the view correctly." % (self.__class__.__name__, lookup_url_kwarg)
+            "attribute on the view correctly."
+            % (self.__class__.__name__, lookup_url_kwarg)
         )
 
         filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
@@ -131,7 +140,9 @@ class UserDetailsUpdateDestroyView(
         return user_obj
 
     def get_serializer(self, *args, **kwargs):
-        serializer_class = serializer_factory.get_serializer(user_type=self.request.user.type)
+        serializer_class = serializer_factory.get_serializer(
+            user_type=self.request.user.type
+        )
         return serializer_class
 
     def get(self, request, *args, **kwargs) -> Response:

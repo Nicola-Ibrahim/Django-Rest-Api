@@ -7,7 +7,7 @@ import enum
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 
-from src.apps.core.api.exceptions import BaseException
+from src.apps.core.base_api.exceptions import BaseException
 
 
 class ErrorCode(enum.Enum):
@@ -28,7 +28,9 @@ class WrongOTP(BaseException):
 class OTPExpired(BaseException):
     detail_ = {
         "code": ErrorCode.OTP_Expired.value,
-        "detail": _("The OTP number has been expired, please resubmit your credential again."),
+        "detail": _(
+            "The OTP number has been expired, please resubmit your credential again."
+        ),
     }
     status_code = status.HTTP_406_NOT_ACCEPTABLE
 

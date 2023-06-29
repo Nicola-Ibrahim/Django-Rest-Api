@@ -1,5 +1,5 @@
 from src.apps.accounts.api.permissions.mixins import BasePermissionMixin
-from src.apps.core.api.views import BaseApiView, BaseGenericApiView
+from src.apps.core.base_api.views import BaseAPIView, BaseGenericAPIView
 
 from ...core import mailers
 from . import exceptions as authentication_exceptions
@@ -15,13 +15,15 @@ from .serializers.serializers import (
 )
 
 
-class LoginView(BaseGenericApiView):
+class LoginView(BaseGenericAPIView):
     """View for user logging"""
 
     serializer_class = LoginSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
 
         serializer.is_valid(raise_exception=True)
 
@@ -30,7 +32,7 @@ class LoginView(BaseGenericApiView):
         return authentication_responses.LoginResponse(user=user)
 
 
-class LogoutView(BasePermissionMixin, BaseGenericApiView):
+class LogoutView(BasePermissionMixin, BaseGenericAPIView):
     """View for user logout"""
 
     serializer_class = LogoutSerializer
@@ -43,13 +45,15 @@ class LogoutView(BasePermissionMixin, BaseGenericApiView):
         return authentication_responses.LogoutResponse()
 
 
-class ForgetPasswordRequestView(BaseGenericApiView):
+class ForgetPasswordRequestView(BaseGenericAPIView):
     """View for sending an OTP number to the user's email for changing the password"""
 
     serializer_class = ForgetPasswordRequestSerializer
 
     def post(self, request):
-        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
 
         # Validate user's email and check existence
         serializer.is_valid(raise_exception=True)
@@ -67,20 +71,22 @@ class ForgetPasswordRequestView(BaseGenericApiView):
         return authentication_responses.ForgetPasswordRequestResponse(user=user)
 
 
-class VerifyOTPNumberView(BasePermissionMixin, BaseGenericApiView):
+class VerifyOTPNumberView(BasePermissionMixin, BaseGenericAPIView):
     """View for verifying the generated OTP number for the user who wants to change password."""
 
     serializer_class = VerifyOTPNumberSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
         return authentication_responses.VerifyOTPResponse()
 
 
-class BaseResetPasswordView(BasePermissionMixin, BaseGenericApiView):
+class BaseResetPasswordView(BasePermissionMixin, BaseGenericAPIView):
     """
     Abstract base view for setting new password
     This model implements patch method, so the
@@ -91,7 +97,9 @@ class BaseResetPasswordView(BasePermissionMixin, BaseGenericApiView):
         abstract = True
 
     def patch(self, request):
-        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -116,7 +124,7 @@ class FirstTimePasswordView(BaseResetPasswordView):
     serializer_class = FirstTimePasswordSerializer
 
 
-class CheckJWTTokenView(BasePermissionMixin, BaseApiView):
+class CheckJWTTokenView(BasePermissionMixin, BaseAPIView):
     def post(self, request, *args, **kwargs):
         if not request.user.is_password_changed:
             raise authentication_exceptions.FirstTimePasswordError(user=request.user)

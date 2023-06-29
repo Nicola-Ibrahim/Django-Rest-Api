@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 
-from ...core.api.tokens import JWTAccessToken
+from ...core.base_api.tokens import JWTAccessToken
 
 
 def get_user_from_access_token(access_token_str):
