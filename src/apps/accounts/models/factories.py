@@ -21,9 +21,6 @@ def get_model(user_type: str) -> User:  # type:ignore # noqa: A002
         "warehouse": Teacher,
         "doctor": Student,
     }
-    model = models_classes.get(user_type, None)
-
-    if not model:
-        raise exceptions.UserModelNotFound()
+    model = models_classes.get(user_type, User)
 
     return model

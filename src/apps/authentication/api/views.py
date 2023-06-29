@@ -21,9 +21,7 @@ class LoginView(BaseGenericAPIView):
     serializer_class = LoginSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=request.data, context={"request": request})
 
         serializer.is_valid(raise_exception=True)
 
@@ -51,9 +49,7 @@ class ForgetPasswordRequestView(BaseGenericAPIView):
     serializer_class = ForgetPasswordRequestSerializer
 
     def post(self, request):
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=request.data, context={"request": request})
 
         # Validate user's email and check existence
         serializer.is_valid(raise_exception=True)
@@ -77,9 +73,7 @@ class VerifyOTPNumberView(BasePermissionMixin, BaseGenericAPIView):
     serializer_class = VerifyOTPNumberSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -97,9 +91,7 @@ class BaseResetPasswordView(BasePermissionMixin, BaseGenericAPIView):
         abstract = True
 
     def patch(self, request):
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
 

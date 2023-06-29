@@ -2,9 +2,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from src.apps.core.api.serializers import BaseModelSerializer, BaseSerializer
+from src.apps.accounts.models.models import Student, Teacher
+from src.apps.core.base_api.serializers import BaseModelSerializer, BaseSerializer
 
-from ...models.models import Student, Teacher
 from ..utils import get_user_from_access_token
 from .profile_serializers import StudentProfileSerializer, TeacherProfileSerializer
 

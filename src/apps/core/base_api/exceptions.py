@@ -84,7 +84,7 @@ class SerializerFieldsError(BaseException):
 
         def _get_error_message(error_detail):
             """Get the error message associated with the occurred error"""
-            
+
             return error_detail[0]
 
         def _create_error_list(errors: dict):

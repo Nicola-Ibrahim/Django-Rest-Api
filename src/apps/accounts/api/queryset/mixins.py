@@ -1,4 +1,4 @@
-from ...models import factories as model_factories
+from src.apps.accounts.models import factories as model_factories
 
 
 class QueryParamUserTypeQuerySetMixin:

@@ -1,15 +1,14 @@
-from src.apps.core.api.serializers import BaseModelSerializer
-
-from ...models.profiles import StudentProfile, TeacherProfile
+from src.apps.accounts.models.profiles import StudentProfile, TeacherProfile
+from src.apps.core.base_api.serializers import BaseModelSerializer
 
 
 class TeacherProfileSerializer(BaseModelSerializer):
     class Meta:
         model = TeacherProfile
         fields = [
-            "name",
-            "working_hours",
-            "profit_percentage",
+            "first_name",
+            "last_name",
+            "num_courses",
             "teacher",
         ]
 

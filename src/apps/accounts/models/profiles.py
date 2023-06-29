@@ -5,7 +5,9 @@ from .validators import validate_name
 
 
 class AdminProfile(models.Model):
-    admin = models.OneToOneField(Admin, related_name="admin_profile", on_delete=models.CASCADE)
+    admin = models.OneToOneField(
+        Admin, related_name="admin_profile", on_delete=models.CASCADE
+    )
     first_name = models.CharField(max_length=200)
     last_name = models.CharField(max_length=200)
 
@@ -21,12 +23,9 @@ class StudentProfile(models.Model):
         blank=True,
         null=True,
     )
-    name = models.CharField(
-        max_length=200,
-        validators=[validate_name],
-    )
-    working_hours = models.FloatField()
-    profit_percentage = models.FloatField()
+    first_name = models.CharField(max_length=200)
+    last_name = models.CharField(max_length=200)
+    study_hours = models.IntegerField()
 
     def save(self, *args, **kwargs) -> None:
         self.name = self.name.capitalize()
@@ -46,9 +45,7 @@ class TeacherProfile(models.Model):
     )
     first_name = models.CharField(max_length=200, validators=[validate_name])
     last_name = models.CharField(max_length=200, validators=[validate_name])
-    distance = models.FloatField(max_length=200)
-    duration = models.FloatField()
-    profit_percentage = models.FloatField()
+    num_courses = models.IntegerField()
     is_idle = models.BooleanField(default=False)
 
     def __str__(self) -> str:
