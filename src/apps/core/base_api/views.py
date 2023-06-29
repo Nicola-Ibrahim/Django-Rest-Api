@@ -1,40 +1,37 @@
 from django.conf import settings
 from rest_framework.generics import GenericAPIView
-from rest_framework.parsers import FormParser, JSONParser
 from rest_framework.views import APIView
 
-from .exceptions import NotAuthenticated, PermissionDenied
-from .parsers import PlainTextParser
-from .responses import LanguagesListResponse
+from . import exceptions, responses
 
 
-class BaseGenericApiView(GenericAPIView):
-    parser_classes = [JSONParser, PlainTextParser, FormParser]
+class BaseGenericAPIView(GenericAPIView):
+    """Base extended class for GenericAPIView, implement custom behaviors"""
 
     def permission_denied(self, request, message=None, code=None):
         """
         If request is not permitted, determine what kind of exception to raise.
         """
         if request.authenticators and not request.successful_authenticator:
-            raise NotAuthenticated()
-        raise PermissionDenied(detail=message, code=code)
+            raise exceptions.NotAuthenticated()
+        raise exceptions.PermissionDenied(detail=message, code=code)
 
 
-class BaseApiView(APIView):
-    parser_classes = [JSONParser, PlainTextParser, FormParser]
+class BaseAPIView(APIView):
+    """Base extended class for BaseAPIView, implement custom behaviors"""
 
     def permission_denied(self, request, message=None, code=None):
         """
         If request is not permitted, determine what kind of exception to raise.
         """
         if request.authenticators and not request.successful_authenticator:
-            raise NotAuthenticated()
-        raise PermissionDenied(detail=message, code=code)
+            raise exceptions.NotAuthenticated()
+        raise exceptions.PermissionDenied(detail=message, code=code)
 
 
-class LanguagesListView(BaseApiView):
+class LanguagesListView(BaseAPIView):
     def get(self, request, *args, **kwargs):
         # Get the list of available supported languages.
         languages = settings.LANGUAGES
 
-        return LanguagesListResponse(languages=languages)
+        return responses.LanguagesListResponse(languages=languages)
