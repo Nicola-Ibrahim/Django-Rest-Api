@@ -3,10 +3,10 @@
 
 from datetime import timedelta
 
-INSTALLED_APPS += (
+INSTALLED_APPS += (  # type: ignore # noqa: F821
     "rest_framework",
     "rest_framework_simplejwt",
-)  # type: ignore # noqa: F821
+)
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),

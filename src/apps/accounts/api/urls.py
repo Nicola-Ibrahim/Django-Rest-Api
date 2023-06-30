@@ -6,7 +6,7 @@ app_name = "auth"
 
 urlpatterns = [
     path("", views.UserListView.as_view(), name="list-users"),
-    path("<str:user_type>/", views.UserCreateView.as_view(), name="create-users"),
+    path("<str:user_type>/create/", views.UserCreateView.as_view(), name="create-users"),
     path(
         "<uuid:id>/",
         views.UserDetailsUpdateDestroyView.as_view(),

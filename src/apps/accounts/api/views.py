@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from src.apps.core import mailers
 from src.apps.core.base_api import views as base_views
 
-from . import exceptions, responses
+from . import responses
 from .filters.mixins import FilterMixin
 from .permissions import mixins as permissions_mixin
 from .queryset.mixins import InUserTypeQuerySetMixin, QueryParamUserTypeQuerySetMixin
@@ -73,17 +73,17 @@ class UserCreateView(
         Get the appropriate serializer depending on the url user_type param
         """
         serializer_class = serializer_factory.get_serializer(
-            self.request.GET.get("user_type")
+            self.kwargs.get("user_type")
         )
         return serializer_class
 
     def post(self, request, *args, **kwargs) -> Response:
-        # Get appropriate serializer depending on the user_type kwarg
         serializer = self.get_serializer(
             data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
 
+        # TODO: pass the type of created user to the serializer to put the user type attribute
         # Create the user
         user = serializer.save()
 
@@ -106,38 +106,6 @@ class UserDetailsUpdateDestroyView(
 ):
     queryset = get_user_model().objects.all()
     lookup_field = "id"
-
-    # def get_object(self):
-    #     """
-    #     Returns the object the view is displaying.
-
-    #     You may want to override this if you need to provide non-standard
-    #     queryset lookups.  Eg if objects are referenced using multiple
-    #     keyword arguments in the url conf.
-    #     """
-    #     queryset = self.filter_queryset(self.get_queryset())
-
-    #     # Perform the lookup filtering.
-    #     lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-
-    #     assert lookup_url_kwarg in self.kwargs, (
-    #         "Expected view %s to be called with a URL keyword argument "
-    #         'named "%s". Fix your URL conf, or set the `.lookup_field` '
-    #         "attribute on the view correctly."
-    #         % (self.__class__.__name__, lookup_url_kwarg)
-    #     )
-
-    #     filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
-    #     user_obj = queryset.filter(**filter_kwargs)
-    #     if not user_obj.exists():
-    #         raise exceptions.UserNotExists()
-
-    #     user_obj = user_obj.first()
-
-    #     # May raise a permission denied
-    #     self.check_object_permissions(self.request, user_obj)
-
-    #     return user_obj
 
     def get_serializer_class(self, *args, **kwargs):
         serializer_class = serializer_factory.get_serializer(

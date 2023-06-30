@@ -18,7 +18,6 @@ def get_serializer(user_type: str) -> UserSerializer:
         UserSerializer: serializer for register a user
     """
 
-    # Define the serializers_classes dictionary
     serializers_classes = {
         "user": UserSerializer,
         "admin": UserSerializer,
@@ -26,8 +25,8 @@ def get_serializer(user_type: str) -> UserSerializer:
         "student": StudentUserSerializer,
     }
 
-    # Get the serializer from the dictionary
+    # Get the serializer from the serializers_classes dictionary
+    print(user_type)
     serializer = serializers_classes.get(user_type, UserSerializer)
 
-    # Return the serializer
     return serializer
