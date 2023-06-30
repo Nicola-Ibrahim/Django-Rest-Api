@@ -1,6 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
-from rest_framework import generics, status
 from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
@@ -12,51 +10,58 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from src.apps.core import mailers
-from src.apps.core.base_api.views import BaseGenericAPIView
+from src.apps.core.base_api import views as base_views
 
-from . import exceptions as accounts_exceptions
-from . import responses as accounts_responses
+from . import exceptions, responses
 from .filters.mixins import FilterMixin
 from .permissions import mixins as permissions_mixin
 from .queryset.mixins import InUserTypeQuerySetMixin, QueryParamUserTypeQuerySetMixin
 from .serializers import factories as serializer_factory
+from .serializers import serializers
 from .serializers.mixins import (
     InUserTypeSerializerMixin,
     QueryParamUserTypeSerializerMixin,
 )
-from .serializers.serializers import AccountVerificationSerializer, UserSerializer
 
 
-class VerifyAccount(BaseGenericAPIView):
+class VerifyAccount(base_views.BaseGenericAPIView):
     """Verify the user by the token send it to the email"""
 
     permission_classes = (AllowAny,)
-    serializer_class = AccountVerificationSerializer
+    serializer_class = serializers.AccountVerificationSerializer
 
     def get(self, request):
-        serializer = self.get_serializer(request.GET.get("token"), context={"request": request})
+        serializer = self.get_serializer(
+            request.GET.get("token"), context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return accounts_responses.ActivatedAccount()
+        return responses.ActivatedAccount()
 
 
 class UserListView(
     # FilterMixin,
     # permissions_mixin.ListCreateUserPermissionMixin,
     ListModelMixin,
-    BaseGenericAPIView,
+    base_views.BaseGenericAPIView,
 ):
 
-    """View for listing and adding a new user"""
+    """View for listing a new user."""
+
+    queryset = get_user_model().objects.all()
+    serializer_class = serializers.UserSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
 
 
-class UserListCreateView(
+class UserCreateView(
     QueryParamUserTypeQuerySetMixin,
     # FilterMixin,
     # permissions_mixin.ListCreateUserPermissionMixin,
     ListModelMixin,
     CreateModelMixin,
-    BaseGenericAPIView,
+    base_views.BaseGenericAPIView,
 ):
 
     """View for creating a user.
@@ -67,15 +72,16 @@ class UserListCreateView(
         """
         Get the appropriate serializer depending on the url user_type param
         """
-        serializer_class = serializer_factory.get_serializer(self.request.GET.get("user_type"))
+        serializer_class = serializer_factory.get_serializer(
+            self.request.GET.get("user_type")
+        )
         return serializer_class
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs) -> Response:
         # Get appropriate serializer depending on the user_type kwarg
-        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
 
         # Create the user
@@ -85,8 +91,10 @@ class UserListCreateView(
         # mailers.RegisterMailer(
         #     to_email=user.email, password=password
         # ).send_email()
-        mailers.VerificationMailer(token=user.tokens()["access"], to_emails=[user.email], request=request)
-        return accounts_responses.UserCreateResponse()
+        mailers.VerificationMailer(
+            token=user.tokens()["access"], to_emails=[user.email], request=request
+        )
+        return responses.UserCreateResponse()
 
 
 class UserDetailsUpdateDestroyView(
@@ -94,44 +102,47 @@ class UserDetailsUpdateDestroyView(
     RetrieveModelMixin,
     UpdateModelMixin,
     DestroyModelMixin,
-    BaseGenericAPIView,
+    base_views.BaseGenericAPIView,
 ):
     queryset = get_user_model().objects.all()
     lookup_field = "id"
 
-    def get_object(self):
-        """
-        Returns the object the view is displaying.
+    # def get_object(self):
+    #     """
+    #     Returns the object the view is displaying.
 
-        You may want to override this if you need to provide non-standard
-        queryset lookups.  Eg if objects are referenced using multiple
-        keyword arguments in the url conf.
-        """
-        queryset = self.filter_queryset(self.get_queryset())
+    #     You may want to override this if you need to provide non-standard
+    #     queryset lookups.  Eg if objects are referenced using multiple
+    #     keyword arguments in the url conf.
+    #     """
+    #     queryset = self.filter_queryset(self.get_queryset())
 
-        # Perform the lookup filtering.
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+    #     # Perform the lookup filtering.
+    #     lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
 
-        assert lookup_url_kwarg in self.kwargs, (
-            "Expected view %s to be called with a URL keyword argument "
-            'named "%s". Fix your URL conf, or set the `.lookup_field` '
-            "attribute on the view correctly." % (self.__class__.__name__, lookup_url_kwarg)
+    #     assert lookup_url_kwarg in self.kwargs, (
+    #         "Expected view %s to be called with a URL keyword argument "
+    #         'named "%s". Fix your URL conf, or set the `.lookup_field` '
+    #         "attribute on the view correctly."
+    #         % (self.__class__.__name__, lookup_url_kwarg)
+    #     )
+
+    #     filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+    #     user_obj = queryset.filter(**filter_kwargs)
+    #     if not user_obj.exists():
+    #         raise exceptions.UserNotExists()
+
+    #     user_obj = user_obj.first()
+
+    #     # May raise a permission denied
+    #     self.check_object_permissions(self.request, user_obj)
+
+    #     return user_obj
+
+    def get_serializer_class(self, *args, **kwargs):
+        serializer_class = serializer_factory.get_serializer(
+            user_type=self.request.user.type
         )
-
-        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
-        user_obj = queryset.filter(**filter_kwargs)
-        if not user_obj.exists():
-            raise accounts_exceptions.UserNotExists()
-
-        user_obj = user_obj.first()
-
-        # May raise a permission denied
-        self.check_object_permissions(self.request, user_obj)
-
-        return user_obj
-
-    def get_serializer(self, *args, **kwargs):
-        serializer_class = serializer_factory.get_serializer(user_type=self.request.user.type)
         return serializer_class
 
     def get(self, request, *args, **kwargs) -> Response:
@@ -150,9 +161,88 @@ class UserDetailsUpdateDestroyView(
             # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
 
-        return accounts_responses.UserUpdateResponse()
+        return responses.UserUpdateResponse()
 
     def delete(self, request, *args, **kwargs):
         instance = self.get_object()
         self.perform_destroy(instance)
-        return accounts_responses.UserDestroyResponse()
+        return responses.UserDestroyResponse()
+
+
+class ForgetPasswordRequestView(base_views.BaseGenericAPIView):
+    """View for sending an OTP number to the user's email for changing the password"""
+
+    serializer_class = serializers.ForgetPasswordRequestSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
+
+        # Validate user's email and check existence
+        serializer.is_valid(raise_exception=True)
+
+        # Create OTP number for the user
+        serializer.save()
+
+        # Send reset password message with OTP to user's email
+        mailers.OTPMailer(
+            to_email=serializer.validated_data.get("email"),
+            otp_number=serializer.validated_data.get("otp"),
+        ).send_email()
+
+        user = serializer.validated_data.get("user")
+        return responses.ForgetPasswordRequestResponse(user=user)
+
+
+class VerifyOTPNumberView(base_views.BaseGenericAPIView):
+    """View for verifying the generated OTP number for the user who wants to change password."""
+
+    serializer_class = serializers.VerifyOTPNumberSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return responses.VerifyOTPResponse()
+
+
+class BaseResetPasswordView(base_views.BaseGenericAPIView):
+    """
+    Abstract base view for setting new password
+    This model implements patch method, so the
+    concrete ResetPassword class only have to set serializer_class attribute.
+    """
+
+    class Meta:
+        abstract = True
+
+    def patch(self, request):
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return responses.ResetPasswordResponse()
+
+
+class ForgetPasswordView(BaseResetPasswordView):
+    """View for resetting the forgotten password"""
+
+    serializer_class = serializers.ForgetPasswordSerializer
+
+
+class ChangePasswordView(BaseResetPasswordView):
+    """View for changing password"""
+
+    serializer_class = serializers.ChangePasswordSerializer
+
+
+class FirstTimePasswordView(BaseResetPasswordView):
+    """View for setting the first time password"""
+
+    serializer_class = serializers.FirstTimePasswordSerializer

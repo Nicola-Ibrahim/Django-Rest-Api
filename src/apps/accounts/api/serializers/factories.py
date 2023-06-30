@@ -27,10 +27,7 @@ def get_serializer(user_type: str) -> UserSerializer:
     }
 
     # Get the serializer from the dictionary
-    serializer = serializers_classes.get(user_type, None)
-
-    if not serializer:
-        return UserSerializer
+    serializer = serializers_classes.get(user_type, UserSerializer)
 
     # Return the serializer
     return serializer

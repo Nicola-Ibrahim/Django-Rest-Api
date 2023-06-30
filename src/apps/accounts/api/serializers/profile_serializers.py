@@ -20,7 +20,12 @@ class TeacherProfileSerializer(BaseModelSerializer):
 class StudentProfileSerializer(BaseModelSerializer):
     class Meta:
         model = StudentProfile
-        fields = ["first_name", "last_name", "student"]
+        fields = [
+            "first_name",
+            "last_name",
+            "study_hours",
+            "student",
+        ]
 
         extra_kwargs = {
             "student": {"write_only": True},
