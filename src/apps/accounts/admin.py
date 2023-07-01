@@ -1,15 +1,15 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
+from django.forms.models import BaseInlineFormSet
 
-from .models.models import Admin, User
+from .models import models, profiles
 
 # from django.utils.translation import ugettext_lazy as _
 
 
-@admin.register(
-    User,
-    Admin,
-)
+# Define an inline admin descriptor for the profile model
+
+
 class UserAdmin(DjangoUserAdmin):
     """Define admin model for custom User model."""
 
@@ -64,7 +64,7 @@ class UserAdmin(DjangoUserAdmin):
         disabled_fields = set()
 
         # Prevent non admin user from changing some fields
-        is_admin = request.user.type == User.Type.ADMIN
+        is_admin = request.user.type == models.User.Type.ADMIN
         if not is_admin:
             disabled_fields |= {
                 "email",
@@ -82,8 +82,36 @@ class UserAdmin(DjangoUserAdmin):
         return form
 
     def has_delete_permission(self, request, obj=None) -> bool:
-        is_admin = request.user.type == User.Type.ADMIN  # type: ignore
+        is_admin = request.user.type == models.User.Type.ADMIN  # type: ignore
         if not is_admin:
             return False
 
         return super().has_delete_permission(request, obj)
+
+
+class AdminProfileInline(admin.StackedInline):
+    # Use the custom inline formset
+    model = profiles.AdminProfile
+    can_delete = False
+    verbose_name_plural = "profile"
+
+
+@admin.register(models.Admin)
+class AdminUserAdmin(UserAdmin):
+    """Define admin model for custom User model."""
+
+    inlines = (AdminProfileInline,)
+
+
+class TeacherProfileInline(admin.StackedInline):
+    # Use the custom inline formset
+    model = profiles.TeacherProfile
+    can_delete = False
+    verbose_name_plural = "profile"
+
+
+@admin.register(models.Teacher)
+class TeacherUserAdmin(UserAdmin):
+    """Define admin model for custom User model."""
+
+    inlines = (TeacherProfileInline,)

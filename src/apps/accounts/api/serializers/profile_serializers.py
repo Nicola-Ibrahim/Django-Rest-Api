@@ -1,10 +1,23 @@
-from src.apps.accounts.models.profiles import StudentProfile, TeacherProfile
+from src.apps.accounts.models import profiles
 from src.apps.core.base_api.serializers import BaseModelSerializer
+
+
+class AdminProfileSerializer(BaseModelSerializer):
+    class Meta:
+        model = profiles.AdminProfile
+        fields = [
+            "first_name",
+            "last_name",
+        ]
+
+        extra_kwargs = {
+            "teacher": {"write_only": True},
+        }
 
 
 class TeacherProfileSerializer(BaseModelSerializer):
     class Meta:
-        model = TeacherProfile
+        model = profiles.TeacherProfile
         fields = [
             "first_name",
             "last_name",
@@ -19,7 +32,7 @@ class TeacherProfileSerializer(BaseModelSerializer):
 
 class StudentProfileSerializer(BaseModelSerializer):
     class Meta:
-        model = StudentProfile
+        model = profiles.StudentProfile
         fields = [
             "first_name",
             "last_name",
