@@ -5,9 +5,7 @@ from .validators import validate_name
 
 
 class AdminProfile(models.Model):
-    admin = models.OneToOneField(
-        Admin, related_name="admin_profile", on_delete=models.CASCADE
-    )
+    admin = models.OneToOneField(Admin, related_name="admin_profile", on_delete=models.CASCADE)
     first_name = models.CharField(max_length=200)
     last_name = models.CharField(max_length=200)
 

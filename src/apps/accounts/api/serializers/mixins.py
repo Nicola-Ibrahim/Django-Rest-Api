@@ -1,4 +1,3 @@
-from ..serializers.serializers import UserSerializer
 from . import factories as serializer_factory
 
 

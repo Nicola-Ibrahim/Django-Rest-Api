@@ -1,6 +1,6 @@
 import django_filters.rest_framework as filters
 
-from ...models.models import Student, Teacher, User
+from src.apps.accounts.models import models
 
 
 class UserFilter(filters.FilterSet):
@@ -14,10 +14,10 @@ class UserFilter(filters.FilterSet):
     """
 
     class Meta:
-        model = User
+        model = models.User
         fields = {
             "email": ["icontains"],  # Case-insensitive containment match
-            "is_verified": ["exact"],  # Exact match
+            # "is_verified": ["exact"],  # Exact match
         }
 
 
@@ -32,7 +32,7 @@ class TeacherFilter(filters.FilterSet):
     """
 
     class Meta:
-        model = Teacher
+        model = models.Teacher
         fields = {
             # "teacher_profile__name": [
             #     "icontains"
@@ -55,7 +55,7 @@ class StudentFilter(filters.FilterSet):
     """
 
     class Meta:
-        model = Student
+        model = models.Student
         fields = {
             # "student_profile__first_name": [
             #     "icontains"

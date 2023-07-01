@@ -1,7 +1,7 @@
-from .factories import UserTypeFilterFactory
+from .factories import UserTypeFilterBackend
 
 
 class FilterMixin:
     filter_backends = [
-        UserTypeFilterFactory,
+        UserTypeFilterBackend,
     ]

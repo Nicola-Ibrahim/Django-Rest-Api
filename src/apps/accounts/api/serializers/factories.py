@@ -1,11 +1,10 @@
-from ..exceptions import UserSerializerNotFound
-from .serializers import StudentUserSerializer, TeacherUserSerializer, UserSerializer
+from . import serializers
 
 
-def get_serializer(user_type: str) -> UserSerializer:
+def get_serializer(user_type: str) -> serializers.UserCreateSerializer:
     """Get the suitable serializer for user relying on its type
 
-    This method uses a dictionary of serializers_classes to get the UserSerializer subclass
+    This method uses a dictionary of serializers_classes to get the UserCreateSerializer subclass
     that matches the given user type. If no serializer is found, it raises a UserSerializerNotFound exception.
 
     Args:
@@ -15,18 +14,17 @@ def get_serializer(user_type: str) -> UserSerializer:
         UserSerializerNotFound: serializer not found error
 
     Returns:
-        UserSerializer: serializer for register a user
+        UserCreateSerializer: serializer for register a user
     """
 
     serializers_classes = {
-        "user": UserSerializer,
-        "admin": UserSerializer,
-        "teacher": TeacherUserSerializer,
-        "student": StudentUserSerializer,
+        "user": serializers.UserCreateSerializer,
+        "admin": serializers.AdminUserCreateSerializer,
+        "teacher": serializers.TeacherUserCreateSerializer,
+        "student": serializers.StudentUserCreateSerializer,
     }
 
     # Get the serializer from the serializers_classes dictionary
-    print(user_type)
-    serializer = serializers_classes.get(user_type, UserSerializer)
+    serializer = serializers_classes.get(user_type, serializers.UserCreateSerializer)
 
     return serializer

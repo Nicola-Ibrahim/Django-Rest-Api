@@ -10,10 +10,6 @@ class AdminProfileSerializer(BaseModelSerializer):
             "last_name",
         ]
 
-        extra_kwargs = {
-            "teacher": {"write_only": True},
-        }
-
 
 class TeacherProfileSerializer(BaseModelSerializer):
     class Meta:
@@ -22,12 +18,7 @@ class TeacherProfileSerializer(BaseModelSerializer):
             "first_name",
             "last_name",
             "num_courses",
-            "teacher",
         ]
-
-        extra_kwargs = {
-            "teacher": {"write_only": True},
-        }
 
 
 class StudentProfileSerializer(BaseModelSerializer):
@@ -37,9 +28,4 @@ class StudentProfileSerializer(BaseModelSerializer):
             "first_name",
             "last_name",
             "study_hours",
-            "student",
         ]
-
-        extra_kwargs = {
-            "student": {"write_only": True},
-        }

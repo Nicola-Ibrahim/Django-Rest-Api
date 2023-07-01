@@ -1,29 +1,76 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from src.apps.accounts.models.models import Student, Teacher
+from src.apps.accounts.models import models, profiles
 from src.apps.core.base_api.serializers import BaseModelSerializer, BaseSerializer
 
 from ..utils import get_user_from_access_token
-from .profile_serializers import StudentProfileSerializer, TeacherProfileSerializer
+from . import profile_serializers
 
 
-class UserSerializer(BaseModelSerializer):
-    """Serializer is responsible for creation and updating an instance"""
+class UserListSerializer(BaseModelSerializer):
+    """An abstract serializer for managing User model"""
 
-    manager_name = serializers.ReadOnlyField(source="manager.admin_profile.first_name")
-
-    groups = serializers.ReadOnlyField(source="groups.all.values")
-
-    password = serializers.CharField(
-        write_only=True, required=True, validators=[validate_password]
+    url = serializers.HyperlinkedIdentityField(
+        view_name="accounts-api:user-details-update-destroy",
+        lookup_field="id",
+        read_only=True,
     )
-    confirm_password = serializers.CharField(write_only=True, required=True)
 
-    # url = serializers.HyperlinkedIdentityField(
-    #     view_name="auth:details", read_only=True
-    # )
+    manager = serializers.SlugRelatedField(many=False, slug_field="email", read_only=True)
+
+    # Use SlugRelatedField for only accepting the name of the group (No need for other info)
+    groups = serializers.SlugRelatedField(
+        queryset=Group.objects.all(),
+        many=False,
+        slug_field="name",
+        allow_null=True,
+    )
+
+    profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = get_user_model()
+
+        fields = [
+            "id",
+            "url",
+            "email",
+            "first_name",
+            "last_name",
+            "is_staff",
+            "is_active",
+            "is_verified",
+            "is_superuser",
+            "groups",
+            "manager",
+            "profile",
+        ]
+
+    def get_profile(self, obj):
+        """Get the appropriate profile data for different user type"""
+        profiles_serializers = {
+            "admin": profile_serializers.AdminProfileSerializer(
+                instance=profiles.AdminProfile.objects.filter(admin=obj.id).first()
+            ),
+            "teacher": profile_serializers.TeacherProfileSerializer(
+                instance=profiles.TeacherProfile.objects.filter(teacher=obj.id).first()
+            ),
+            "student": profile_serializers.StudentProfileSerializer(
+                instance=profiles.StudentProfile.objects.filter(student=obj.id).first()
+            ),
+        }
+        serializer = profiles_serializers.get(obj.type.lower(), None)
+        return serializer.data
+
+
+class UserCreateSerializer(BaseModelSerializer):
+    """Serializer is responsible for creation and updating a user"""
+
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    confirm_password = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = get_user_model()
@@ -33,7 +80,6 @@ class UserSerializer(BaseModelSerializer):
         profile_serializer = None
 
         fields = [
-            "id",
             "email",
             "password",
             "confirm_password",
@@ -43,21 +89,7 @@ class UserSerializer(BaseModelSerializer):
             "street",
             "zipcode",
             "identification",
-            "type",
-            "manager_name",
-            "is_staff",
-            "is_active",
-            "is_verified",
-            "groups",
-            "manager",
         ]
-
-        read_only_fields = ("is_active", "is_staff")
-        extra_kwargs = {
-            "manager": {"write_only": True},
-            "password": {"write_only": True},
-            "confirm_password": {"write_only": True},
-        }
 
     def validate(self, attrs):
         """Override validate method to ensure user entered the same password values
@@ -72,9 +104,7 @@ class UserSerializer(BaseModelSerializer):
             user data: the user data after validation
         """
         if attrs["password"] != attrs["confirm_password"]:
-            raise serializers.ValidationError(
-                {"password": "Password fields didn't match."}
-            )
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
         return attrs
 
     def update(self, instance, validated_data):
@@ -105,7 +135,6 @@ class UserSerializer(BaseModelSerializer):
         Returns:
             User: a new inserted user
         """
-
         # Get the profile data of the user
         user_profile_data = validated_data.pop(self.Meta.profile_related_name)
 
@@ -129,30 +158,45 @@ class UserSerializer(BaseModelSerializer):
         return user
 
 
-class TeacherUserSerializer(UserSerializer):
+class AdminUserCreateSerializer(UserCreateSerializer):
     """
-    A subclass of UserSerializer for handling teacher users
+    A subclass of UserCreateSerializer for handling teacher users
     """
 
-    profile = TeacherProfileSerializer(source="teacher_profile")
+    profile = profile_serializers.AdminProfileSerializer(source="admin_profile")
 
-    class Meta(UserSerializer.Meta):
-        model = Teacher
-        fields = UserSerializer.Meta.fields + ["profile"]
+    class Meta(UserCreateSerializer.Meta):
+        model = models.Admin
+        fields = UserCreateSerializer.Meta.fields + ["profile"]
+        profile_related_name = "admin_profile"
+        profile_relation_field = "admin"
+        profile_serializer = profile_serializers.AdminProfileSerializer
+
+
+class TeacherUserCreateSerializer(UserCreateSerializer):
+    """
+    A subclass of UserCreateSerializer for handling teacher users
+    """
+
+    profile = profile_serializers.TeacherProfileSerializer(source="teacher_profile")
+
+    class Meta(UserCreateSerializer.Meta):
+        model = models.Teacher
+        fields = UserCreateSerializer.Meta.fields + ["profile"]
         profile_related_name = "teacher_profile"
         profile_relation_field = "teacher"
-        profile_serializer = TeacherProfileSerializer
+        profile_serializer = profile_serializers.TeacherProfileSerializer
 
 
-class StudentUserSerializer(UserSerializer):
-    profile = StudentProfileSerializer(source="student_profile")
+class StudentUserCreateSerializer(UserCreateSerializer):
+    profile = profile_serializers.StudentProfileSerializer(source="student_profile")
 
-    class Meta(UserSerializer.Meta):
-        model = Student
-        fields = UserSerializer.Meta.fields + ["profile"]
+    class Meta(UserCreateSerializer.Meta):
+        model = models.Student
+        fields = UserCreateSerializer.Meta.fields + ["profile"]
         profile_related_name = "student_profile"
         profile_relation_field = "student"
-        profile_serializer = StudentProfileSerializer
+        profile_serializer = profile_serializers.StudentProfileSerializer
 
 
 class AccountVerificationSerializer(BaseSerializer):
@@ -238,9 +282,7 @@ class VerifyOTPNumberSerializer(BaseSerializer):
         """Update the is_verified field after validate the otp number assigned to user"""
 
         # Get the OTP number of the user
-        instance = OTPNumber.objects.get(
-            user=self.context["request"].user, number=validated_data.get("otp")
-        )
+        instance = OTPNumber.objects.get(user=self.context["request"].user, number=validated_data.get("otp"))
 
         # Set OTP number to be verified
         instance.is_verified = True
@@ -254,9 +296,7 @@ class ChangePasswordSerializer(BaseSerializer):
 
     old_password = serializers.CharField(max_length=128, write_only=True, required=True)
     new_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    confirmed_password = serializers.CharField(
-        max_length=128, write_only=True, required=True
-    )
+    confirmed_password = serializers.CharField(max_length=128, write_only=True, required=True)
 
     def validate(self, attrs: dict):
         """Validate the inserted data, passwords and otp number"""
@@ -297,9 +337,7 @@ class ForgetPasswordSerializer(BaseSerializer):
     """This serializer is responsible for setting a new password of the user"""
 
     new_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    confirmed_password = serializers.CharField(
-        max_length=128, write_only=True, required=True
-    )
+    confirmed_password = serializers.CharField(max_length=128, write_only=True, required=True)
     otp = serializers.CharField(min_length=1, write_only=True, required=True)
 
     def validate(self, attrs: dict):
@@ -349,9 +387,7 @@ class FirstTimePasswordSerializer(BaseSerializer):
     """This serializer is responsible for setting a first time password of the user"""
 
     new_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    confirmed_password = serializers.CharField(
-        max_length=128, write_only=True, required=True
-    )
+    confirmed_password = serializers.CharField(max_length=128, write_only=True, required=True)
 
     def validate(self, attrs: dict):
         """Validate the inserted data, validate passwords and otp number"""

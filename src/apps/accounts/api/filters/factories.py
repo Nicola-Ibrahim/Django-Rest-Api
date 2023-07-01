@@ -4,7 +4,7 @@ from .. import exceptions
 from .filters import StudentFilter, TeacherFilter, UserFilter
 
 
-class UserTypeFilterFactory(filters.DjangoFilterBackend):
+class UserTypeFilterBackend(filters.DjangoFilterBackend):
     """A factory class that returns the suitable filter class based on the user type.
 
     This class inherits from DjangoFilterBackend and overrides the get_filterset_class method
@@ -15,12 +15,12 @@ class UserTypeFilterFactory(filters.DjangoFilterBackend):
     """
 
     filters_classes = {
-        "user": UserFilter,
-        "warehouse": TeacherFilter,
-        "doctor": StudentFilter,
+        "admin": UserFilter,
+        "teacher": TeacherFilter,
+        "student": StudentFilter,
     }
 
-    def get_suitable_filter(self, type: str) -> filters.FilterSet:
+    def get_filter(self, type: str) -> filters.FilterSet:
         """Returns the FilterSet subclass that matches the given user type.
 
         Args:
@@ -32,17 +32,14 @@ class UserTypeFilterFactory(filters.DjangoFilterBackend):
         Raises:
             exceptions.UserFilterNotFound: If no FilterSet subclass is found for the given user type.
         """
-        filter_ = self.filters_classes.get(type, None)
+        # filter_ = self.filters_classes.get(type, UserFilter)
 
-        if not filter_:
-            raise exceptions.UserFilterNotFound()
-
-        return filter_
+        return UserFilter
 
     def get_filterset_class(self, view, queryset=None):
         """Return the `FilterSet` class used to filter the queryset.
 
-        This method overrides the base class method and calls get_suitable_filter
+        This method overrides the base class method and calls get_filter
         to get the FilterSet subclass based on the user type in the view kwargs.
 
         Args:
@@ -56,11 +53,17 @@ class UserTypeFilterFactory(filters.DjangoFilterBackend):
             AssertionError: If the FilterSet model does not match the queryset model.
         """
         # Get the FilterSet subclass from the user type
-        # filterset_class = self.get_suitable_filter(view.kwargs["user_type"])
-        filterset_class = self.get_suitable_filter(view.get("user_type", ""))
+        # filterset_class = self.get_filter(view.kwargs["user_type"])
+        filterset_class = self.get_filter(view.get("user_type", ""))
 
         # Get the fields to filter by from the view attribute
         filterset_fields = getattr(view, "filterset_fields", None)  # type: ignore # noqa: F841
+
+        # import logging
+
+        # logger = logging.getLogger(__name__)
+        # logger.debug(filterset_class)
+        # logger.debug(filterset_fields)
 
         if filterset_class:
             # Get the model class from the FilterSet meta class

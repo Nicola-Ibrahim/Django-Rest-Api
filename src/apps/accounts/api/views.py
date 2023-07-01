@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
@@ -13,8 +14,8 @@ from src.apps.core import mailers
 from src.apps.core.base_api import views as base_views
 
 from . import responses
-from .filters.mixins import FilterMixin
-from .permissions import mixins as permissions_mixin
+from .filters import mixins as filters_mixins
+from .permissions import mixins as permissions_mixins
 from .queryset.mixins import InUserTypeQuerySetMixin, QueryParamUserTypeQuerySetMixin
 from .serializers import factories as serializer_factory
 from .serializers import serializers
@@ -31,17 +32,15 @@ class VerifyAccount(base_views.BaseGenericAPIView):
     serializer_class = serializers.AccountVerificationSerializer
 
     def get(self, request):
-        serializer = self.get_serializer(
-            request.GET.get("token"), context={"request": request}
-        )
+        serializer = self.get_serializer(request.GET.get("token"), context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return responses.ActivatedAccount()
 
 
 class UserListView(
-    # FilterMixin,
-    # permissions_mixin.ListCreateUserPermissionMixin,
+    # filters_mixins.FilterMixin,
+    # permissions_mixins.ListCreateUserPermissionMixin,
     ListModelMixin,
     base_views.BaseGenericAPIView,
 ):
@@ -49,16 +48,24 @@ class UserListView(
     """View for listing a new user."""
 
     queryset = get_user_model().objects.all()
-    serializer_class = serializers.UserSerializer
+    serializer_class = serializers.UserListSerializer
 
     def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class UserCreateView(
     QueryParamUserTypeQuerySetMixin,
     # FilterMixin,
-    # permissions_mixin.ListCreateUserPermissionMixin,
+    # permissions_mixins.ListCreateUserPermissionMixin,
     ListModelMixin,
     CreateModelMixin,
     base_views.BaseGenericAPIView,
@@ -72,15 +79,11 @@ class UserCreateView(
         """
         Get the appropriate serializer depending on the url user_type param
         """
-        serializer_class = serializer_factory.get_serializer(
-            self.kwargs.get("user_type")
-        )
+        serializer_class = serializer_factory.get_serializer(self.kwargs.get("user_type"))
         return serializer_class
 
     def post(self, request, *args, **kwargs) -> Response:
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
 
         # TODO: pass the type of created user to the serializer to put the user type attribute
@@ -91,14 +94,12 @@ class UserCreateView(
         # mailers.RegisterMailer(
         #     to_email=user.email, password=password
         # ).send_email()
-        mailers.VerificationMailer(
-            token=user.tokens()["access"], to_emails=[user.email], request=request
-        )
+        mailers.VerificationMailer(token=user.tokens()["access"], to_emails=[user.email], request=request)
         return responses.UserCreateResponse()
 
 
 class UserDetailsUpdateDestroyView(
-    # permissions_mixin.BasePermissionMixin,
+    # permissions_mixins.BasePermissionMixin,
     RetrieveModelMixin,
     UpdateModelMixin,
     DestroyModelMixin,
@@ -108,9 +109,7 @@ class UserDetailsUpdateDestroyView(
     lookup_field = "id"
 
     def get_serializer_class(self, *args, **kwargs):
-        serializer_class = serializer_factory.get_serializer(
-            user_type=self.request.user.type
-        )
+        serializer_class = serializer_factory.get_serializer(user_type=self.request.user.type)
         return serializer_class
 
     def get(self, request, *args, **kwargs) -> Response:
@@ -143,9 +142,7 @@ class ForgetPasswordRequestView(base_views.BaseGenericAPIView):
     serializer_class = serializers.ForgetPasswordRequestSerializer
 
     def post(self, request):
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=request.data, context={"request": request})
 
         # Validate user's email and check existence
         serializer.is_valid(raise_exception=True)
@@ -169,9 +166,7 @@ class VerifyOTPNumberView(base_views.BaseGenericAPIView):
     serializer_class = serializers.VerifyOTPNumberSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -189,9 +184,7 @@ class BaseResetPasswordView(base_views.BaseGenericAPIView):
         abstract = True
 
     def patch(self, request):
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
