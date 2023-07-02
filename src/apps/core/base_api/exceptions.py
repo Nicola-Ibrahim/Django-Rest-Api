@@ -41,7 +41,7 @@ class BaseException(APIException):
 
     def with_data(self, **kwargs):
         """Update the data dictionary in The Response"""
-        pass
+        return self
 
 
 class NotAuthenticated(BaseException):
@@ -68,11 +68,7 @@ class SerializerFieldsError(BaseException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_code = "invalid"
 
-    def __init__(self, errors, detail=None, code=None, status_code=None):
-        self.with_data(errors=errors)
-        super().__init__(detail, code, status_code)
-
-    def with_data(self, **kwargs):
+    def with_data(self, errors: dict):
         def _get_error_code(error_detail):
             """Get the error code associated with the occurred error"""
             if hasattr(error_detail, "code"):
@@ -99,4 +95,6 @@ class SerializerFieldsError(BaseException):
                 if isinstance(error, dict):
                     return _create_error_list(error)
 
-        _create_error_list(kwargs.get("errors"))
+        _create_error_list(errors=errors)
+
+        return super().with_data()

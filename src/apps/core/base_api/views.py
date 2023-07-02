@@ -34,4 +34,4 @@ class LanguagesListView(BaseAPIView):
         # Get the list of available supported languages.
         languages = settings.LANGUAGES
 
-        return responses.LanguagesListResponse(languages=languages)
+        return responses.LanguagesListResponse().with_data(languages=languages)

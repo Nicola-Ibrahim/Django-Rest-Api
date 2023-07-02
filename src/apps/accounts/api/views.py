@@ -39,7 +39,7 @@ class VerifyAccount(base_views.BaseGenericAPIView):
 
 
 class UserListView(
-    filters_mixins.FilterMixin,
+    # filters_mixins.FilterMixin,
     # permissions_mixins.ListCreateUserPermissionMixin,
     ListModelMixin,
     base_views.BaseGenericAPIView,
@@ -88,13 +88,15 @@ class UserCreateView(
 
         # TODO: pass the type of created user to the serializer to put the user type attribute
         # Create the user
-        user = serializer.save()
+        serializer.save()
 
         # Send welcome email
         # mailers.RegisterMailer(
         #     to_email=user.email, password=password
         # ).send_email()
-        mailers.VerificationMailer(token=user.tokens()["access"], to_emails=[user.email], request=request)
+        # mailers.VerificationMailer(
+        #     token=user.tokens()["access"], to_emails=[user.email], request=request
+        # )
         return responses.UserCreateResponse().with_data(user_data=serializer.data)
 
 

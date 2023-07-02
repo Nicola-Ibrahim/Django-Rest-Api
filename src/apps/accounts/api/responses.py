@@ -32,6 +32,8 @@ class UserCreateResponse(BaseResponse):
         if user_data:
             self.data_["data"] = user_data
 
+        return super().with_data()
+
 
 class VerifyOTPResponse(BaseResponse):
     data_ = {
@@ -62,3 +64,5 @@ class ForgetPasswordRequestResponse(BaseResponse):
     def with_data(self, user: models.User):
         if user:
             self.data_["data"]["access_token"] = user.get_tokens()["access"]
+
+        return super().with_data()

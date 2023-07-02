@@ -51,3 +51,4 @@ class FirstTimePasswordError(BaseException):
 
     def with_data(self, access_token: str):
         self.detail_["data"]["access_token"] = access_token
+        return super().with_data()

@@ -32,10 +32,8 @@ class BaseResponse(Response):
         super().__init__(data, status, template_name, headers, exception, content_type)
 
     def with_data(self, **kwargs):
-        """Update the data dictionary in The Response.
-        Override it when need to add data to response
-        """
-        pass
+        """Update the data dictionary in The Response"""
+        return self
 
 
 class LanguagesListResponse(BaseResponse):
@@ -46,19 +44,7 @@ class LanguagesListResponse(BaseResponse):
     }
     status_ = status.HTTP_200_OK
 
-    def __init__(
-        self,
-        languages,
-        data=None,
-        status=None,
-        template_name=None,
-        headers=None,
-        exception=False,
-        content_type=None,
-    ):
-        self.with_data(languages=languages)
-        super().__init__(data, status, template_name, headers, exception, content_type)
-
-    def with_data(self, **kwargs):
-        languages = kwargs.get("languages", [])
+    def with_data(self, languages: list):
         self.data_["data"]["languages"] = [{"code": code, "name": _(name)} for code, name in languages]
+
+        return super().with_data()
