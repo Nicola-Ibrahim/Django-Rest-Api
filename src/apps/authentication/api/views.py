@@ -18,7 +18,7 @@ class LoginView(BaseGenericAPIView):
 
         user = serializer.validated_data.get("user")
 
-        return responses.LoginResponse(user=user)
+        return responses.LoginResponse().with_data(user_details=user.get_user_details())
 
 
 class LogoutView(BasePermissionMixin, BaseGenericAPIView):
@@ -37,6 +37,6 @@ class LogoutView(BasePermissionMixin, BaseGenericAPIView):
 class CheckJWTTokenView(BasePermissionMixin, BaseAPIView):
     def post(self, request, *args, **kwargs):
         if not request.user.is_password_changed:
-            raise exceptions.FirstTimePasswordError(user=request.user)
+            raise exceptions.FirstTimePasswordError().with_data(token=self.request.user.get_tokens()["access"])
 
         return responses.CheckJWTTokenResponse(user=request.user)

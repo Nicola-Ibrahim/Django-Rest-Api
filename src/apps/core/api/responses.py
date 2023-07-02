@@ -31,7 +31,7 @@ class BaseResponse(Response):
 
         super().__init__(data, status, template_name, headers, exception, content_type)
 
-    def update_data(self, **kwargs):
+    def with_data(self, **kwargs):
         """Update the data dictionary in The Response"""
         pass
 
@@ -54,9 +54,9 @@ class LanguagesListResponse(BaseResponse):
         exception=False,
         content_type=None,
     ):
-        self.update_data(languages=languages)
+        self.with_data(languages=languages)
         super().__init__(data, status, template_name, headers, exception, content_type)
 
-    def update_data(self, **kwargs):
+    def with_data(self, **kwargs):
         languages = kwargs.get("languages", [])
         self.data_["data"]["languages"] = [{"code": code, "name": _(name)} for code, name in languages]

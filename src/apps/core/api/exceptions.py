@@ -39,7 +39,7 @@ class BaseException(APIException):
 
         self.detail = _get_error_details(detail, code)
 
-    def update_data(self, **kwargs):
+    def with_data(self, **kwargs):
         """Update the data dictionary in The Response"""
         pass
 
@@ -69,10 +69,10 @@ class SerializerFieldsError(BaseException):
     default_code = "invalid"
 
     def __init__(self, errors, detail=None, code=None, status_code=None):
-        self.update_data(errors=errors)
+        self.with_data(errors=errors)
         super().__init__(detail, code, status_code)
 
-    def update_data(self, **kwargs):
+    def with_data(self, **kwargs):
         def _get_error_code(error_detail):
             """Get the error code associated with the occurred error"""
             if hasattr(error_detail, "code"):
@@ -84,7 +84,7 @@ class SerializerFieldsError(BaseException):
 
         def _get_error_message(error_detail):
             """Get the error message associated with the occurred error"""
-            
+
             return error_detail[0]
 
         def _create_error_list(errors: dict):

@@ -49,12 +49,5 @@ class FirstTimePasswordError(BaseException):
     }
     status_code = status.HTTP_200_OK
 
-    def __init__(self, user, detail=None, code=None, status_code=None):
-        self.update_data(user=user)
-        super().__init__(detail=detail, code=code, status_code=status_code)
-
-    def update_data(self, **kwargs):
-        user = kwargs.get("user")
-        # Add access token to the data
-        if user:
-            self.detail_["data"]["access_token"] = user.get_tokens()["access"]
+    def with_data(self, access_token: str):
+        self.detail_["data"]["access_token"] = access_token

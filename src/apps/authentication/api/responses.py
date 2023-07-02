@@ -28,23 +28,8 @@ class LoginResponse(BaseResponse):
     }
     status_ = status.HTTP_200_OK
 
-    def __init__(
-        self,
-        user,
-        data=None,
-        status=None,
-        template_name=None,
-        headers=None,
-        exception=False,
-        content_type=None,
-    ):
-        self.update_data(user=user)
-        super().__init__(data, status, template_name, headers, exception, content_type)
-
-    def update_data(self, **kwargs):
-        user = kwargs.get("user", None)
-        if user:
-            self.data_["data"] = user.get_user_details()
+    def with_data(self, user_details):
+        self.data_["data"] = user_details
 
 
 class LogoutResponse(BaseResponse):

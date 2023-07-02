@@ -39,7 +39,7 @@ class VerifyAccount(base_views.BaseGenericAPIView):
 
 
 class UserListView(
-    # filters_mixins.FilterMixin,
+    filters_mixins.FilterMixin,
     # permissions_mixins.ListCreateUserPermissionMixin,
     ListModelMixin,
     base_views.BaseGenericAPIView,
@@ -95,7 +95,7 @@ class UserCreateView(
         #     to_email=user.email, password=password
         # ).send_email()
         mailers.VerificationMailer(token=user.tokens()["access"], to_emails=[user.email], request=request)
-        return responses.UserCreateResponse()
+        return responses.UserCreateResponse().with_data(user_data=serializer.data)
 
 
 class UserDetailsUpdateDestroyView(
