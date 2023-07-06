@@ -39,7 +39,7 @@ class VerifyAccount(base_views.BaseGenericAPIView):
 
 
 class UserListView(
-    # filters_mixins.FilterMixin,
+    filters_mixins.FilterMixin,
     # permissions_mixins.ListCreateUserPermissionMixin,
     ListModelMixin,
     base_views.BaseGenericAPIView,
@@ -59,7 +59,7 @@ class UserListView(
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        return responses.UserListResponse().with_data(users_data=serializer.data)
 
 
 class UserCreateView(

@@ -28,7 +28,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
 
         # Raise Field Error exception
         if self._errors and raise_exception:
-            raise exceptions.SerializerFieldsError(errors=self.errors)
+            raise exceptions.SerializerFieldsError().with_data(errors=self.errors)
 
         return not bool(self._errors)
 
@@ -55,7 +55,7 @@ class BaseSerializer(serializers.Serializer):
 
         # Raise Field Error exception
         if self._errors and raise_exception:
-            raise exceptions.SerializerFieldsError(errors=self.errors)
+            raise exceptions.SerializerFieldsError().with_data(errors=self.errors)
 
         return not bool(self._errors)
 

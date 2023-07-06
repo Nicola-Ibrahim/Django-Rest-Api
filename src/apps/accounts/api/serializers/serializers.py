@@ -73,7 +73,7 @@ class UserCreateSerializer(BaseModelSerializer):
     confirm_password = serializers.CharField(write_only=True, required=True)
 
     class Meta:
-        model = get_user_model()
+        model = None
         ordering = ["-id"]
         profile_related_name = ""
         profile_relation_field = ""
@@ -105,6 +105,7 @@ class UserCreateSerializer(BaseModelSerializer):
         """
         if attrs["password"] != attrs["confirm_password"]:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
+
         return attrs
 
     def update(self, instance, validated_data):
@@ -136,24 +137,25 @@ class UserCreateSerializer(BaseModelSerializer):
             User: a new inserted user
         """
         # Get the profile data of the user
-        user_profile_data = validated_data.pop(self.Meta.profile_related_name)
+        user_profile_data = validated_data.pop(self.Meta.profile_related_name)  # type: ignore # noqa:F841
 
         # Remove confirm_password field value from the inserted data
         validated_data.pop("confirm_password")
 
-        # Create a new teacher user without saving
-        user = super().create(validated_data)
+        print(validated_data)
 
-        # Create profile data for the user
-        user_profile_data[self.Meta.profile_relation_field] = user.id
-        profile_serializer = self.Meta.profile_serializer(data=user_profile_data)
-        profile_serializer.is_valid(raise_exception=True)
+        # Create a new teacher user without saving
+        user = self.Meta.model.objects.create(**validated_data)
+
+        print(user)
+
+        # # Create profile data for the user
+        # user_profile_data[self.Meta.profile_relation_field] = user.id
+        # profile_serializer = self.Meta.profile_serializer(data=user_profile_data)
+        # profile_serializer.is_valid(raise_exception=True)
 
         # Save the user's profile
-        profile_serializer.save()
-
-        # Save the user
-        user.save()
+        # profile_serializer.save()
 
         return user
 

@@ -11,6 +11,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from . import utils
 from .managers import CustomUserManager, ProxyUserManger
+from .validators import validate_name
 
 
 class User(AbstractUser):
@@ -23,15 +24,14 @@ class User(AbstractUser):
 
     # Set username to none
     username = None
-    # first_name = None
-    # last_name = None
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
-    email = models.EmailField(("email address"), unique=True, validators=[validate_email])
     USERNAME_FIELD = "email"  # Set email field as a username
     REQUIRED_FIELDS = ["password"]  # Remove email from required fields
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    email = models.EmailField(_("email address"), unique=True, validators=[validate_email])
+    first_name = models.CharField(_("first name"), max_length=150, blank=True, validators=[validate_name])
+    last_name = models.CharField(_("last name"), max_length=150, blank=True, validators=[validate_name])
     phone_number = models.IntegerField(null=True, blank=True)
     state = models.CharField(max_length=50, null=True, blank=True)
     city = models.CharField(max_length=50, null=True, blank=True)

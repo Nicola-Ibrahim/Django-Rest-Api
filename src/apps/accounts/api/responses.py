@@ -11,6 +11,7 @@ from src.apps.core.base_api.responses import BaseResponse
 
 
 class OperationCode(enum.Enum):
+    Listing = _("listing")
     Created = _("created")
     Updated = _("updated")
     Deleted = _("deleted")
@@ -18,6 +19,23 @@ class OperationCode(enum.Enum):
     Reset_Password = _("reset_password")
     Forget_Password = _("forget_password")
     First_Time_Password = _("first_time_password")
+
+
+class UserListResponse(BaseResponse):
+    data_ = {
+        "code": OperationCode.Listing.value,
+        "detail": _("The user has been created"),
+        "data": [],
+    }
+
+    status_ = status.HTTP_200_OK
+
+    def with_data(self, users_data: list):
+        if users_data:
+            self.data_["detail"] = _(f"{len(users_data)} users have been found")
+            self.data_["data"] = users_data
+
+        return super().with_data()
 
 
 class UserCreateResponse(BaseResponse):

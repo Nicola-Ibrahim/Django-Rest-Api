@@ -10,6 +10,7 @@ from .models import models, profiles
 # Define an inline admin descriptor for the profile model
 
 
+@admin.register(models.User)
 class UserAdmin(DjangoUserAdmin):
     """Define admin model for custom User model."""
 
@@ -19,6 +20,8 @@ class UserAdmin(DjangoUserAdmin):
             ("Personal info"),
             {
                 "fields": (
+                    "first_name",
+                    "last_name",
                     "phone_number",
                     "state",
                     "city",
@@ -115,3 +118,17 @@ class TeacherUserAdmin(UserAdmin):
     """Define admin model for custom User model."""
 
     inlines = (TeacherProfileInline,)
+
+
+class StudentProfileInline(admin.StackedInline):
+    # Use the custom inline formset
+    model = profiles.StudentProfile
+    can_delete = False
+    verbose_name_plural = "profile"
+
+
+@admin.register(models.Student)
+class StudentUserAdmin(UserAdmin):
+    """Define admin model for custom User model."""
+
+    inlines = (StudentProfileInline,)
