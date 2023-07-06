@@ -1,12 +1,19 @@
 import enum
 
+from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.exceptions import APIException, _get_error_details
 
 
 class ErrorCode(enum.Enum):
+    Not_Exists = _("not_exists")
     Not_Authenticated = "not_authenticated"
-    Permission_Denied = "permission_denied"
+    JWT_No_Type = _("JWT_no_type")
+    JWT_No_Id = _("JWT_no_id")
+    JWT_Wrong_Type = _("JWT_wrong_type")
+    JWT_token_not_valid = _("token_not_valid")
+    Bad_Authorization_Header = _("bad_authorization_header")
+    Permission_Denied = _("permission_denied")
     Field_Error = "field_error"
 
 
@@ -48,6 +55,78 @@ class NotAuthenticated(BaseException):
     detail_ = {
         "code": ErrorCode.Not_Authenticated.value,
         "detail": "Authentication credentials were not provided.",
+    }
+    status_code = status.HTTP_401_UNAUTHORIZED
+
+
+class JWTAccessTokenNotValid(BaseException):
+    detail_ = {
+        "code": ErrorCode.JWT_token_not_valid.value,
+        "detail": _("Given access token not valid for any token type or expired."),
+    }
+    status_code = status.HTTP_401_UNAUTHORIZED
+
+
+class JWTAccessTokenNotExists(BaseException):
+    detail_ = {
+        "code": ErrorCode.Not_Exists.value,
+        "detail": _("The access token does not exists in the header."),
+    }
+    status_code = status.HTTP_404_NOT_FOUND
+
+
+class JWTAccessTokenHasNoType(BaseException):
+    detail_ = {
+        "code": ErrorCode.JWT_No_Type.value,
+        "detail": _("The access token has no type."),
+    }
+    status_code = status.HTTP_404_NOT_FOUND
+
+
+class JWTAccessTokenHasWrongType(BaseException):
+    detail_ = {
+        "code": ErrorCode.JWT_Wrong_Type.value,
+        "detail": _("The access token has wrong type."),
+    }
+    status_code = status.HTTP_400_BAD_REQUEST
+
+
+class JWTAccessTokenHasNoId(BaseException):
+    detail_ = {
+        "code": ErrorCode.JWT_No_Id.value,
+        "detail": _("The access token has no id."),
+    }
+    status_code = status.HTTP_404_NOT_FOUND
+
+
+class JWTRefreshTokenHasNoType(BaseException):
+    detail_ = {
+        "code": ErrorCode.JWT_No_Type.value,
+        "detail": _("The refresh token has no type."),
+    }
+    status_code = status.HTTP_404_NOT_FOUND
+
+
+class JWTRefreshTokenHasWrongType(BaseException):
+    detail_ = {
+        "code": ErrorCode.JWT_Wrong_Type.value,
+        "detail": _("The refresh token has wrong type."),
+    }
+    status_code = status.HTTP_400_BAD_REQUEST
+
+
+class JWTRefreshTokenHasNoId(BaseException):
+    detail_ = {
+        "code": ErrorCode.JWT_No_Id.value,
+        "detail": _("The refresh token has no id."),
+    }
+    status_code = status.HTTP_404_NOT_FOUND
+
+
+class JWTAuthenticationFailed(BaseException):
+    detail_ = {
+        "code": ErrorCode.Bad_Authorization_Header.value,
+        "detail": _("Authorization header must contain two space-delimited values."),
     }
     status_code = status.HTTP_401_UNAUTHORIZED
 
@@ -94,6 +173,9 @@ class SerializerFieldsError(BaseException):
 
                 if isinstance(error, dict):
                     return _create_error_list(error)
+
+        # Reset detail befor appending new error messages
+        self.detail_["detail"] = []
 
         _create_error_list(errors=errors)
 

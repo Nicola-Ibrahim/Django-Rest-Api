@@ -6,7 +6,7 @@ from rest_framework_simplejwt.authentication import (
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.settings import api_settings
 
-from src.apps.authentication.api import exceptions
+from src.apps.core.base_api import exceptions
 
 AUTH_HEADER_TYPES = api_settings.AUTH_HEADER_TYPES
 AUTH_HEADER_TYPE_BYTES = {h.encode(HTTP_HEADER_ENCODING) for h in AUTH_HEADER_TYPES}

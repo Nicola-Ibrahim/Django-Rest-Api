@@ -3,10 +3,10 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from src.apps.accounts.models import models, profiles
+from src.apps.accounts.api import exceptions
+from src.apps.accounts.models import models, profiles, utils
 from src.apps.core.base_api.serializers import BaseModelSerializer, BaseSerializer
 
-from ..utils import get_user_from_access_token
 from . import profile_serializers
 
 
@@ -19,7 +19,9 @@ class UserListSerializer(BaseModelSerializer):
         read_only=True,
     )
 
-    manager = serializers.SlugRelatedField(many=False, slug_field="email", read_only=True)
+    manager = serializers.SlugRelatedField(
+        many=False, slug_field="email", read_only=True
+    )
 
     # Use SlugRelatedField for only accepting the name of the group (No need for other info)
     groups = serializers.SlugRelatedField(
@@ -66,10 +68,58 @@ class UserListSerializer(BaseModelSerializer):
         return serializer.data
 
 
+class UserDetailsSerializer(BaseModelSerializer):
+    """An abstract serializer for managing User model"""
+
+    # Use SlugRelatedField for only accepting the name of the group (No need for other info)
+    groups = serializers.SlugRelatedField(
+        queryset=Group.objects.all(),
+        many=False,
+        slug_field="name",
+        allow_null=True,
+    )
+
+    profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = get_user_model()
+
+        fields = [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "is_staff",
+            "is_active",
+            "is_verified",
+            "is_superuser",
+            "groups",
+            "profile",
+        ]
+
+    def get_profile(self, obj):
+        """Get the appropriate profile data for different user type"""
+        profiles_serializers = {
+            "admin": profile_serializers.AdminProfileSerializer(
+                instance=profiles.AdminProfile.objects.filter(admin=obj.id).first()
+            ),
+            "teacher": profile_serializers.TeacherProfileSerializer(
+                instance=profiles.TeacherProfile.objects.filter(teacher=obj.id).first()
+            ),
+            "student": profile_serializers.StudentProfileSerializer(
+                instance=profiles.StudentProfile.objects.filter(student=obj.id).first()
+            ),
+        }
+        serializer = profiles_serializers.get(obj.type.lower(), None)
+        return serializer.data
+
+
 class UserCreateSerializer(BaseModelSerializer):
     """Serializer is responsible for creation and updating a user"""
 
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password = serializers.CharField(
+        write_only=True, required=True, validators=[validate_password]
+    )
     confirm_password = serializers.CharField(write_only=True, required=True)
 
     class Meta:
@@ -104,7 +154,7 @@ class UserCreateSerializer(BaseModelSerializer):
             user data: the user data after validation
         """
         if attrs["password"] != attrs["confirm_password"]:
-            raise serializers.ValidationError({"password": "Password fields didn't match."})
+            raise exceptions.NotSimilarPasswords()
 
         return attrs
 
@@ -206,7 +256,7 @@ class AccountVerificationSerializer(BaseSerializer):
 
     def validate(self, attrs):
         # Get the use id from the payload
-        user = get_user_from_access_token(attrs.get("token"))
+        user = utils.get_user_from_access_token(attrs.get("token"))
 
         # Add the user instance to validated data
         attrs["user"] = user
@@ -239,19 +289,19 @@ class ForgetPasswordRequestSerializer(BaseSerializer):
         user = get_user_model().objects.filter(email=email)
 
         if not user.exists():
-            raise accounts_exceptions.UserNotExists()
+            raise exceptions.UserNotExists()
 
         user = user.first()
 
         attrs["email"] = email
-        attrs["otp"] = OTPNumber.get_number()
+        attrs["otp"] = models.OTPNumber.get_number()
         attrs["user"] = user
         return attrs
 
     def create(self, validated_data):
         """Create an OTP number for the user"""
 
-        instance = OTPNumber.objects.update_or_create(
+        instance = models.OTPNumber.objects.update_or_create(
             defaults={
                 "number": validated_data.get("otp"),
                 "user": validated_data.get("user"),
@@ -268,15 +318,15 @@ class VerifyOTPNumberSerializer(BaseSerializer):
         otp = attrs.get("otp", "")
 
         user = self.context["request"].user
-        otp_instance = OTPNumber.objects.filter(user=user, number=otp)
+        otp_instance = models.OTPNumber.objects.filter(user=user, number=otp)
 
         # Check if the OTP number does not exists
         if not otp_instance.exists():
-            raise authentication_exceptions.WrongOTP()
+            raise exceptions.WrongOTP()
 
         # If the OTP number is expired
         if not otp_instance.first().check_num(otp):
-            raise authentication_exceptions.OTPExpired()
+            raise exceptions.OTPExpired()
 
         return attrs
 
@@ -284,7 +334,9 @@ class VerifyOTPNumberSerializer(BaseSerializer):
         """Update the is_verified field after validate the otp number assigned to user"""
 
         # Get the OTP number of the user
-        instance = OTPNumber.objects.get(user=self.context["request"].user, number=validated_data.get("otp"))
+        instance = models.OTPNumber.objects.get(
+            user=self.context["request"].user, number=validated_data.get("otp")
+        )
 
         # Set OTP number to be verified
         instance.is_verified = True
@@ -298,7 +350,9 @@ class ChangePasswordSerializer(BaseSerializer):
 
     old_password = serializers.CharField(max_length=128, write_only=True, required=True)
     new_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    confirmed_password = serializers.CharField(max_length=128, write_only=True, required=True)
+    confirmed_password = serializers.CharField(
+        max_length=128, write_only=True, required=True
+    )
 
     def validate(self, attrs: dict):
         """Validate the inserted data, passwords and otp number"""
@@ -306,11 +360,11 @@ class ChangePasswordSerializer(BaseSerializer):
         # Validate the if the old password is correct for the request user
         user = self.context["request"].user
         if not user.check_password(attrs["old_password"]):
-            raise accounts_exceptions.WrongPassword()
+            raise exceptions.WrongPassword()
 
         # Check if the two inserted password are similar
         if attrs["new_password"] != attrs["confirmed_password"]:
-            raise accounts_exceptions.NotSimilarPasswords()
+            raise exceptions.NotSimilarPasswords()
 
         # Validate the password if it meets all validator requirements
         user_validate_password(attrs["new_password"], self.context["request"].user)
@@ -339,7 +393,9 @@ class ForgetPasswordSerializer(BaseSerializer):
     """This serializer is responsible for setting a new password of the user"""
 
     new_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    confirmed_password = serializers.CharField(max_length=128, write_only=True, required=True)
+    confirmed_password = serializers.CharField(
+        max_length=128, write_only=True, required=True
+    )
     otp = serializers.CharField(min_length=1, write_only=True, required=True)
 
     def validate(self, attrs: dict):
@@ -352,15 +408,15 @@ class ForgetPasswordSerializer(BaseSerializer):
 
         # Check if the OTP number does not exists
         if not otp_instance.exists():
-            raise authentication_exceptions.WrongOTP()
+            raise exceptions.WrongOTP()
 
         # Check if the user OTP number is verified
         if not otp_instance.first().is_verified:
-            raise authentication_exceptions.OTPNotVerified()
+            raise exceptions.OTPNotVerified()
 
         # Check if the two inserted password are similar
         if attrs["new_password"] != attrs["confirmed_password"]:
-            raise accounts_exceptions.NotSimilarPasswords()
+            raise exceptions.NotSimilarPasswords()
 
         # Validate the password if it meets all validator requirements
         user_validate_password(attrs["new_password"], self.context["request"].user)
@@ -389,14 +445,16 @@ class FirstTimePasswordSerializer(BaseSerializer):
     """This serializer is responsible for setting a first time password of the user"""
 
     new_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    confirmed_password = serializers.CharField(max_length=128, write_only=True, required=True)
+    confirmed_password = serializers.CharField(
+        max_length=128, write_only=True, required=True
+    )
 
     def validate(self, attrs: dict):
         """Validate the inserted data, validate passwords and otp number"""
 
         # Check if the two inserted password are similar
         if attrs["new_password"] != attrs["confirmed_password"]:
-            raise accounts_exceptions.NotSimilarPasswords()
+            raise exceptions.NotSimilarPasswords()
 
         # Validate the password if it meets all validator requirements
         user_validate_password(attrs["new_password"], self.context["request"].user)

@@ -28,7 +28,7 @@ class BaseModelSerializer(serializers.ModelSerializer):
 
         # Raise Field Error exception
         if self._errors and raise_exception:
-            raise exceptions.SerializerFieldsError().with_data(errors=self.errors)
+            raise exceptions.SerializerFieldsError().with_data(errors=self._errors)
 
         return not bool(self._errors)
 
@@ -69,11 +69,15 @@ class HourTimeField(serializers.TimeField):
         try:
             hour = int(value)
         except ValueError:
-            raise serializers.ValidationError("Invalid time format. Expected only hours.")
+            raise serializers.ValidationError(
+                "Invalid time format. Expected only hours."
+            )
 
         # Check if the hour is valid
         if hour < 0 or hour > 23:
-            raise serializers.ValidationError("Invalid hour value. Expected between 0 and 23.")
+            raise serializers.ValidationError(
+                "Invalid hour value. Expected between 0 and 23."
+            )
 
         # Convert the hour to a datetime.time object
         return datetime.time(hour=hour)

@@ -24,7 +24,7 @@ class OperationCode(enum.Enum):
 class UserListResponse(BaseResponse):
     data_ = {
         "code": OperationCode.Listing.value,
-        "detail": _("The user has been created"),
+        "detail": _("No users found"),
         "data": [],
     }
 
@@ -51,6 +51,15 @@ class UserCreateResponse(BaseResponse):
             self.data_["data"] = user_data
 
         return super().with_data()
+
+
+class UserDestroyResponse(BaseResponse):
+    data_ = {
+        "code": OperationCode.Deleted.value,
+        "detail": _("The user has been deleted"),
+    }
+
+    status_ = status.HTTP_204_NO_CONTENT
 
 
 class VerifyOTPResponse(BaseResponse):

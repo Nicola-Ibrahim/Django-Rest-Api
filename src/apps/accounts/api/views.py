@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from src.apps.core import mailers
 from src.apps.core.base_api import views as base_views
 
+from ..models import factories as model_factory
 from . import responses
 from .filters import mixins as filters_mixins
 from .permissions import mixins as permissions_mixins
@@ -32,14 +33,16 @@ class VerifyAccount(base_views.BaseGenericAPIView):
     serializer_class = serializers.AccountVerificationSerializer
 
     def get(self, request):
-        serializer = self.get_serializer(request.GET.get("token"), context={"request": request})
+        serializer = self.get_serializer(
+            request.GET.get("token"), context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return responses.ActivatedAccount()
 
 
 class UserListView(
-    filters_mixins.FilterMixin,
+    # filters_mixins.FilterMixin,
     # permissions_mixins.ListCreateUserPermissionMixin,
     ListModelMixin,
     base_views.BaseGenericAPIView,
@@ -79,11 +82,15 @@ class UserCreateView(
         """
         Get the appropriate serializer depending on the url user_type param
         """
-        serializer_class = serializer_factory.get_serializer(self.kwargs.get("user_type"))
+        serializer_class = serializer_factory.get_serializer(
+            self.kwargs.get("user_type")
+        )
         return serializer_class
 
     def post(self, request, *args, **kwargs) -> Response:
-        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
 
         # TODO: pass the type of created user to the serializer to put the user type attribute
@@ -111,17 +118,28 @@ class UserDetailsUpdateDestroyView(
     lookup_field = "id"
 
     def get_serializer_class(self, *args, **kwargs):
-        serializer_class = serializer_factory.get_serializer(user_type=self.request.user.type)
+        serializer_class = None
+
+        if self.request.method == "GET":
+            serializer_class = serializers.UserDetailsSerializer
+
+        elif self.request.method == "PUT":
+            user = self.get_object()
+            serializer_class = serializer_factory.get_serializer(user_type=user.type)
+
         return serializer_class
 
     def get(self, request, *args, **kwargs) -> Response:
-        serializer = self.get_serializer(request.user, context={"request": request})
+        user = self.get_object()
+        serializer = self.get_serializer(instance=user, context={"request": request})
         return Response(serializer.data)
 
     def put(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer = self.get_serializer(
+            instance=instance, data=request.data, partial=partial
+        )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
@@ -133,8 +151,8 @@ class UserDetailsUpdateDestroyView(
         return responses.UserUpdateResponse()
 
     def delete(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
+        user = self.get_object()
+        self.perform_destroy(user)
         return responses.UserDestroyResponse()
 
 
@@ -144,7 +162,9 @@ class ForgetPasswordRequestView(base_views.BaseGenericAPIView):
     serializer_class = serializers.ForgetPasswordRequestSerializer
 
     def post(self, request):
-        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
 
         # Validate user's email and check existence
         serializer.is_valid(raise_exception=True)
@@ -168,7 +188,9 @@ class VerifyOTPNumberView(base_views.BaseGenericAPIView):
     serializer_class = serializers.VerifyOTPNumberSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -186,7 +208,9 @@ class BaseResetPasswordView(base_views.BaseGenericAPIView):
         abstract = True
 
     def patch(self, request):
-        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
 

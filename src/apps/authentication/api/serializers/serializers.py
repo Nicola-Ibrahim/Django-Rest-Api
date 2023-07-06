@@ -2,12 +2,9 @@ from django.contrib.auth import authenticate, get_user_model
 from rest_framework import serializers
 
 from src.apps.accounts.api import exceptions as accounts_exceptions
-from src.apps.accounts.models.models import OTPNumber
-from src.apps.accounts.models.validators import user_validate_password
+from src.apps.authentication.api import exceptions
 from src.apps.core.base_api import tokens
 from src.apps.core.base_api.serializers import BaseSerializer
-
-from .. import exceptions as authentication_exceptions
 
 
 class LoginSerializer(BaseSerializer):
@@ -39,10 +36,10 @@ class LoginSerializer(BaseSerializer):
             )
 
             if not user:
-                raise accounts_exceptions.CredentialsNotValid()
+                raise exceptions.CredentialsNotValid()
 
             if not user.is_password_changed:
-                raise authentication_exceptions.FirstTimePasswordError(user=user)
+                raise accounts_exceptions.FirstTimePasswordError(user=user)
 
             attrs["user"] = user
         return attrs
@@ -57,5 +54,7 @@ class LogoutSerializer(BaseSerializer):
         return attrs
 
     def create(self, validated_data):
-        tokens.CustomRefreshToken(validated_data.get("refresh"), verify=True).blacklist()
+        tokens.CustomRefreshToken(
+            validated_data.get("refresh"), verify=True
+        ).blacklist()
         return True
