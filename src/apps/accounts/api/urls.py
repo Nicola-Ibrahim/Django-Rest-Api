@@ -19,8 +19,12 @@ urlpatterns = [
         views.ForgetPasswordRequestView.as_view(),
         name="forget-password-request",
     ),
-    path("forget_password/", views.ForgetPasswordView.as_view(), name="forget-password"),
-    path("change_password/", views.ChangePasswordView.as_view(), name="change-password"),
+    path(
+        "forget_password/", views.ForgetPasswordView.as_view(), name="forget-password"
+    ),
+    path(
+        "change_password/", views.ChangePasswordView.as_view(), name="change-password"
+    ),
     path(
         "first_time_password/",
         views.FirstTimePasswordView.as_view(),

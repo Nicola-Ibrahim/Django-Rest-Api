@@ -29,18 +29,29 @@ class User(AbstractUser):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
-    email = models.EmailField(_("email address"), unique=True, validators=[validate_email])
-    first_name = models.CharField(_("first name"), max_length=150, blank=True, validators=[validate_name])
-    last_name = models.CharField(_("last name"), max_length=150, blank=True, validators=[validate_name])
+    email = models.EmailField(
+        _("email address"), unique=True, validators=[validate_email]
+    )
+    first_name = models.CharField(
+        _("first name"), max_length=150, blank=True, validators=[validate_name]
+    )
+    last_name = models.CharField(
+        _("last name"), max_length=150, blank=True, validators=[validate_name]
+    )
     phone_number = models.IntegerField(null=True, blank=True)
     state = models.CharField(max_length=50, null=True, blank=True)
     city = models.CharField(max_length=50, null=True, blank=True)
     street = models.CharField(max_length=50, null=True, blank=True)
     zipcode = models.IntegerField(null=True, blank=True)
     identification = models.IntegerField(null=True, blank=True)
-    type = models.CharField(max_length=50, choices=Type.choices, blank=True, default=Type.ADMIN)
+    type = models.CharField(
+        max_length=50, choices=Type.choices, blank=True, default=Type.ADMIN
+    )
     is_verified = models.BooleanField(default=False)
-    manager = models.ForeignKey("Admin", on_delete=models.SET_NULL, null=True, blank=True)
+
+    manager = models.ForeignKey(
+        "Admin", on_delete=models.SET_NULL, null=True, blank=True
+    )
 
     def __str__(self) -> str:
         return self.email
@@ -122,7 +133,11 @@ class OTPNumber(models.Model):
         """
         _now = timezone.now()
 
-        if (self.number is not None) and (number == self.number) and (_now < self.valid_until):
+        if (
+            (self.number is not None)
+            and (number == self.number)
+            and (_now < self.valid_until)
+        ):
             # self.number = None
             self.valid_until = _now
             self.save()

@@ -4,11 +4,10 @@ from abc import ABC, abstractmethod
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from rest_framework.reverse import reverse
 from rest_framework_simplejwt.tokens import RefreshToken
-
-from src.apps.core.services import BaseEmailService, EmailServiceFactory
 
 
 class BaseMailer(ABC):
@@ -34,32 +33,18 @@ class BaseMailer(ABC):
         self.to_emails = to_emails
 
         # Add new changes to email's body if there is any.
-        self.edit_body()
+        self._edit_body()
 
         # Create an email services depending on the configuration settings
-        self.create_service()
+        self._create_service()
 
-    def create_service(self):
-        self.email_service: BaseEmailService = EmailServiceFactory(
+    def _create_service(self):
+        self.mail = EmailMessage(
             subject=self.subject,
             body=self.body,
             from_email=self.from_email,
-            to_emails=self.to_emails,
-        ).create_service()
-
-    # def init_email(self) -> None:
-    #     """Create an email entity with the plugged data.
-
-    #     This method calls the init_email method of the email_service object to create an
-    #     email entity with the given subject, body and recipient.
-
-    #     Raises:
-    #         Exception: If email_service is None.
-    #     """
-    #     if not self.email_service:
-    #         raise Exception("You must provide an email service")
-
-    #     self.email_service.init_email()
+            to=self.to_emails,
+        )
 
     def send_email(self) -> None:
         """Send the email using the email service.
@@ -72,14 +57,14 @@ class BaseMailer(ABC):
         # self.init_email()
 
         try:
-            self.email_service.send_email()
+            self.mail.send(fail_silently=False)
 
         except Exception as e:
             logger = logging.getLogger(__name__)
             logger.error("Error at %s", "mailer", exc_info=e)
 
     @abstractmethod
-    def edit_body(self) -> None:
+    def _edit_body(self) -> None:
         """Edit body if addition data should be added.
 
         This is an abstract method that should be implemented by subclasses of BaseMailer
@@ -91,7 +76,7 @@ class BaseMailer(ABC):
 class RegisterMailer(BaseMailer):
     """Concrete Mailer for sending a welcome email with password to the user.
 
-    This class inherits from BaseMailer and implements the edit_body method to add the
+    This class inherits from BaseMailer and implements the _edit_body method to add the
     user's full name and password to the body.
 
     """
@@ -112,7 +97,7 @@ class RegisterMailer(BaseMailer):
             to_emails=to_emails,
         )
 
-    def edit_body(self) -> None:
+    def _edit_body(self) -> None:
         """Edit body by adding the user's full name and password.
 
         This method overrides the abstract method of BaseMailer and appends the user's full
@@ -122,13 +107,15 @@ class RegisterMailer(BaseMailer):
 
         context = {"full_name": self.full_name, "password": self.password}
 
-        self.body = render_to_string(template_name="authentication/registration_email.html", context=context)
+        self.body = render_to_string(
+            template_name="accounts/registration_email.html", context=context
+        )
 
 
 class OTPMailer(BaseMailer):
     """Concrete Mailer for sending an email with OTP number to the user.
 
-    This class inherits from BaseMailer and implements the edit_body method to add the
+    This class inherits from BaseMailer and implements the _edit_body method to add the
     OTP number to the body.
 
     """
@@ -147,7 +134,7 @@ class OTPMailer(BaseMailer):
             to_emails=to_emails,
         )
 
-    def edit_body(self) -> None:
+    def _edit_body(self) -> None:
         """Edit body by adding the OTP number.
 
         This method overrides the abstract method of BaseMailer and appends the OTP number
@@ -156,13 +143,15 @@ class OTPMailer(BaseMailer):
         """
         context = {"email": self.to_emails[0], "otp_number": self.otp_number}
 
-        self.body = render_to_string(template_name="authentication/forget_password.html", context=context)
+        self.body = render_to_string(
+            template_name="accounts/forget_password.html", context=context
+        )
 
 
 class VerificationMailer(BaseMailer):
     """Concrete Mailer for sending a verification email to the new registered user with token value.
 
-    This class inherits from BaseMailer and implements the edit_body method to add a link
+    This class inherits from BaseMailer and implements the _edit_body method to add a link
     with a token value for verifying the user's email.
 
     """
@@ -184,7 +173,7 @@ class VerificationMailer(BaseMailer):
             to_emails=to_emails,
         )
 
-    def edit_body(self) -> None:
+    def _edit_body(self) -> None:
         """Edit body by adding a link with a token value for verifying the email.
 
         This method overrides the abstract method of BaseMailer and appends a link with a token value
@@ -202,7 +191,9 @@ class VerificationMailer(BaseMailer):
         current_site = get_current_site(self.request).domain
 
         # Get the url of the "email-verify" view
-        relativeLink = reverse("authentication:email-verify")  # -> /api/authentication/verify_email/
+        relativeLink = reverse(
+            "authentication:email-verify"
+        )  # -> /api/authentication/verify_email/
 
         # Sum up the final url for verification
         absurl = "http://" + current_site + relativeLink + "?token=" + str(token)
@@ -212,4 +203,6 @@ class VerificationMailer(BaseMailer):
             "link": absurl,
         }
 
-        self.body = render_to_string(template_name="authentication/account_verification.html", context=context)
+        self.body = render_to_string(
+            template_name="authentication/account_verification.html", context=context
+        )

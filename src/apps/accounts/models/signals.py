@@ -41,18 +41,20 @@ from . import models, profiles
 #         perm_group.user_set.add(instance)
 
 
-@receiver(post_save, sender=models.Student)
-def create_student_profile(sender, instance, created, **kwargs):
-    if created:
-        if not profiles.StudentProfile.objects.filter(student=instance).exists():
-            profiles.StudentProfile.objects.create(student=instance)
+# @receiver(post_save, sender=models.Student)
+# def create_student_profile(sender, instance, created, **kwargs):
+#     if created:
+#         if not profiles.StudentProfile.objects.filter(student=instance).exists():
+#             profiles.StudentProfile.objects.create(student=instance)
 
 
-@receiver(post_save, sender=models.Teacher)
-def create_teacher_profile(sender, instance, created, **kwargs):
-    if created:
-        if not profiles.TeacherProfile.objects.filter(teacher=instance).exists():
-            profiles.TeacherProfile.objects.create(teacher=instance)
+# @receiver(post_save, sender=models.Teacher)
+# def create_teacher_profile(sender, instance, created, **kwargs):
+#     print(created)
+#     if created:
+#         print(profiles.TeacherProfile.objects.filter(teacher=instance).exists())
+#         if not profiles.TeacherProfile.objects.filter(teacher=instance).exists():
+#             profiles.TeacherProfile.objects.create(teacher=instance)
 
 
 # @receiver(pre_save, sender=models.Teacher)

@@ -132,3 +132,6 @@ class StudentUserAdmin(UserAdmin):
     """Define admin model for custom User model."""
 
     inlines = (StudentProfileInline,)
+
+
+admin.site.register(profiles.TeacherProfile)

@@ -10,20 +10,14 @@ from rest_framework.mixins import (
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from src.apps.accounts.models import factories as model_factories
 from src.apps.core import mailers
 from src.apps.core.base_api import views as base_views
 
-from ..models import factories as model_factory
 from . import responses
 from .filters import mixins as filters_mixins
-from .permissions import mixins as permissions_mixins
-from .queryset.mixins import InUserTypeQuerySetMixin, QueryParamUserTypeQuerySetMixin
 from .serializers import factories as serializer_factory
 from .serializers import serializers
-from .serializers.mixins import (
-    InUserTypeSerializerMixin,
-    QueryParamUserTypeSerializerMixin,
-)
 
 
 class VerifyAccount(base_views.BaseGenericAPIView):
@@ -66,7 +60,6 @@ class UserListView(
 
 
 class UserCreateView(
-    QueryParamUserTypeQuerySetMixin,
     # FilterMixin,
     # permissions_mixins.ListCreateUserPermissionMixin,
     ListModelMixin,
@@ -78,11 +71,23 @@ class UserCreateView(
     It supports creating different user types.
     """
 
+    def get_queryset(self):
+        """Returns a queryset of model instances based on the user type in the view kwargs.
+
+        Returns:
+            QuerySet: A queryset of model instances that match the user type.
+        """
+
+        # Get the model
+        model = model_factories.get_model(user_type=self.request.GET.get("user_type"))
+        queryset = model.objects.all()
+        return queryset
+
     def get_serializer_class(self):
         """
         Get the appropriate serializer depending on the url user_type param
         """
-        serializer_class = serializer_factory.get_serializer(
+        serializer_class = serializer_factory.get_create_serializer(
             self.kwargs.get("user_type")
         )
         return serializer_class
@@ -93,17 +98,13 @@ class UserCreateView(
         )
         serializer.is_valid(raise_exception=True)
 
-        # TODO: pass the type of created user to the serializer to put the user type attribute
-        # Create the user
-        serializer.save()
+        user = serializer.save()
 
         # Send welcome email
-        # mailers.RegisterMailer(
-        #     to_email=user.email, password=password
-        # ).send_email()
-        # mailers.VerificationMailer(
-        #     token=user.tokens()["access"], to_emails=[user.email], request=request
-        # )
+        mailers.RegisterMailer(
+            full_name=user.email, password="sdf", to_emails=[user.email]
+        ).send_email()
+
         return responses.UserCreateResponse().with_data(user_data=serializer.data)
 
 
@@ -125,20 +126,25 @@ class UserDetailsUpdateDestroyView(
 
         elif self.request.method == "PUT":
             user = self.get_object()
-            serializer_class = serializer_factory.get_serializer(user_type=user.type)
+            serializer_class = serializer_factory.get_update_serializer(
+                user_type=user.type
+            )
 
         return serializer_class
 
     def get(self, request, *args, **kwargs) -> Response:
         user = self.get_object()
         serializer = self.get_serializer(instance=user, context={"request": request})
-        return Response(serializer.data)
+        return responses.UserDetailsResponse().with_data(serializer.data)
 
     def put(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
         serializer = self.get_serializer(
-            instance=instance, data=request.data, partial=partial
+            instance=instance,
+            data=request.data,
+            partial=partial,
+            context={"request": request},
         )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
@@ -170,12 +176,13 @@ class ForgetPasswordRequestView(base_views.BaseGenericAPIView):
         serializer.is_valid(raise_exception=True)
 
         # Create OTP number for the user
-        serializer.save()
+        otp_instance = serializer.save()
 
         # Send reset password message with OTP to user's email
         mailers.OTPMailer(
             to_email=serializer.validated_data.get("email"),
             otp_number=serializer.validated_data.get("otp"),
+            to_emails=[otp_instance.user.email],
         ).send_email()
 
         user = serializer.validated_data.get("user")

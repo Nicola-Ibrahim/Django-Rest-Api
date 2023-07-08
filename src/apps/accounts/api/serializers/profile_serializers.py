@@ -6,25 +6,36 @@ class AdminProfileSerializer(BaseModelSerializer):
     class Meta:
         model = profiles.AdminProfile
         fields = [
+            "admin",
             "section",
         ]
+
+        extra_kwargs = {
+            "admin": {"write_only": True},
+        }
 
 
 class TeacherProfileSerializer(BaseModelSerializer):
     class Meta:
         model = profiles.TeacherProfile
         fields = [
+            "teacher",
             "num_courses",
         ]
+
+        extra_kwargs = {
+            "teacher": {"write_only": True},
+        }
 
 
 class StudentProfileSerializer(BaseModelSerializer):
     class Meta:
         model = profiles.StudentProfile
         fields = [
+            "student",
             "study_hours",
         ]
 
-    def create(self, validated_data):
-        print(validated_data)
-        return super().create(validated_data)
+        extra_kwargs = {
+            "student": {"write_only": True},
+        }

@@ -13,6 +13,7 @@ from src.apps.core.base_api.responses import BaseResponse
 class OperationCode(enum.Enum):
     Listing = _("listing")
     Created = _("created")
+    Detail = _("detail")
     Updated = _("updated")
     Deleted = _("deleted")
     Verified_OTP = _("verified_OTP")
@@ -48,6 +49,38 @@ class UserCreateResponse(BaseResponse):
 
     def with_data(self, user_data: dict):
         if user_data:
+            self.data_["data"] = user_data
+
+        return super().with_data()
+
+
+class UserUpdateResponse(BaseResponse):
+    data_ = {
+        "code": OperationCode.Created.value,
+        "detail": _("The user has been updated"),
+    }
+
+    status_ = status.HTTP_200_OK
+
+    def with_data(self, user_data: dict):
+        if user_data:
+            self.data_["data"] = user_data
+
+        return super().with_data()
+
+
+class UserDetailsResponse(BaseResponse):
+    data_ = {
+        "code": OperationCode.Detail.value,
+        "detail": _("No users found"),
+        "data": {},
+    }
+
+    status_ = status.HTTP_200_OK
+
+    def with_data(self, user_data: dict):
+        if user_data:
+            self.data_["detail"] = f"The info of {user_data['first_name']}"
             self.data_["data"] = user_data
 
         return super().with_data()

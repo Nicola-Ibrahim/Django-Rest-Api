@@ -18,15 +18,18 @@ class LoginSerializer(BaseSerializer):
         password = attrs["password"]
 
         if email and password:
-            # Check if the user is inactive
+            # Check if the user is exists
             user = get_user_model().objects.filter(email=email)
             if not user.exists():
                 raise accounts_exceptions.UserNotExists()
 
             user = user.first()
-
+            # Check if the user is inactive
             if not user.is_active:
                 raise accounts_exceptions.UserNotActive()
+
+            # if not user.is_password_changed:
+            #     raise accounts_exceptions.FirstTimePasswordError(user=user)
 
             # Authenticate the user
             user = authenticate(
@@ -37,9 +40,6 @@ class LoginSerializer(BaseSerializer):
 
             if not user:
                 raise exceptions.CredentialsNotValid()
-
-            if not user.is_password_changed:
-                raise accounts_exceptions.FirstTimePasswordError(user=user)
 
             attrs["user"] = user
         return attrs

@@ -5,7 +5,9 @@ from .models import Admin, Student, Teacher
 
 
 class AdminProfile(models.Model):
-    admin = models.OneToOneField(Admin, related_name="admin_profile", on_delete=models.CASCADE)
+    admin = models.OneToOneField(
+        Admin, related_name="admin_profile", on_delete=models.CASCADE
+    )
     section = models.CharField(_("section"), max_length=50)
 
 

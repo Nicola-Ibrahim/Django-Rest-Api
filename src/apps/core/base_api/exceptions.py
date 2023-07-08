@@ -48,6 +48,8 @@ class BaseException(APIException):
 
     def with_data(self, **kwargs):
         """Update the data dictionary in The Response"""
+
+        # Return self instance to ensure raising an APIException, not method's returned value
         return self
 
 

@@ -33,6 +33,8 @@ class BaseResponse(Response):
 
     def with_data(self, **kwargs):
         """Update the data dictionary in The Response"""
+
+        # Return self instance to ensure returning Response, not method's returned value
         return self
 
 
@@ -45,6 +47,8 @@ class LanguagesListResponse(BaseResponse):
     status_ = status.HTTP_200_OK
 
     def with_data(self, languages: list):
-        self.data_["data"]["languages"] = [{"code": code, "name": _(name)} for code, name in languages]
+        self.data_["data"]["languages"] = [
+            {"code": code, "name": _(name)} for code, name in languages
+        ]
 
         return super().with_data()

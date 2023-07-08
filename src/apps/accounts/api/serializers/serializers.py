@@ -158,27 +158,8 @@ class UserCreateSerializer(BaseModelSerializer):
 
         return attrs
 
-    def update(self, instance, validated_data):
-        # Get user profile data
-        profile_data = validated_data.pop("profile")
-
-        # Update main data of the user
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-
-        # Update profile data of the user
-        profile = instance.teacher_profile
-        for attr, value in profile_data.items():
-            setattr(profile, attr, value)
-
-        # Save instance
-        profile.save()
-        instance.save()
-
-        return instance
-
     def create(self, validated_data: dict[str, str]):
-        """Override the create method create a new user with the profile data
+        """Create a new user with the profile data
 
         Args:
             validated_data (dict[str, str]): validated data by the serializer
@@ -192,20 +173,16 @@ class UserCreateSerializer(BaseModelSerializer):
         # Remove confirm_password field value from the inserted data
         validated_data.pop("confirm_password")
 
-        print(validated_data)
-
         # Create a new teacher user without saving
-        user = self.Meta.model.objects.create(**validated_data)
+        user = self.Meta.model.objects.create_user(**validated_data)
 
-        print(user)
-
-        # # Create profile data for the user
-        # user_profile_data[self.Meta.profile_relation_field] = user.id
-        # profile_serializer = self.Meta.profile_serializer(data=user_profile_data)
-        # profile_serializer.is_valid(raise_exception=True)
+        # Create profile data for the user
+        user_profile_data[self.Meta.profile_relation_field] = user.id
+        profile_serializer = self.Meta.profile_serializer(data=user_profile_data)
+        profile_serializer.is_valid(raise_exception=True)
 
         # Save the user's profile
-        # profile_serializer.save()
+        profile_serializer.save()
 
         return user
 
@@ -246,6 +223,104 @@ class StudentUserCreateSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
         model = models.Student
         fields = UserCreateSerializer.Meta.fields + ["profile"]
+        profile_related_name = "student_profile"
+        profile_relation_field = "student"
+        profile_serializer = profile_serializers.StudentProfileSerializer
+
+
+class UserUpdateSerializer(BaseModelSerializer):
+    """Serializer is responsible for creation and updating a user"""
+
+    password = serializers.CharField(
+        write_only=True, required=True, validators=[validate_password]
+    )
+    confirm_password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = None
+        ordering = ["-id"]
+        profile_related_name = ""
+        profile_relation_field = ""
+        profile_serializer = None
+
+        fields = [
+            "first_name",
+            "last_name",
+            "phone_number",
+            "state",
+            "city",
+            "street",
+            "zipcode",
+            "identification",
+        ]
+
+    def update(self, instance, validated_data):
+        """Update an existence user with the profile data
+
+        Args:
+            validated_data (dict[str, str]): validated data by the serializer
+
+        Returns:
+            User: a new inserted user
+        """
+        user = instance
+
+        # Get user profile data
+        profile_data = validated_data.pop(self.Meta.profile_related_name)
+
+        # Update main data of the user
+        for attr, value in validated_data.items():
+            setattr(user, attr, value)
+
+        # Update profile data of the user
+        profile_instance = getattr(user, self.Meta.profile_related_name)
+        profile_serializer = self.Meta.profile_serializer(
+            instance=profile_instance, data=profile_data
+        )
+        profile_serializer.is_valid(raise_exception=True)
+        profile_serializer.save()
+
+        user.save()
+
+        return user
+
+
+class AdminUserUpdateSerializer(UserUpdateSerializer):
+    """
+    A subclass of UserUpdateSerializer for handling teacher users
+    """
+
+    profile = profile_serializers.AdminProfileSerializer(source="admin_profile")
+
+    class Meta(UserUpdateSerializer.Meta):
+        model = models.Admin
+        fields = UserUpdateSerializer.Meta.fields + ["profile"]
+        profile_related_name = "admin_profile"
+        profile_relation_field = "admin"
+        profile_serializer = profile_serializers.AdminProfileSerializer
+
+
+class TeacherUserUpdateSerializer(UserUpdateSerializer):
+    """
+    A subclass of UserUpdateSerializer for handling teacher users
+    """
+
+    profile = profile_serializers.TeacherProfileSerializer(source="teacher_profile")
+
+    class Meta(UserUpdateSerializer.Meta):
+        model = models.Teacher
+        fields = UserUpdateSerializer.Meta.fields + ["profile"]
+        profile_related_name = "teacher_profile"
+        profile_relation_field = "teacher"
+        profile_serializer = profile_serializers.TeacherProfileSerializer
+
+
+class StudentUserUpdateSerializer(UserUpdateSerializer):
+    profile = profile_serializers.StudentProfileSerializer(source="student_profile")
+
+    class Meta(UserUpdateSerializer.Meta):
+        model = models.Student
+        fields = UserUpdateSerializer.Meta.fields + ["profile"]
         profile_related_name = "student_profile"
         profile_relation_field = "student"
         profile_serializer = profile_serializers.StudentProfileSerializer
@@ -301,14 +376,14 @@ class ForgetPasswordRequestSerializer(BaseSerializer):
     def create(self, validated_data):
         """Create an OTP number for the user"""
 
-        instance = models.OTPNumber.objects.update_or_create(
+        otp_instance = models.OTPNumber.objects.update_or_create(
             defaults={
                 "number": validated_data.get("otp"),
                 "user": validated_data.get("user"),
                 "is_verified": False,
             }
         )
-        return instance
+        return otp_instance
 
 
 class VerifyOTPNumberSerializer(BaseSerializer):
