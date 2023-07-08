@@ -4,7 +4,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
 from src.apps.accounts.api import exceptions
-from src.apps.accounts.models import models, profiles, utils
+from src.apps.accounts.models import models, profiles, utils, validators
 from src.apps.core.base_api.serializers import BaseModelSerializer, BaseSerializer
 
 from . import profile_serializers
@@ -442,7 +442,9 @@ class ChangePasswordSerializer(BaseSerializer):
             raise exceptions.NotSimilarPasswords()
 
         # Validate the password if it meets all validator requirements
-        user_validate_password(attrs["new_password"], self.context["request"].user)
+        validators.user_validate_password(
+            attrs["new_password"], self.context["request"].user
+        )
 
         return attrs
 
@@ -457,7 +459,7 @@ class ChangePasswordSerializer(BaseSerializer):
         user.set_password(password)
 
         # Delete otp number for the user
-        OTPNumber.objects.filter(user=user).delete()
+        models.OTPNumber.objects.filter(user=user).delete()
 
         user.save()
 
@@ -479,7 +481,7 @@ class ForgetPasswordSerializer(BaseSerializer):
         otp = attrs.get("otp", "")
 
         user = self.context["request"].user
-        otp_instance = OTPNumber.objects.filter(user=user, number=otp)
+        otp_instance = models.OTPNumber.objects.filter(user=user, number=otp)
 
         # Check if the OTP number does not exists
         if not otp_instance.exists():
@@ -494,7 +496,9 @@ class ForgetPasswordSerializer(BaseSerializer):
             raise exceptions.NotSimilarPasswords()
 
         # Validate the password if it meets all validator requirements
-        user_validate_password(attrs["new_password"], self.context["request"].user)
+        validators.user_validate_password(
+            attrs["new_password"], self.context["request"].user
+        )
 
         return attrs
 
@@ -509,7 +513,7 @@ class ForgetPasswordSerializer(BaseSerializer):
         user.set_password(password)
 
         # Delete otp number for the user
-        OTPNumber.objects.filter(user=user).delete()
+        models.OTPNumber.objects.filter(user=user).delete()
 
         user.save()
 
@@ -532,7 +536,9 @@ class FirstTimePasswordSerializer(BaseSerializer):
             raise exceptions.NotSimilarPasswords()
 
         # Validate the password if it meets all validator requirements
-        user_validate_password(attrs["new_password"], self.context["request"].user)
+        validators.user_validate_password(
+            attrs["new_password"], self.context["request"].user
+        )
 
         return attrs
 
