@@ -1,6 +1,8 @@
 .PHONY: superuser
 superuser:
 	poetry run python -m src.manage makesuperuser
+users:
+	poetry run python -m src.manage generate_users --type $(type) --count $(count)
 
 .PHONY: lint
 lint:
@@ -36,7 +38,7 @@ update: migrations migrate	update-pre-commit
 
 .PHONY: shell
 shell:
-	poetry run python -m src.manage shell_plus.py
+	poetry run python -m src.manage shell_plus
 
 .PHONY: flush-tokens
 flush-tokens:
