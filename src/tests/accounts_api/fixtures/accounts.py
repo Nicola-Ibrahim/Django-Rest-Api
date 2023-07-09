@@ -1,7 +1,13 @@
 import pytest
-from model_bakery import baker
+
+from .factories import UserFactory
 
 
 @pytest.fixture
-def users(db):
-    return baker.make("accounts.User", email="user1@hotmail.com")
+def user1(db):
+    return UserFactory.create(first_name="Django", last_name="D")
+
+
+@pytest.fixture
+def users(db, request):
+    return UserFactory.create_batch(3)
