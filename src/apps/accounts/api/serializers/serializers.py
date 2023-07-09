@@ -48,6 +48,7 @@ class UserListSerializer(BaseModelSerializer):
             "is_superuser",
             "groups",
             "manager",
+            "type",
             "profile",
         ]
 
