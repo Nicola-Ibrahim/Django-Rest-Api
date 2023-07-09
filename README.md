@@ -16,9 +16,16 @@ Project setup instruction here.
     cd django-auth
   ```
 
-- Install poetry
+- For windows system:
 
-  - Windows:
+  - install make in powershell:
+
+    ```bash
+
+    Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+    ```
+
+  - Install poetry
 
     In Powershell: install poetry for package management using
 
@@ -26,11 +33,47 @@ Project setup instruction here.
       (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | py -
     ```
 
-- Add poetry to system environment
+  - Add poetry to system environment
 
-  ```bash
-    setx path "%path%;C:\Users\{%user_name%}\AppData\Roaming\Python\Scripts"
-  ```
+    ```bash
+      setx path "%path%;C:\Users\{%user_name%}\AppData\Roaming\Python\Scripts"
+    ```
+
+- For linux system:
+
+  - install make in terminal:
+
+    ```bash
+      sudo apt install make
+    ```
+
+  - Install poetry
+
+    In terminal: install poetry for package management using
+
+    ```bash
+      curl -sSL https://install.python-poetry.org | python3 -
+    ```
+
+    Add to poetry to environment path
+
+    open the file:
+
+    ```bash
+      nano ~/.bashrc
+    ```
+
+    Add the following command to file to export poetry to env variables:
+
+    ```bash
+      export PATH="/home/sammy/.local/bin:$PATH"
+    ```
+
+    Apply changes
+
+    ```bash
+      source ~/.bashrc
+    ```
 
 - Edit the poetry configuration to create virtualenv in the root directory
 
