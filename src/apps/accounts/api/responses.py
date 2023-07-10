@@ -45,7 +45,7 @@ class UserCreateResponse(BaseResponse):
         "detail": _("The user has been created"),
     }
 
-    status_ = status.HTTP_200_OK
+    status_ = status.HTTP_201_CREATED
 
     def with_data(self, user_data: dict):
         if user_data:
