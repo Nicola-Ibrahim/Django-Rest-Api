@@ -134,6 +134,8 @@ class UserCreateSerializer(BaseModelSerializer):
             "email",
             "password",
             "confirm_password",
+            "first_name",
+            "last_name",
             "phone_number",
             "state",
             "city",
