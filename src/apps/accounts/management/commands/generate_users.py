@@ -2,7 +2,7 @@ import logging
 
 from django.core.management.base import BaseCommand, CommandParser
 
-from src.tests.accounts_api.fixtures import factories
+from src.tests.accounts.fixtures import factories
 
 
 class Command(BaseCommand):
