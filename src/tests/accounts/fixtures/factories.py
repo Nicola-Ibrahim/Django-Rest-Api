@@ -1,5 +1,5 @@
 import factory
-from factory import faker, fuzzy
+from factory import fuzzy
 
 from src.apps.accounts.models import models
 
