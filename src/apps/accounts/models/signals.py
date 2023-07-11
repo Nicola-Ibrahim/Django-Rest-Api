@@ -3,6 +3,8 @@ This file script should be imported in the ready()
 method in apps.py file
 For ensuring to be recognizable by the server
 """
+import functools
+
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
@@ -41,23 +43,45 @@ from . import models, profiles
 #         perm_group.user_set.add(instance)
 
 
-# @receiver(post_save, sender=models.Student)
-# def create_student_profile(sender, instance, created, **kwargs):
-#     if created:
-#         if not profiles.StudentProfile.objects.filter(student=instance).exists():
-#             profiles.StudentProfile.objects.create(student=instance)
+@receiver(post_save, sender=models.Admin, dispatch_uid="admin_post_save")
+def create_admin_profile(sender, instance, created, **kwargs):
+    if created:
+        profiles.AdminProfile.objects.create(admin=instance)
 
 
-# @receiver(post_save, sender=models.Teacher)
-# def create_teacher_profile(sender, instance, created, **kwargs):
-#     print(created)
-#     if created:
-#         print(profiles.TeacherProfile.objects.filter(teacher=instance).exists())
-#         if not profiles.TeacherProfile.objects.filter(teacher=instance).exists():
-#             profiles.TeacherProfile.objects.create(teacher=instance)
+@receiver(post_save, sender=models.Student, dispatch_uid="student_post_save")
+def create_student_profile(sender, instance, created, **kwargs):
+    if created:
+        profiles.StudentProfile.objects.create(student=instance)
 
 
-# @receiver(pre_save, sender=models.Teacher)
-# def update_if_exists(sender, instance, **kwargs):
-#     if models.Teacher.objects.filter(user=instance.user).exists():
-#         models.Teacher.objects.filter(user=instance.user).delete()
+@receiver(post_save, sender=models.Teacher, dispatch_uid="teacher_post_save")
+def create_teacher_profile(sender, instance, created, **kwargs):
+    if created:
+        profiles.TeacherProfile.objects.create(teacher=instance)
+
+
+def signal_wrapper(signal, sender, receiver, dispatch_uid):
+    """Wrapper to disconnect signal and reconnect after finish executing func"""
+
+    def decorator(func):
+        # Define a modified version of the original function
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            # Disconnect the signal before calling the original function
+            signal.disconnect(sender=sender, dispatch_uid=dispatch_uid)
+
+            # Call the original function and store the result
+            result = func(*args, **kwargs)
+
+            # Reconnect the signal after calling the original function
+            signal.connect(sender=sender, receiver=receiver, dispatch_uid=dispatch_uid)
+
+            # Return the result of the original function
+            return result
+
+        # Return the modified version of the original function
+        return wrapper
+
+    # Return the decorator
+    return decorator
