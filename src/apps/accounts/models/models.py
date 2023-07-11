@@ -18,9 +18,9 @@ class User(AbstractUser):
     objects = CustomUserManager()
 
     class Type(models.TextChoices):
-        STUDENT = "Student", "student"
-        TEACHER = "Teacher", "teacher"
-        ADMIN = "Admin", "admin"
+        STUDENT = "Student", _("student")
+        TEACHER = "Teacher", _("teacher")
+        ADMIN = "Admin", _("admin")
 
     # Set username to none
     username = None
@@ -38,16 +38,20 @@ class User(AbstractUser):
     last_name = models.CharField(
         _("last name"), max_length=150, blank=True, validators=[validate_name]
     )
-    phone_number = models.IntegerField(null=True, blank=True)
-    state = models.CharField(max_length=50, null=True, blank=True)
-    city = models.CharField(max_length=50, null=True, blank=True)
-    street = models.CharField(max_length=50, null=True, blank=True)
-    zipcode = models.IntegerField(null=True, blank=True)
-    identification = models.IntegerField(null=True, blank=True)
+    phone_number = models.IntegerField(_("phone_number"), null=True, blank=True)
+    state = models.CharField(_("state"), max_length=50, null=True, blank=True)
+    city = models.CharField(_("city"), max_length=50, null=True, blank=True)
+    street = models.CharField(_("street"), max_length=50, null=True, blank=True)
+    zipcode = models.IntegerField(_("zipcode"), null=True, blank=True)
+    identification = models.IntegerField(_("identification"), null=True, blank=True)
     type = models.CharField(
-        max_length=50, choices=Type.choices, blank=True, default=Type.ADMIN
+        _("user type"),
+        max_length=50,
+        choices=Type.choices,
+        blank=True,
+        default=Type.ADMIN,
     )
-    is_verified = models.BooleanField(default=False)
+    is_verified = models.BooleanField(_("verified"), default=False)
 
     manager = models.ForeignKey(
         "Admin", on_delete=models.SET_NULL, null=True, blank=True
@@ -100,11 +104,21 @@ class Admin(User):
 
 
 class OTPNumber(models.Model):
-    number = models.CharField(max_length=16, null=True)
-    is_verified = models.BooleanField(default=False)
+    number = models.CharField(
+        max_length=16,
+        null=True,
+        verbose_name=_("number"),
+        help_text=_("The OTP number sent to the user"),
+    )
+    is_verified = models.BooleanField(
+        default=False,
+        verbose_name=_("verified"),
+        help_text=_("Whether the OTP number has been verified by the user"),
+    )
     valid_until = models.DateTimeField(
         default=timezone.now,
-        help_text="The timestamp of the moment of expiry of the saved number.",
+        verbose_name=_("valid until"),
+        help_text=_("The timestamp of the moment of expiry of the saved number."),
     )
 
     user = models.ForeignKey(
@@ -113,6 +127,8 @@ class OTPNumber(models.Model):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
+        verbose_name=_("user"),
+        help_text=_("The user associated with the OTP number"),
     )
 
     def save(self, *args, **kwargs) -> None:
