@@ -22,12 +22,21 @@ class UserFactory(factory.django.DjangoModelFactory):
 
 
 class AdminUserFactory(UserFactory):
+    class Meta:
+        model = models.Admin
+
     type = "Admin"
 
 
 class StudentUserFactory(UserFactory):
+    class Meta:
+        model = models.Student
+
     type = "Student"
 
 
 class TeacherUserFactory(UserFactory):
+    class Meta:
+        model = models.Teacher
+
     type = "Teacher"
