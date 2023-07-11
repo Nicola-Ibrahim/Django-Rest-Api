@@ -57,3 +57,9 @@ db-graph:
 .PHONY: test
 test:
 	poetry run python -m pytest -v -rs -s -n auto --show-capture=no
+
+.PHONY: test-cov
+test-cov:
+	poetry run python -m pytest --cov
+	poetry run coverage html
+
