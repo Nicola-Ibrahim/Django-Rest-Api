@@ -1,10 +1,16 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.auth.password_validation import validate_password
+from django.db.models import signals
 from rest_framework import serializers
 
 from src.apps.accounts.api import exceptions
 from src.apps.accounts.models import models, profiles, utils, validators
+from src.apps.accounts.models.signals import (
+    create_student_profile,
+    create_teacher_profile,
+    signal_wrapper,
+)
 from src.apps.core.base_api.serializers import BaseModelSerializer, BaseSerializer
 
 from . import profile_serializers
@@ -204,6 +210,16 @@ class AdminUserCreateSerializer(UserCreateSerializer):
         profile_relation_field = "admin"
         profile_serializer = profile_serializers.AdminProfileSerializer
 
+    # Decorate create method to disconnect post_save signal for creating a profile
+    @signal_wrapper(
+        signal=signals.post_save,
+        sender=models.Teacher,
+        receiver=create_teacher_profile,
+        dispatch_uid="admin_post_save",
+    )
+    def create(self, validated_data: dict[str, str]):
+        return super().create(validated_data)
+
 
 class TeacherUserCreateSerializer(UserCreateSerializer):
     """
@@ -219,6 +235,16 @@ class TeacherUserCreateSerializer(UserCreateSerializer):
         profile_relation_field = "teacher"
         profile_serializer = profile_serializers.TeacherProfileSerializer
 
+    # Decorate create method to disconnect post_save signal for creating a profile
+    @signal_wrapper(
+        signal=signals.post_save,
+        sender=models.Teacher,
+        receiver=create_teacher_profile,
+        dispatch_uid="teacher_post_save",
+    )
+    def create(self, validated_data: dict[str, str]):
+        return super().create(validated_data)
+
 
 class StudentUserCreateSerializer(UserCreateSerializer):
     profile = profile_serializers.StudentProfileSerializer(source="student_profile")
@@ -229,6 +255,16 @@ class StudentUserCreateSerializer(UserCreateSerializer):
         profile_related_name = "student_profile"
         profile_relation_field = "student"
         profile_serializer = profile_serializers.StudentProfileSerializer
+
+    # Decorate create method to disconnect post_save signal for creating a profile
+    @signal_wrapper(
+        signal=signals.post_save,
+        sender=models.Student,
+        receiver=create_student_profile,
+        dispatch_uid="student_post_save",
+    )
+    def create(self, validated_data: dict[str, str]):
+        return super().create(validated_data)
 
 
 class UserUpdateSerializer(BaseModelSerializer):
