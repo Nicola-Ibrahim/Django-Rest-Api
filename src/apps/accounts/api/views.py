@@ -124,7 +124,7 @@ class UserDetailsUpdateDestroyView(
         if self.request.method == "GET":
             serializer_class = serializers.UserDetailsSerializer
 
-        elif self.request.method == "PUT":
+        elif self.request.method in ["PUT", "PATCH"]:
             user = self.get_object()
             serializer_class = serializer_factory.get_update_serializer(
                 user_type=user.type
@@ -154,10 +154,25 @@ class UserDetailsUpdateDestroyView(
             # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
 
-        return responses.UserUpdateResponse()
+        return responses.UserUpdateResponse().with_data(user_data=serializer.data)
 
     def patch(self, request, *args, **kwargs):
-        return self.partial_update(request, *args, **kwargs)
+        instance = self.get_object()
+        serializer = self.get_serializer(
+            instance=instance,
+            data=request.data,
+            partial=True,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, "_prefetched_objects_cache", None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return responses.UserUpdateResponse().with_data(user_data=serializer.data)
 
     def delete(self, request, *args, **kwargs):
         user = self.get_object()
