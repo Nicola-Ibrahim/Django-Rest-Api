@@ -15,22 +15,20 @@ class TestUserModel:
 
 
 class TestAdminModel:
-    def test_admin_model(self, one_admin_user):
+    def test_is_admin(self, one_admin_user):
         assert isinstance(one_admin_user, models.Admin)
         assert one_admin_user.type == models.User.Type.ADMIN
         assert one_admin_user.is_staff and one_admin_user.is_superuser
 
 
 class TestStudentModel:
-    @pytest.mark.django_db
-    def test_student_model(self, one_student_user):
+    def test_is_student(self, one_student_user):
         assert isinstance(one_student_user, models.Student)
         assert one_student_user.type == models.User.Type.STUDENT
         assert not (one_student_user.is_staff or one_student_user.is_superuser)
 
 
 class TestTeacherModel:
-    @pytest.mark.django_db
-    def test_teacher_model(self, one_teacher_user):
+    def test_is_teacher(self, one_teacher_user):
         assert isinstance(one_teacher_user, models.Teacher)
         assert one_teacher_user.type == models.User.Type.TEACHER
