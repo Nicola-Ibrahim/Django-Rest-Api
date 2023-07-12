@@ -71,18 +71,6 @@ class UserCreateView(
     It supports creating different user types.
     """
 
-    def get_queryset(self):
-        """Returns a queryset of model instances based on the user type in the view kwargs.
-
-        Returns:
-            QuerySet: A queryset of model instances that match the user type.
-        """
-
-        # Get the model
-        model = model_factories.get_model(user_type=self.request.GET.get("user_type"))
-        queryset = model.objects.all()
-        return queryset
-
     def get_serializer_class(self):
         """
         Get the appropriate serializer depending on the url user_type param
