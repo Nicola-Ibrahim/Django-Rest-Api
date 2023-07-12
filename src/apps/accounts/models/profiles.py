@@ -6,7 +6,11 @@ from .models import Admin, Student, Teacher
 
 class AdminProfile(models.Model):
     admin = models.OneToOneField(
-        Admin, related_name="admin_profile", on_delete=models.CASCADE
+        Admin,
+        related_name="admin_profile",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
     )
     section = models.CharField(_("section"), max_length=50)
 
