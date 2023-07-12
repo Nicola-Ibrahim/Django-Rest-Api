@@ -41,6 +41,7 @@ pytest-django = "^4.5.2"
 pytest-factory = "^0.0.1.dev0"
 pytest-factoryboy = "^2.5.1"
 pytest-cov = "^4.1.0"
+pytest-mock = "^3.11.1"
 
 [tool.black]
 line-length = 119
@@ -78,7 +79,7 @@ python_files = "test_*.py"
 testpaths = ["."]
 pythonpath = ["." ,"src"]
 filterwarnings = "ignore::DeprecationWarning:^(?!node\\.).*:"
-addopts = "-vv -x --lf --cov"
+# addopts = "-vv -x --lf --cov"
 
 
 [build-system]
