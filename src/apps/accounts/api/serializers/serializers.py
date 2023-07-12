@@ -122,7 +122,7 @@ class UserDetailsSerializer(BaseModelSerializer):
 
 
 class UserCreateSerializer(BaseModelSerializer):
-    """Serializer is responsible for creation and updating a user"""
+    """Template base serializer is responsible for creation and updating a user"""
 
     password = serializers.CharField(
         write_only=True, required=True, validators=[validate_password]
@@ -182,7 +182,7 @@ class UserCreateSerializer(BaseModelSerializer):
         # Remove confirm_password field value from the inserted data
         validated_data.pop("confirm_password")
 
-        # Create a new teacher user without saving
+        # Create a new user
         user = self.Meta.model.objects.create_user(**validated_data)
 
         # Create profile data for the user
