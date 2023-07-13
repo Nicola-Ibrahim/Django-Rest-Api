@@ -1,5 +1,3 @@
-import pytest
-
 from src.apps.accounts.models import models
 
 

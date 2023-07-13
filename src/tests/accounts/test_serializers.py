@@ -1,4 +1,7 @@
+import pytest
+
 from src.apps.accounts.api.serializers import serializers
+from src.apps.accounts.models import models
 
 
 class TestUserSerializer:
@@ -102,3 +105,35 @@ class TestTeacherUserSerializer:
 
         assert serializer.is_valid()
         assert serializer.errors == {}
+
+    ml_model_name_max_chars = 134
+
+    @pytest.mark.parametrize(
+        "wrong_field",
+        (
+            {"name": "a" * (ml_model_name_max_chars + 1)},
+            {"tags": "tag outside of array"},
+            {"tags": ["--------wrong length tag--------"]},
+            {"version": "wronglengthversion"},
+            {"is_public": 1},
+            {"is_public": "Nope"},
+        ),
+    )
+    def test_deserialize_fails(self, one_teacher_user, wrong_field: dict):
+        # Get the Teacher model fields
+        teacher_model_fields_names = [
+            field.name for field in models.Teacher._meta.get_fields()
+        ]
+
+        invalid_serialized_data = {
+            k: v
+            for k, v in one_teacher_user.__dict__.items()
+            if k in teacher_model_fields_names
+        } | wrong_field
+
+        serializer = serializers.TeacherUserCreateSerializer(
+            data=invalid_serialized_data
+        )
+
+        assert not serializer.is_valid()
+        assert serializer.errors != {}

@@ -1,4 +1,3 @@
-import pytest
 from django.db.models.signals import post_save
 
 from src.apps.accounts.models import models
