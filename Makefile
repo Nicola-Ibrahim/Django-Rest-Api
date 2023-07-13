@@ -2,7 +2,7 @@
 superuser:
 	poetry run python -m src.manage makesuperuser
 users:
-	poetry run python -m src.manage generate_users --type $(type) --count $(count)
+	poetry run python -m src.manage generate_users
 
 .PHONY: lint
 lint:
