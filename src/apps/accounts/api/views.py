@@ -10,12 +10,11 @@ from rest_framework.mixins import (
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from src.apps.accounts.models import factories as model_factories
 from src.apps.core import mailers
 from src.apps.core.base_api import views as base_views
 
 from . import responses
-from .filters import mixins as filters_mixins
+from .permissions import mixins as permissions_mixins
 from .serializers import factories as serializer_factory
 from .serializers import serializers
 
@@ -37,7 +36,7 @@ class VerifyAccount(base_views.BaseGenericAPIView):
 
 class UserListView(
     # filters_mixins.FilterMixin,
-    # permissions_mixins.ListCreateUserPermissionMixin,
+    permissions_mixins.ListUserPermissionMixin,
     ListModelMixin,
     base_views.BaseGenericAPIView,
 ):
@@ -61,7 +60,7 @@ class UserListView(
 
 class UserCreateView(
     # FilterMixin,
-    # permissions_mixins.ListCreateUserPermissionMixin,
+    # permissions_mixins.ListUserPermissionMixin,
     ListModelMixin,
     CreateModelMixin,
     base_views.BaseGenericAPIView,

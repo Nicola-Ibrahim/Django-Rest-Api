@@ -26,12 +26,9 @@ class BasePermission(permissions.DjangoObjectPermissions):
     }
 
 
-class ListCreateUserPermission(BasePermission):
+class ListUserPermission(BasePermission):
     def has_permission(self, request, view):
         if request.method == "GET" and request.user and request.user.is_authenticated:
-            return True
-
-        if request.method == "POST":
             return True
 
         return False
