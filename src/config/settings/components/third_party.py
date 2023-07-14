@@ -3,7 +3,10 @@
 
 from datetime import timedelta
 
-INSTALLED_APPS += ("rest_framework_simplejwt",)  # type: ignore # noqa: F821
+INSTALLED_APPS += (  # type: ignore # noqa: F821
+    "rest_framework",
+    "rest_framework_simplejwt",
+)
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
@@ -32,14 +35,18 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
 }
 
-
-INSTALLED_APPS += ("rest_framework",)  # type: ignore # noqa: F821
-
 REST_FRAMEWORK = {
-    # "DEFAULT_SCHEMA_CLASS": ("rest_framework.schemas.coreapi.AutoSchema"),
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        # "rest_framework_simplejwt.authentication.JWTAuthentication",
-        "apps.authentication.api.authentication.CustomJWTAuthentication",
+        "src.apps.core.base_api.authentication.CustomJWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
+    "DEFAULT_PARSER_CLASSES": [
+        "rest_framework.parsers.JSONParser",
+        "rest_framework.parsers.FormParser",
+        "rest_framework.parsers.MultiPartParser",
+        "src.apps.core.base_api.parsers.PlainTextParser",
+    ],
+    "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.AcceptHeaderVersioning",
+    "DEFAULT_VERSION": "1.0",
+    "ALLOWED_VERSIONS": ["1.0", "2.0"],
 }

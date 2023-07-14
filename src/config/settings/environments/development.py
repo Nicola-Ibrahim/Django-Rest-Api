@@ -7,17 +7,28 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "standard": {"format": "%(asctime)s %(levelname)s %(name)s %(message)s"},
+        "colored": {
+            "()": "colorlog.ColoredFormatter",
+            "format": "%(log_color)s%(asctime)s %(levelname)s %(name)s %(bold_white)s%(message)s",
+        },
     },
     "handlers": {
         "console": {
             "level": "INFO",
-            "class": "logging.StreamHandler",
-            "formatter": "standard",
+            "class": "colorlog.StreamHandler",
+            "formatter": "colored",
             "filters": [],
         },
+        # "file": {
+        #     "level": "DEBUG",
+        #     "class": "logging.FileHandler",
+        #     "filename": "/logging/django.log",
+        #     "formatter": "colored",
+        # },
     },
     "loggers": {
         logger_name: {
+            "handlers": ["console"],
             "level": "WARNING",
             "propagate": True,
         }
@@ -36,6 +47,7 @@ LOGGING = {
         "handlers": ["console"],
     },
 }
+
 
 # Model graph configurations
 GRAPH_MODELS = {
@@ -83,3 +95,17 @@ SWAGGER_SETTINGS = {
 REDOC_SETTINGS = {
     "LAZY_RENDERING": False,
 }
+
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "db.sqlite3",
+    }
+}
+
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://nicola-ibrahim-upgraded-garbanzo-75gq9g4r9p9fp45r-8000.preview.app.github.dev",
+    "https://nicola-ibrahim-musical-rotary-phone-95pv9p46p453pg97-8000.preview.app.github.dev",
+]
