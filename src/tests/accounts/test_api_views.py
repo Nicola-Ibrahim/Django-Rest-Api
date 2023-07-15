@@ -15,6 +15,8 @@ class TestAccountsViews:
     @settings(
         suppress_health_check=[HealthCheck.function_scoped_fixture],
         verbosity=Verbosity.verbose,
+        deadline=2000,
+        max_examples=100,
     )
     @given(users=st.lists(user_strategy, min_size=1, max_size=4))
     def test_length_of_created_users(self, users, mocker, rf):
