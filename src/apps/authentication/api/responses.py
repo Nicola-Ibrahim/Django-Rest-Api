@@ -30,6 +30,7 @@ class LoginResponse(BaseResponse):
 
     def with_data(self, user_details):
         self.data_["data"] = user_details
+        return super().with_data()
 
 
 class LogoutResponse(BaseResponse):
