@@ -26,12 +26,12 @@ include(
     "components/base.py",
     "components/database.py",
     "components/email.py",
-    "components/third_party.py",
     "components/custom.py",
+    "envvars.py",
     # Select the right env:
     f"environments/{DJANGO_ENV}.py",
     optional(LOCAL_SETTINGS_PATH),
-    "envvars.py",
+    "components/third_party.py",
 )
 
 
