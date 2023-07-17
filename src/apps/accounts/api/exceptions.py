@@ -19,6 +19,7 @@ class ErrorCode(enum.Enum):
     Not_Similar_Passwords = "not_similar_passwords"
     Wrong_Password = _("wrong_password")
     First_Time_Password = _("first_time_password")
+    Not_Valid = _("not_valid")
 
 
 class UserNotExists(BaseException):
@@ -98,3 +99,16 @@ class UserSerializerNotFound(BaseException):
         "detail": _("The type of the user serializer is not found"),
     }
     status_code = status.HTTP_400_BAD_REQUEST
+
+
+class PasswordNotValid(BaseException):
+    detail_ = {
+        "code": ErrorCode.Not_Valid.value,
+        "detail": _("The password is not valid"),
+        "data": {},
+    }
+    status_code = status.HTTP_400_BAD_REQUEST
+
+    def with_data(self, errors):
+        self.detail_["data"] = errors
+        return super().with_data()
