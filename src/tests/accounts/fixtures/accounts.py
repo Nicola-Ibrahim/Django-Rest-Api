@@ -1,4 +1,7 @@
+from unittest import mock
+
 import pytest
+from rest_framework.permissions import IsAuthenticated
 
 from . import factories
 
@@ -26,3 +29,18 @@ def one_student_user(db):
 @pytest.fixture
 def users(db, request):
     return factories.UserFactory.create_batch(3)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def mock_views_permissions():
+    # little util I use for testing for DRY when patching multiple objects
+    patch_perm = lambda perm: mock.patch.multiple(
+        perm,
+        has_permission=mock.Mock(return_value=True),
+        has_object_permission=mock.Mock(return_value=True),
+    )
+    with (
+        patch_perm(IsAuthenticated),
+        # ...add other permissions you may have below
+    ):
+        yield
