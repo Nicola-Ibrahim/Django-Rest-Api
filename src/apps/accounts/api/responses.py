@@ -121,8 +121,8 @@ class ForgetPasswordRequestResponse(BaseResponse):
     }
     status_ = status.HTTP_200_OK
 
-    def with_data(self, user: models.User):
-        if user:
-            self.data_["data"]["access_token"] = user.get_tokens()["access"]
+    def with_data(self, access_token: str):
+        if access_token:
+            self.data_["data"]["access_token"] = access_token
 
         return super().with_data()
