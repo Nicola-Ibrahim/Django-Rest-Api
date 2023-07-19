@@ -34,7 +34,7 @@ class BaseResponse(Response):
     def with_data(self, **kwargs):
         """Update the data dictionary in The Response"""
 
-        # Return self instance to ensure returning Response, not method's returned value
+        # Return self instance to ensure returning Response, not Any returned value
         return self
 
 

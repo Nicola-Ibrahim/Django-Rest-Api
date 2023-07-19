@@ -1,8 +1,9 @@
 from hypothesis import HealthCheck, Verbosity, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra.django import from_model
+from hypothesis.stateful import Bundle, RuleBasedStateMachine, precondition, rule
 
-from src.apps.accounts.models import models
+from src.apps.accounts.models import models, profiles
 
 
 class TestUserModel:
@@ -53,14 +54,12 @@ class TestStudentModel:
     @settings(
         suppress_health_check=[HealthCheck.function_scoped_fixture],
         verbosity=Verbosity.verbose,
-        deadline=2000,
-        max_examples=10,
     )
-    @given(user=user_student_strategy)
-    def test_is_student(self, user):
-        assert isinstance(user, models.Student)
-        assert user.type == models.User.Type.STUDENT
-        assert not (user.is_staff or user.is_superuser)
+    @given(student=user_student_strategy)
+    def test_is_student(self, student):
+        assert isinstance(student, models.Student)
+        assert student.type == models.User.Type.STUDENT
+        assert not (student.is_staff or student.is_superuser)
 
 
 class TestTeacherModel:
@@ -77,3 +76,27 @@ class TestTeacherModel:
         assert isinstance(user, models.Teacher)
         assert user.type == models.User.Type.TEACHER
         assert not (user.is_staff or user.is_superuser)
+
+
+class TeacherUserStateMachine(RuleBasedStateMachine):
+    teachers = Bundle("teachers")
+    profiles = Bundle("profiles")
+
+    @rule(target=teachers, email=st.emails(), password=st.text(min_size=8))
+    def create_user(self, email, password):
+        # This will create a unique User object and save it in the database
+        return models.User.objects.create_user(email=email, password=password)
+
+    @rule(target=profiles, teacher=teachers)
+    def create_profile(self, teacher):
+        # This will create a Profile object for the given user and save it in the database
+        return profiles.Teacher.objects.create(teacher=teacher)
+
+    @precondition(lambda self: self.teachers.count > 0)
+    @rule(teacher=teachers)
+    def check_user_verified(self, teacher):
+        # This will check that the user is verified
+        self.assertTrue(teacher.is_verified)
+
+
+TestUserMachine = TeacherUserStateMachine.TestCase

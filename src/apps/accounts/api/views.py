@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.mixins import (
@@ -160,6 +162,9 @@ class UserDetailsUpdateDestroyView(
             instance._prefetched_objects_cache = {}
 
         return responses.UserUpdateResponse().with_data(user_data=serializer.data)
+
+    def get_object(self):
+        return super().get_object()
 
     def delete(self, request, *args, **kwargs):
         user = self.get_object()
