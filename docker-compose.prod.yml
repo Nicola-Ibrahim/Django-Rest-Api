@@ -1,0 +1,48 @@
+# Specify the version of the docker-compose file format
+version: "3.4"
+
+# Define the services that make up your application
+services:
+  db:
+    # Use the postgres:15 image from Docker Hub
+    image: postgres:15
+
+    # Restart the container unless it is stopped by the user
+    restart: unless-stopped
+
+    # Expose port 5432 on the host and map it to port 5432 on the container
+    ports:
+      - "5432:5432"
+
+    # Set environment variables for the database configuration
+    environment:
+      POSTGRES_DB: dauth
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+
+    # Mount a named volume to persist the database data
+    volumes:
+      - postgresql-data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+
+    depends_on:
+      - db
+    # Run a command that installs debugpy and runs the Django server with debug mode enabled
+    # command: ["sh", "-c", "pip install debugpy -t /tmp && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 src\manage.py runserver 0.0.0.0:8000 --nothreading --noreload"]
+
+    # Expose port 8000 on the host and map it to port 8000 on the container for the web server
+    # Expose port 5678 on the host and map it to port 5678 on the container for the debugger
+    ports:
+      - 8000:8000
+
+    environment:
+      - DAUTH_DJANGO_ENV=production
+
+volumes:
+  postgresql-data:
+    # Use the local driver to store the volume on the host machine
+    driver: local
