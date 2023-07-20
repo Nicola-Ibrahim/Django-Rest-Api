@@ -97,3 +97,6 @@ AUTH_USER_MODEL = "accounts.User"
 
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
+
+# OTP number's expiratoin time configuration (in seconds)
+DAUTH_OTP_EXPIRATION = 300  # seconds

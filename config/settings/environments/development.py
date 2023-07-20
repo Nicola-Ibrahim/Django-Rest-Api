@@ -1,4 +1,7 @@
 DEBUG = True
+
+# ref: https://stackoverflow.com/questions/34360912/deploying-django-app-with-docker-allowed-hosts
+# The domain should be added to ALLOWED_HOSTS to be accessable
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 # Logger configurations
