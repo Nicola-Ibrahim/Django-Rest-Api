@@ -63,3 +63,6 @@ test-cov:
 	poetry run python -m pytest --cov
 	poetry run coverage html
 
+.PHONY: up-dependencies-only
+up-dependencies-only:
+	docker-compose -f docker-compose.dev.yml up --force-recreate db
