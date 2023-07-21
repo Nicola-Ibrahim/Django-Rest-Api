@@ -1,5 +1,5 @@
 """Email settings file
-For overriding in .env: User DAUTH_ prefix before any variable and assign a new value to it
+For overriding in .env: User DAUTH_SETTINGS_ prefix before any variable and assign a new value to it
 """
 
 # ref: https://docs.djangoproject.com/en/4.2/topics/email/#email-backends

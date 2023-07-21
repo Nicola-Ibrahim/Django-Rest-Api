@@ -3,23 +3,6 @@ version: "3.4"
 
 # Define the services that make up your application
 services:
-  app:
-    # Use the backend image that is built from the Dockerfile in the current directory
-    build:
-      context: .
-      dockerfile: ./Dockerfile
-
-    depends_on:
-      - db
-
-    # Expose port 8000 on the host and map it to port 8000 on the container for the web server
-    # Expose port 5678 on the host and map it to port 5678 on the container for the debugger
-    ports:
-      - "8000:8000"
-
-    environment:
-      - DAUTH_DJANGO_ENV=development
-
   db:
     # Use the postgres:15 image from Docker Hub
     image: postgres:15.3
@@ -40,6 +23,23 @@ services:
     # Mount a named volume to persist the database data
     volumes:
       - postgresql-data:/var/lib/postgresql/data
+
+  app:
+    # Use the backend image that is built from the Dockerfile in the current directory
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+
+    depends_on:
+      - db
+
+    # Expose port 8000 on the host and map it to port 8000 on the container for the web server
+    # Expose port 5678 on the host and map it to port 5678 on the container for the debugger
+    ports:
+      - "8000:8000"
+
+    environment:
+      - DAUTH_SETTINGS_DJANGO_ENV=development
 
 volumes:
   postgresql-data:

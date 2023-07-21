@@ -40,7 +40,7 @@ services:
       - 8000:8000
 
     environment:
-      - DAUTH_DJANGO_ENV=production
+      - DAUTH_SETTINGS_DJANGO_ENV=production
 
 volumes:
   postgresql-data:

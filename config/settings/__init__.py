@@ -10,7 +10,7 @@ from split_settings.tools import include, optional
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
 # Namespacing our own custom environment variables
-ENVVAR_SETTINGS_PREFIX = "DAUTH_"
+ENVVAR_SETTINGS_PREFIX = "DAUTH_SETTINGS_"
 
 LOCAL_SETTINGS_PATH = os.getenv(f"{ENVVAR_SETTINGS_PREFIX}LOCAL_SETTINGS_PATH")
 

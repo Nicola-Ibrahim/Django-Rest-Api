@@ -7,7 +7,7 @@ def get_settings_from_environment(prefix):
     prefix_len = len(prefix)
     """
     For example:
-    DAUTH_IN_DOCKER = 1
+    DAUTH_SETTINGS_IN_DOCKER = 1
     -> convert to ->
     {
         IN_DOCKER = 1
