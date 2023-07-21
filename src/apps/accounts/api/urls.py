@@ -28,7 +28,7 @@ urlpatterns = [
     path(
         "first_time_password/",
         views.FirstTimePasswordView.as_view(),
-        name="First-Time-password",
+        name="first-time-password",
     ),
     path("otp/verify/", views.VerifyOTPNumberView.as_view(), name="verify-top"),
 ]

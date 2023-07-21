@@ -57,6 +57,8 @@ nosetests.xml
 # Environments
 /local
 /.env
+/.envs/.env.dev
+/.envs/.env.prod
 .venv
 ENV/
 env.bak/

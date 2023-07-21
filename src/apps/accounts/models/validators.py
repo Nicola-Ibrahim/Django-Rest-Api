@@ -2,7 +2,7 @@ from django.contrib.auth.password_validation import get_default_password_validat
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 
-from ..api import exceptions
+from src.apps.accounts.api import exceptions
 
 
 class NameRegexValidator(RegexValidator):
@@ -31,4 +31,4 @@ def user_validate_password(password, user=None, password_validators=None):
         except ValidationError as error:
             errors.append(error.message)
     if errors:
-        raise exceptions.PasswordNotValid(errors=errors)
+        raise exceptions.PasswordNotValid().with_data(errors=errors)

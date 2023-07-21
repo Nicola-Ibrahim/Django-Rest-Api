@@ -7,4 +7,8 @@ class AccountsConfig(AppConfig):
     verbose_name = "Accounts"
 
     def ready(self) -> None:
-        from .models import signals
+        try:
+            from .models import signals
+
+        except ImportError:
+            pass

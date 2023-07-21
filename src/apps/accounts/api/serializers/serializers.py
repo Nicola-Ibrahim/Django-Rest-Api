@@ -415,7 +415,7 @@ class ForgetPasswordRequestSerializer(BaseSerializer):
     def create(self, validated_data):
         """Create an OTP number for the user"""
 
-        otp_instance = models.OTPNumber.objects.update_or_create(
+        otp_instance, created = models.OTPNumber.objects.update_or_create(
             defaults={
                 "number": validated_data.get("otp"),
                 "user": validated_data.get("user"),
@@ -583,6 +583,7 @@ class FirstTimePasswordSerializer(BaseSerializer):
 
     def create(self, validated_data):
         """Update the user's password"""
+        print(self.context["request"])
         user = self.context["request"].user
         password = validated_data.get("new_password")
         user.set_password(password)

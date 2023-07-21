@@ -52,6 +52,7 @@ class User(AbstractUser):
         default=Type.ADMIN,
     )
     is_verified = models.BooleanField(_("verified"), default=False)
+    is_password_changed = models.BooleanField(_("is_password_changed"), default=False)
 
     manager = models.ForeignKey(
         "Admin", on_delete=models.SET_NULL, null=True, blank=True
@@ -60,11 +61,17 @@ class User(AbstractUser):
     def __str__(self) -> str:
         return self.email
 
-    def tokens(self):
+    def get_tokens(self):
         refresh = RefreshToken.for_user(self)
         return {
             "refresh": str(refresh),
             "access": str(refresh.access_token),
+        }
+
+    def get_user_details(self):
+        return {
+            "name": self.get_full_name(),
+            "tokens": self.get_tokens(),
         }
 
 

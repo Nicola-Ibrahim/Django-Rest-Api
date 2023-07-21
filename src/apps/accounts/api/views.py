@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.mixins import (
@@ -161,6 +163,9 @@ class UserDetailsUpdateDestroyView(
 
         return responses.UserUpdateResponse().with_data(user_data=serializer.data)
 
+    def get_object(self):
+        return super().get_object()
+
     def delete(self, request, *args, **kwargs):
         user = self.get_object()
         self.perform_destroy(user)
@@ -185,13 +190,14 @@ class ForgetPasswordRequestView(base_views.BaseGenericAPIView):
 
         # Send reset password message with OTP to user's email
         mailers.OTPMailer(
-            to_email=serializer.validated_data.get("email"),
             otp_number=serializer.validated_data.get("otp"),
             to_emails=[otp_instance.user.email],
         ).send_email()
 
         user = serializer.validated_data.get("user")
-        return responses.ForgetPasswordRequestResponse(user=user)
+        return responses.ForgetPasswordRequestResponse().with_data(
+            access_token=user.get_tokens()["access"]
+        )
 
 
 class VerifyOTPNumberView(base_views.BaseGenericAPIView):
