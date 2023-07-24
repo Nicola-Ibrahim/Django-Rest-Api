@@ -37,10 +37,24 @@ services:
     # Expose port 8000 on the host and map it to port 8000 on the container for the web server
     # Expose port 5678 on the host and map it to port 5678 on the container for the debugger
     ports:
-      - 8000:8000
+      - "8000:8000"
 
     environment:
-      - DAUTH_SETTINGS_DJANGO_ENV=production
+      - POETRY_VIRTUALENVS_CREATE=false
+
+  proxy:
+    build:
+      context: ./nginx
+      dockerfile: ./Dockerfile
+
+    volumes:
+      - static_data:src/static
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      - backend
 
 volumes:
   postgresql-data:
