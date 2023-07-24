@@ -7,7 +7,7 @@ import dotenv
 from split_settings.tools import include, optional
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Namespacing our own custom environment variables
 ENVVAR_SETTINGS_PREFIX = "DAUTH_SETTINGS_"
