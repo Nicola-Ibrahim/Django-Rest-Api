@@ -8,7 +8,7 @@ class Command(createsuperuser.Command):
     help = "Crate a superuser, and allow password to be provided"
 
     def handle(self, *args, **options):
-        print("Creating root superuser...")
+        self.stdout.write(self.style.NOTICE("Creating root superuser..."))
 
         try:
             get_user_model().objects.create_superuser(

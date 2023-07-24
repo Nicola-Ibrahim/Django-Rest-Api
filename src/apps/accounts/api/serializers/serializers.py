@@ -583,7 +583,6 @@ class FirstTimePasswordSerializer(BaseSerializer):
 
     def create(self, validated_data):
         """Update the user's password"""
-        print(self.context["request"])
         user = self.context["request"].user
         password = validated_data.get("new_password")
         user.set_password(password)
