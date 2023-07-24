@@ -62,7 +62,7 @@ class Command(BaseCommand):
                 count = None
                 continue
 
-        print("Creating users...")
+        self.stdout.write(self.style.NOTICE("Creating users..."))
 
         factory_map = {
             "user": factories.UserFactory,

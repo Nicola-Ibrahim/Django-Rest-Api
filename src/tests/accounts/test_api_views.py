@@ -50,7 +50,6 @@ class TestAccountsViews:
         url = reverse(
             "accounts-api:user-details-update-destroy", kwargs={"id": user.id}
         )
-        print(url)
         request = rf.get(url)
         view = views.UserDetailsUpdateDestroyView.as_view()
 

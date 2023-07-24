@@ -162,8 +162,6 @@ class TestTeacherUserSerializer:
         invalid_serialized_data = {
             k: v for k, v in user.__dict__.items() if k in teacher_model_fields_names
         } | wrong_field
-        print(invalid_serialized_data)
-        print("-" * 40)
         serializer = serializers.TeacherUserCreateSerializer(
             data=invalid_serialized_data
         )

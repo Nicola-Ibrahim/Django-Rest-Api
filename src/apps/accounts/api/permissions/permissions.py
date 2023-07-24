@@ -59,7 +59,6 @@ class DeleteUserPermission(BasePermission):
 
         # Get the user's permission related to the Http method
         perms = self.get_required_object_permissions(request.method, model_cls)
-        print(perms)
 
         if not user.has_perms(perms):
             # If the user does not have permissions we need to determine if
@@ -115,10 +114,8 @@ class UpdateUserPermission(BasePermission):
 
         # Get the user's permission related to the Http method
         perms = self.get_required_object_permissions(request.method, model_cls)
-        print(perms)
 
         if user.type != User.Type.ADMIN:
-            print(len(data))
             # Prevent the non admin user from multiple deleting
             if len(data) > 1:
                 raise UpdateMultipleUsers()
