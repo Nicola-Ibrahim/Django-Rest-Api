@@ -1,7 +1,16 @@
+from corsheaders.defaults import default_headers
+
 DEBUG = True
 
 # ref: https://stackoverflow.com/questions/34360912/deploying-django-app-with-docker-allowed-hosts
-# The domain should be added to ALLOWED_HOSTS to be accessable
+# The domain should be added to ALLOWED_HOSTS to be accessible
+
+INSTALLED_APPS += (  # type: ignore # noqa: F821
+    "drf_yasg",
+    "debug_toolbar",
+    "django_extensions",
+)
+
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 # Logger configurations
@@ -59,12 +68,6 @@ GRAPH_MODELS = {
 }
 
 # Debugger configurations
-INSTALLED_APPS += (
-    "drf_yasg",
-    "debug_toolbar",
-    "django_extensions",
-)
-
 MIDDLEWARE += ("debug_toolbar.middleware.DebugToolbarMiddleware",)
 INTERNAL_IPS = [
     "127.0.0.1",
@@ -100,15 +103,22 @@ REDOC_SETTINGS = {
 }
 
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "db.sqlite3",
-    }
-}
-
-
 CSRF_TRUSTED_ORIGINS = [
     "https://nicola-ibrahim-upgraded-garbanzo-75gq9g4r9p9fp45r-8000.preview.app.github.dev",
     "https://nicola-ibrahim-musical-rotary-phone-95pv9p46p453pg97-8000.preview.app.github.dev",
+]
+
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
+CORS_ALLOW_HEADERS = (*default_headers,)
+
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://127.0.0.1:8080",
 ]
