@@ -4,14 +4,13 @@
 # it is responsible for installing poetry, your project dependencies, and building wheels
 
 # For more information, please refer to https://aka.ms/vscode-docker-python
-# Use python:3.11-slim as the base image
+# Use python:3.11-buster as the builder image
 FROM python:3.11-buster AS builder-dev
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONHASHSEED=random \
     PYTHONUNBUFFERED=1 \
-    POETRY_VIRTUALENVS_CREATE=false \
     POETRY_VERSION=1.5.1
 
 # Set the PYTHONPATH environment variable to the current directory
@@ -22,7 +21,7 @@ RUN set -xe \
     # Update the package list
     && apt-get update \
     # Install build-essential for compiling C extensions 'libpq-dev'
-    && apt-get install -y --no-install-recommends build-essential netcat postgresql-dev\
+    && apt-get install -y --no-install-recommends build-essential netcat\
     # Install virtualenvwrapper and poetry with pip
     && pip install virtualenvwrapper "poetry==$POETRY_VERSION" \
     # Clean up the cache and temporary files
@@ -32,13 +31,11 @@ RUN set -xe \
 COPY ["poetry.lock", "pyproject.toml", "./"]
 
 # Install project dependencies without installing the project itself
-RUN poetry install --no-root --no-interaction --no-ansi
-
-# Export the requirements.txt file from poetry
-RUN poetry export --without-hashes --with dev --with test -f requirements.txt --output requirements.txt
-
-# Build the wheels for the project and its dependencies
-RUN pip wheel -r requirements.txt --wheel-dir /wheels
+RUN poetry install --no-root --no-interaction --no-ansi \
+    # Export the requirements.txt file from poetry
+    && poetry export --without-hashes --with dev --with test -f requirements.txt --output requirements.txt \
+    # Build the wheels for the project and its dependencies
+    && pip wheel -r requirements.txt --wheel-dir /wheels
 
 # Set the working directory in the container to /backend
 WORKDIR /backend
