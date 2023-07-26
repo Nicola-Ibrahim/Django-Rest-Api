@@ -65,4 +65,4 @@ test-cov:
 
 .PHONY: up-dependencies-only
 up-dependencies-only:
-	docker-compose -f docker-compose.local.yml up --build --force-recreate db backend nginx
+	docker-compose -f docker-compose.yml up --build --force-recreate db backend nginx
