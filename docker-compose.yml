@@ -4,8 +4,8 @@ version: "3.9"
 # Define the services that make up your application
 services:
   db:
-    # Use the postgres:15 image from Docker Hub
-    image: postgres:15
+    # Use the postgres:15-alpine image from Docker Hub
+    image: postgres:15.3-alpine
 
     # Restart the container unless it is stopped by the user
     restart: unless-stopped
@@ -17,38 +17,44 @@ services:
     # Set environment variables for the database configuration
     environment:
       POSTGRES_DB: dauth
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: dauth
+      POSTGRES_PASSWORD: dauth
 
     # Mount a named volume to persist the database data
     volumes:
       - postgresql-data:/var/lib/postgresql/data
 
   backend:
+    container_name: backend_container
+
+    # Use the backend image that is built from the Dockerfile in the current directory
     build:
       context: .
       dockerfile: ./Dockerfile
 
-    depends_on:
-      - db
-    # Run a command that installs debugpy and runs the Django server with debug mode enabled
-    # command: ["sh", "-c", "pip install debugpy -t /tmp && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 src\manage.py runserver 0.0.0.0:8000 --nothreading --noreload"]
-
-    # Expose port 8000 on the host and map it to port 8000 on the container for the web server
-    # Expose port 5678 on the host and map it to port 5678 on the container for the debugger
     ports:
       - "8000:8000"
 
-    environment:
-      - POETRY_VIRTUALENVS_CREATE=false
+    env_file:
+      - ./.envs/.env.dev
 
-  proxy:
+    # Mount a named volume to persist the backend django project
+    volumes:
+      - static_data:/backend/src/static
+      - media_data:/backend/media
+
+    depends_on:
+      - db
+
+  nginx:
     build:
       context: ./nginx
       dockerfile: ./Dockerfile
 
     volumes:
-      - static_data:src/static
+      - static_data:/backend/src/static
+      - media_data:/backend/media
+      - nginx-data:/etc/nginx
 
     ports:
       - "8080:8080"
@@ -58,5 +64,6 @@ services:
 
 volumes:
   postgresql-data:
-    # Use the local driver to store the volume on the host machine
-    driver: local
+  static_data:
+  media_data:
+  nginx-data:
