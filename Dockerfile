@@ -1,42 +1,44 @@
+######################
+# builder-dev  STAGE #
+######################
+# it is responsible for installing poetry, your project dependencies, and building wheels
+
 # For more information, please refer to https://aka.ms/vscode-docker-python
 # Use python:3.11-slim as the base image
-FROM python:3.11-buster
-
-# Keeps Python from generating .pyc files in the container
+FROM python:3.11-buster AS builder-dev
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONHASHSEED=random \
-    # Turns off buffering for easier container logging
     PYTHONUNBUFFERED=1 \
     POETRY_VIRTUALENVS_CREATE=false \
-    POETRY_VERSION=0.1.0
+    POETRY_VERSION=1.5.1
 
 # Set the PYTHONPATH environment variable to the current directory
 ENV PYTHONPATH .
-
-# # Install poetry and dependcies
-# RUN curl -sSL https://install.python-poetry.org | python3 -
-# RUN poetry install
 
 # Install dependencies
 RUN set -xe \
     # Update the package list
     && apt-get update \
     # Install build-essential for compiling C extensions 'libpq-dev'
-    && apt-get install -y --no-install-recommends build-essential netcat \
+    && apt-get install -y --no-install-recommends build-essential netcat postgresql-dev\
     # Install virtualenvwrapper and poetry with pip
-    && pip install virtualenvwrapper poetry==1.5.1 \
+    && pip install virtualenvwrapper "poetry==$POETRY_VERSION" \
     # Clean up the cache and temporary files
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-
 COPY ["poetry.lock", "pyproject.toml", "./"]
 
-
-RUN poetry config virtualenvs.create false
+# Install project dependencies without installing the project itself
 RUN poetry install --no-root --no-interaction --no-ansi
+
+# Export the requirements.txt file from poetry
+RUN poetry export --without-hashes --with dev --with test -f requirements.txt --output requirements.txt
+
+# Build the wheels for the project and its dependencies
+RUN pip wheel -r requirements.txt --wheel-dir /wheels
 
 # Set the working directory in the container to /backend
 WORKDIR /backend
@@ -45,13 +47,24 @@ WORKDIR /backend
 COPY . /backend
 
 
-# Expose port 8000 for the web server
-EXPOSE 8000
+###############
+# FINAL STAGE #
+############### 
+# it is responsible for copying the source code and the wheels from the builder stage and installing them with pip
 
-# Creates a non-root user with an explicit UID and adds permission to access the /app folder
-# For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
-# RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
-# USER appuser
+FROM python:3.11-buster
+
+# Set working directory
+WORKDIR /backend
+
+# Copy source code from builder stage
+COPY --from=builder-dev /backend /backend
+
+# Copy wheels from builder stage
+COPY --from=builder-dev /wheels /wheels
+
+# Install wheels from /wheels directory
+RUN pip install --no-cache-dir --no-index --find-links=/wheels /wheels/*.whl
 
 # Set up the entrypoint script for running commands before starting the web server
 COPY ./scripts/entrypoint.sh /entrypoint.sh
