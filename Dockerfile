@@ -1,7 +1,8 @@
 ######################
 # builder-dev  STAGE #
 ######################
-# it is responsible for installing poetry, your project dependencies, and building wheels
+# it is responsible for installing poetry, createing env, 
+# installing project dependencies, and building wheels
 
 # For more information, please refer to https://aka.ms/vscode-docker-python
 # Use python:3.11-buster as the builder image
@@ -28,14 +29,18 @@ RUN set -xe \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+
 COPY ["poetry.lock", "pyproject.toml", "./"]
 
-# Install project dependencies without installing the project itself
-RUN poetry install --no-root --no-interaction --no-ansi \
+# Create a virtual environment in the backend folder with poetry
+RUN poetry config virtualenvs.in-project true --local \
+    # Install project dependencies without installing the project itself
+    && poetry install --no-root --no-interaction --no-ansi \
     # Export the requirements.txt file from poetry
-    && poetry export --without-hashes --with dev --with test -f requirements.txt --output requirements.txt \
-    # Build the wheels for the project and its dependencies
-    && pip wheel -r requirements.txt --wheel-dir /wheels
+    && poetry export --without-hashes --with dev --with test -f requirements.txt --output requirements.txt 
+# Build the wheels for the project and its dependencies in the virtual environment
+# && pip wheel -r requirements.txt --wheel-dir .venv/wheels
+
 
 # Set the working directory in the container to /backend
 WORKDIR /backend
@@ -44,30 +49,28 @@ WORKDIR /backend
 COPY . /backend
 
 
+
 ###############
 # FINAL STAGE #
 ############### 
-# it is responsible for copying the source code and the wheels from the builder stage and installing them with pip
+# it is responsible for copying the source code and the wheels 
+# from the builder stage and installing them with pip
 
 FROM python:3.11-buster
+
+
+# Copy source code from builder stage
+COPY --from=builder-dev /backend /backend
+COPY --from=builder-dev /.venv /.venv
 
 # Set working directory
 WORKDIR /backend
 
-# Copy source code from builder stage
-COPY --from=builder-dev /backend /backend
-
-# Copy wheels from builder stage
-COPY --from=builder-dev /wheels /wheels
-
-# Install wheels from /wheels directory
-RUN pip install --no-cache-dir --no-index --find-links=/wheels /wheels/*.whl
-
-# Set up the entrypoint script for running commands before starting the web server
-COPY ./scripts/entrypoint.sh /entrypoint.sh
+ENV PATH="../.venv/bin:$PATH"
 
 # Make the entrypoint script executable
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /backend/scripts/entrypoint.sh
+
 
 # Run the entrypoint script as the default command when starting the container
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/backend/scripts/entrypoint.sh"]
