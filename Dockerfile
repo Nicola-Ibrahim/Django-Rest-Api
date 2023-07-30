@@ -68,9 +68,9 @@ WORKDIR /backend
 
 ENV PATH="../.venv/bin:$PATH"
 
-# Make the entrypoint script executable
-RUN chmod +x /backend/scripts/entrypoint.sh
+# Make the dockerized-dauth-run script executable
+RUN chmod +x /backend/scripts/dockerized-dauth-run.sh
 
 
-# Run the entrypoint script as the default command when starting the container
-ENTRYPOINT ["/backend/scripts/entrypoint.sh"]
+# Run the dockerized-dauth-run script as the default command when starting the container
+ENTRYPOINT ["/backend/scripts/dockerized-dauth-run.sh"]
