@@ -10,10 +10,6 @@ services:
     # Restart the container unless it is stopped by the user
     restart: unless-stopped
 
-    # Expose port 5432 on the host and map it to port 5432 on the container
-    ports:
-      - "5432:5432"
-
     # Set environment variables for the database configuration
     environment:
       POSTGRES_DB: dauth
@@ -27,13 +23,16 @@ services:
   backend:
     container_name: backend_container
 
+    # Restart the container unless it is stopped by the user
+    restart: unless-stopped
+
     # Use the backend image that is built from the Dockerfile in the current directory
     build:
       context: .
       dockerfile: ./Dockerfile
 
-    ports:
-      - "8000:8000"
+    expose:
+      - 8000
 
     env_file:
       - ./.envs/.env.dev
@@ -48,8 +47,11 @@ services:
 
   nginx:
     build:
-      context: ./nginx
-      dockerfile: ./Dockerfile
+      context: ./
+      dockerfile: ./nginx/Dockerfile
+
+    # Restart the container unless it is stopped by the user
+    restart: unless-stopped
 
     volumes:
       - static_data:/backend/src/static
@@ -57,7 +59,7 @@ services:
       - nginx-data:/etc/nginx
 
     ports:
-      - "8080:8080"
+      - 80:8080
 
     depends_on:
       - backend
