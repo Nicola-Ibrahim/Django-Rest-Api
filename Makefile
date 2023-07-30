@@ -63,6 +63,6 @@ test-cov:
 	poetry run python -m pytest --cov
 	poetry run coverage html
 
-.PHONY: up-dependencies-only
-up-dependencies-only:
+.PHONY: dev-docker
+dev-docker:
 	docker-compose -f docker-compose.yml up --build --force-recreate db backend nginx
