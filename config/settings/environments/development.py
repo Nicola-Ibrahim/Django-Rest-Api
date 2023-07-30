@@ -103,12 +103,6 @@ REDOC_SETTINGS = {
 }
 
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://nicola-ibrahim-upgraded-garbanzo-75gq9g4r9p9fp45r-8000.preview.app.github.dev",
-    "https://nicola-ibrahim-musical-rotary-phone-95pv9p46p453pg97-8000.preview.app.github.dev",
-]
-
-
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
     "http://127.0.0.1:8080",
