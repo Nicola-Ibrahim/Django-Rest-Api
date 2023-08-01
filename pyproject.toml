@@ -48,6 +48,7 @@ pytest-cov = "^4.1.0"
 pytest-mock = "^3.11.1"
 hypothesis = "^6.81.1"
 
+# ==== black ====
 [tool.black]
 line-length = 119
 include = '\.pyi?$'
@@ -65,9 +66,13 @@ exclude = '''
 )/
 '''
 
+# ==== isort ====
 [tool.isort]
-multi_line_output = 5
+profile = "black"
 line_length = 119
+multi_line_output = 5
+skip = [".venv/", "venv/"]
+skip_glob = ["**/migrations/*.py"]
 
 [tool.yapf]
 based_on_style = "google"
@@ -76,7 +81,7 @@ coalesce_brackets = true
 column_limit = 119
 dedent_closing_brackets = true
 
-
+# ==== pytest ====
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 django_find_project = true
@@ -86,6 +91,40 @@ pythonpath = ["." ,"src"]
 filterwarnings = "ignore::DeprecationWarning:^(?!node\\.).*:"
 # addopts = "-vv -x --lf --cov"
 
+# ==== Coverage ====
+[tool.coverage.run]
+include = ["authen/**"]
+omit = ["*/migrations/*", "*/tests/*"]
+plugins = ["django_coverage_plugin"]
+
+
+# ==== PyLint ====
+[tool.pylint.MASTER]
+load-plugins = [
+    "pylint_django",
+]
+
+[tool.pylint.FORMAT]
+max-line-length = 119
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "missing-docstring",
+    "invalid-name",
+]
+
+[tool.pylint.DESIGN]
+max-parents = 13
+
+[tool.pylint.TYPECHECK]
+generated-members = [
+    "REQUEST",
+    "acl_users",
+    "aq_parent",
+    "[a-zA-Z]+_set{1,2}",
+    "save",
+    "delete",
+]
 
 [build-system]
 requires = ["poetry-core"]
