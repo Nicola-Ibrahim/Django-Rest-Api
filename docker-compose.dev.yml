@@ -46,11 +46,11 @@ services:
       - 8000
 
     env_file:
-      - ./.envs/.env.prod
+      - ./.envs/.env.dev
 
     # Mount a named volume to persist the backend django project
     volumes:
-      - static_data:/backend/src/static
+      - static_data:/backend/src/staticfiles
       - media_data:/backend/media
 
     depends_on:
@@ -75,9 +75,9 @@ services:
     restart: unless-stopped
 
     volumes:
-      - static_data:/backend/src/static
+      - static_data:/backend/src/staticfiles
       - media_data:/backend/media
-      - nginx_data:/etc/nginx
+      # - nginx_data:/etc/nginx
 
     ports:
       - 80:8080
