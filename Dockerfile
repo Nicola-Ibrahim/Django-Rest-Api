@@ -1,10 +1,9 @@
 ######################
 # builder-dev  STAGE #
 ######################
-# it is responsible for installing poetry, createing env, 
+# it is responsible for installing poetry, createing env,
 # installing project dependencies, and building wheels
 
-# For more information, please refer to https://aka.ms/vscode-docker-python
 # Use python:3.11-buster as the builder image
 FROM python:3.11-buster AS builder-dev
 
@@ -22,7 +21,7 @@ RUN set -xe \
     # Update the package list
     && apt-get update \
     # Install build-essential for compiling C extensions 'libpq-dev'
-    && apt-get install -y --no-install-recommends build-essential netcat\
+    && apt-get install -y --no-install-recommends build-essential netcat curl\
     # Install virtualenvwrapper and poetry with pip
     && pip install virtualenvwrapper "poetry==$POETRY_VERSION" \
     # Clean up the cache and temporary files
@@ -35,12 +34,7 @@ COPY ["poetry.lock", "pyproject.toml", "./"]
 # Create a virtual environment in the backend folder with poetry
 RUN poetry config virtualenvs.in-project true --local \
     # Install project dependencies without installing the project itself
-    && poetry install --no-root --no-interaction --no-ansi \
-    # Export the requirements.txt file from poetry
-    && poetry export --without-hashes --with dev --with test -f requirements.txt --output requirements.txt 
-# Build the wheels for the project and its dependencies in the virtual environment
-# && pip wheel -r requirements.txt --wheel-dir .venv/wheels
-
+    && poetry install $(test "$DJANGO_ENV" == production && echo "--without dev test") --no-root --no-interaction --no-ansi
 
 # Set the working directory in the container to /backend
 WORKDIR /backend
@@ -49,15 +43,13 @@ WORKDIR /backend
 COPY . /backend
 
 
-
 ###############
 # FINAL STAGE #
-############### 
-# it is responsible for copying the source code and the wheels 
+###############
+# it is responsible for copying the source code and the wheels
 # from the builder stage and installing them with pip
 
 FROM python:3.11-buster
-
 
 # Copy source code from builder stage
 COPY --from=builder-dev /backend /backend
@@ -66,7 +58,13 @@ COPY --from=builder-dev /.venv /.venv
 # Set working directory
 WORKDIR /backend
 
-ENV PATH="../.venv/bin:$PATH"
+# Create a new user "appuser" with user id 5678
+# RUN useradd -u 5678 --no-create-home --shell /bin/bash appuser \
+#     && chown -R appuser /backend
+
+# # Switch to "appuser" for subsequent commands
+# USER appuser
+
 
 # Make the dockerized-dauth-run script executable
 RUN chmod +x /backend/scripts/dockerized-dauth-run.sh
