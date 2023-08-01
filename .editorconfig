@@ -5,16 +5,26 @@ root = true
 
 # Unix-style newlines with a newline ending every file
 [*]
+charset = utf-8
 end_of_line = lf
 insert_final_newline = true
+trim_trailing_whitespace = true
 
 # Matches multiple files with brace expansion notation
 # Set default charset
-[*.{html, py}]
+[*.{py, rst, ini}]
 charset = utf-8
 indent_size = 4
 indent_style = space
 max_line_length = 82
+
+[*.{html,css,scss,json,yml,xml}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
 
 # Tab indentation (no size specified)
 [Makefile]
@@ -23,5 +33,9 @@ indent_style = tab
 
 # Matches the exact files either package.json or .travis.yml
 [{package.json,.travis.yml}]
+indent_style = space
+indent_size = 2
+
+[default.conf]
 indent_style = space
 indent_size = 2
