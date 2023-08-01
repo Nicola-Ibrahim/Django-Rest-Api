@@ -9,7 +9,9 @@ media
 # Backup files
 *.bak
 
-# Python
+### Python template
+# Byte-compiled / optimized / DLL files
+__pycache__/
 *.py[cod]
 *$py.class
 
@@ -47,6 +49,10 @@ pip-log.txt
 coverage.xml
 htmlcov/
 nosetests.xml
+
+# Translations
+*.mo
+*.pot
 
 # pyenv
 .python-version
