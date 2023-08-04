@@ -1,0 +1,36 @@
+name: Quality Assurance
+
+on: [pull_request, workflow_call]
+
+jobs:
+  quality-assurance:
+    name: Quality Assurance
+    runs-on: ubuntu-latest
+    container: python:3.11-buster
+
+    services:
+      db:
+        image: postgres:15.3-alpine
+        env:
+          POSTGRES_DB: dauth
+          POSTGRES_USER: dauth
+          POSTGRES_PASSWORD: dauth
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run Poetry image
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: 1.5.1
+
+      - name: Install
+        run: make install && make install-pre-commit
+
+      - name: Lint
+        run: make lint
+
+      - name: Test
+        run: make test
+        env:
+          CORESETTING_DATABASES: '{"default":{"HOST":"db"}}'
