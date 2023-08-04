@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
-source ../.venv/bin/activate 
+source .venv/bin/activate
 
 RUN_MANAGE_PY='python manage.py'
 
