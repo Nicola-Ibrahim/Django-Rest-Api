@@ -27,13 +27,13 @@ install:
 	poetry install
 
 
-.PHONY: update-pre-commit
-update-pre-commit:
+.PHONY: install-pre-commit
+install-pre-commit:
 	poetry run pre-commit uninstall
 	poetry run pre-commit install
 
 .PHONY: update
-update: migrations migrate	update-pre-commit
+update: migrations migrate	install-pre-commit
 
 
 .PHONY: shell
@@ -65,4 +65,4 @@ test-cov:
 
 .PHONY: dev-docker
 dev-docker:
-	docker-compose -f docker-compose.dev.yml up --build --force-recreate db backend nginx
+	docker-compose -f docker-compose.dev.yml up --build
