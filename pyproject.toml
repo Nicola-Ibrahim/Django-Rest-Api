@@ -5,7 +5,6 @@ description = ""
 authors = ["Nicola Ibrahim <nicolaibrahim969@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "django-auth"}]
 
 [tool.poetry.dependencies]
 python = "^3.11.4"
