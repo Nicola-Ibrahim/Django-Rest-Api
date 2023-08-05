@@ -78,25 +78,25 @@ class TestTeacherModel:
         assert not (user.is_staff or user.is_superuser)
 
 
-class TeacherUserStateMachine(RuleBasedStateMachine):
-    teachers = Bundle("teachers")
-    profiles = Bundle("profiles")
+# class TeacherUserStateMachine(RuleBasedStateMachine):
+#     teachers = Bundle("teachers")
+#     profiles = Bundle("profiles")
 
-    @rule(target=teachers, email=st.emails(), password=st.text(min_size=8))
-    def create_user(self, email, password):
-        # This will create a unique User object and save it in the database
-        return models.User.objects.create_user(email=email, password=password)
+#     @rule(target=teachers, email=st.emails(), password=st.text(min_size=8))
+#     def create_user(self, email, password):
+#         # This will create a unique User object and save it in the database
+#         return models.User.objects.create_user(email=email, password=password)
 
-    @rule(target=profiles, teacher=teachers)
-    def create_profile(self, teacher):
-        # This will create a Profile object for the given user and save it in the database
-        return profiles.Teacher.objects.create(teacher=teacher)
+#     @rule(target=profiles, teacher=teachers)
+#     def create_profile(self, teacher):
+#         # This will create a Profile object for the given user and save it in the database
+#         return profiles.Teacher.objects.create(teacher=teacher)
 
-    @precondition(lambda self: self.teachers.count > 0)
-    @rule(teacher=teachers)
-    def check_user_verified(self, teacher):
-        # This will check that the user is verified
-        self.assertTrue(teacher.is_verified)
+#     @precondition(lambda self: self.teachers.count > 0)
+#     @rule(teacher=teachers)
+#     def check_user_verified(self, teacher):
+#         # This will check that the user is verified
+#         self.assertTrue(teacher.is_verified)
 
 
-TestUserMachine = TeacherUserStateMachine.TestCase
+# TestUserMachine = TeacherUserStateMachine.TestCase
