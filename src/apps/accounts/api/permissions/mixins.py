@@ -1,11 +1,6 @@
 from rest_framework.permissions import IsAuthenticated
 
-from .permissions import (
-    BasePermission,
-    DeleteUserPermission,
-    ListUserPermission,
-    UpdateUserPermission,
-)
+from .permissions import BasePermission, DeleteUserPermission, ListUserPermission, UpdateUserPermission
 
 
 class IsAuthenticatedMixin:

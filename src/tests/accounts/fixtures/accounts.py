@@ -34,7 +34,7 @@ def users(db, request):
 @pytest.fixture(scope="session", autouse=True)
 def mock_views_permissions():
     # little util I use for testing for DRY when patching multiple objects
-    patch_perm = lambda perm: mock.patch.multiple(
+    patch_perm = lambda perm: mock.patch.multiple(  # noqa:E731
         perm,
         has_permission=mock.Mock(return_value=True),
         has_object_permission=mock.Mock(return_value=True),

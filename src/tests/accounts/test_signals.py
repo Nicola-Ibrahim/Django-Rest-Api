@@ -14,14 +14,10 @@ class TestTeacherModel:
     @given(teacher=from_model(models.Teacher))
     def test_post_save_teacher(self, teacher, mocker):
         # Mock the TeacherProfile model
-        teacher_profile_mock_model = mocker.patch(
-            "src.apps.accounts.models.profiles.TeacherProfile"
-        )
+        teacher_profile_mock_model = mocker.patch("src.apps.accounts.models.profiles.TeacherProfile")
 
         # Act
         post_save.send(models.Teacher, instance=teacher, created=True)
 
         # Assert
-        teacher_profile_mock_model.objects.create.assert_called_once_with(
-            teacher=teacher
-        )
+        teacher_profile_mock_model.objects.create.assert_called_once_with(teacher=teacher)

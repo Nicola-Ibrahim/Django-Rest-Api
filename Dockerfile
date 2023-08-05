@@ -1,8 +1,7 @@
 ######################
 # builder-dev  STAGE #
 ######################
-# it is responsible for installing poetry, createing env,
-# installing project dependencies, and building wheels
+# it is responsible for installing poetry, createing env, installing project dependencies
 
 # Use python:3.11-buster as the builder image
 FROM python:3.11-buster AS builder-dev
@@ -18,28 +17,22 @@ ENV PYTHONPATH .
 
 # Install dependencies
 RUN set -xe \
-    # Update the package list
     && apt-get update \
     # Install build-essential for compiling C extensions 'libpq-dev'
     && apt-get install -y --no-install-recommends build-essential netcat curl\
-    # Install virtualenvwrapper and poetry with pip
     && pip install virtualenvwrapper "poetry==$POETRY_VERSION" \
     # Clean up the cache and temporary files
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+WORKDIR /backend
 
 COPY ["poetry.lock", "pyproject.toml", "./"]
 
 # Create a virtual environment in the backend folder with poetry
 RUN poetry config virtualenvs.in-project true --local \
-    # Install project dependencies without installing the project itself
     && poetry install $(test "$DJANGO_ENV" == production && echo "--without dev test") --no-root --no-interaction --no-ansi
 
-# Set the working directory in the container to /backend
-WORKDIR /backend
-
-# Copy the current directory contents into the container at /backend
 COPY . /backend
 
 
@@ -53,13 +46,11 @@ FROM python:3.11-buster
 
 # Copy source code from builder stage
 COPY --from=builder-dev /backend /backend
-COPY --from=builder-dev /.venv /.venv
 
-# Set working directory
 WORKDIR /backend
 
-# Create a new user "appuser" with user id 5678
-# RUN useradd -u 5678 --no-create-home --shell /bin/bash appuser \
+# # Create a new user "appuser" with user id 5678 without home directory
+# RUN useradd -u 5678 -M --no-create-home --shell /bin/bash appuser \
 #     && chown -R appuser /backend
 
 # # Switch to "appuser" for subsequent commands

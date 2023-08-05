@@ -35,17 +35,13 @@ class Command(BaseCommand):
             required=False,
             help="The type of user to create",
         )
-        parser.add_argument(
-            "--count", type=int, default=1, help="The number of users to create"
-        )
+        parser.add_argument("--count", type=int, default=1, help="The number of users to create")
 
     def handle(self, *args, **options):
         # Prompt for user type.
         user_type = None
         while user_type is None:
-            user_type = input(
-                "Enter the type of user to create (admin/student/teacher):"
-            )
+            user_type = input("Enter the type of user to create (admin/student/teacher):")
 
             if user_type not in self.user_types:
                 self.stderr.write(f"Please select existed user types {self.user_types}")
@@ -75,6 +71,4 @@ class Command(BaseCommand):
 
         user_factory.create_batch(int(count))
 
-        self.stdout.write(
-            self.style.SUCCESS(f"Successfully created {count} {type} users")
-        )
+        self.stdout.write(self.style.SUCCESS(f"Successfully created {count} {type} users"))

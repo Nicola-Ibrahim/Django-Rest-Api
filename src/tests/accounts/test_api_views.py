@@ -47,9 +47,7 @@ class TestAccountsViews:
     @given(user=user_strategy)
     def test_retrieve_user_view(self, user, mocker, rf):
         # Arrange
-        url = reverse(
-            "accounts-api:user-details-update-destroy", kwargs={"id": user.id}
-        )
+        url = reverse("accounts-api:user-details-update-destroy", kwargs={"id": user.id})
         request = rf.get(url)
         view = views.UserDetailsUpdateDestroyView.as_view()
 
@@ -72,9 +70,7 @@ class TestAccountsViews:
     @given(user=user_strategy)
     def test_delete_user_view(self, user, mocker, rf):
         # Arrange
-        url = reverse(
-            "accounts-api:user-details-update-destroy", kwargs={"id": user.id}
-        )
+        url = reverse("accounts-api:user-details-update-destroy", kwargs={"id": user.id})
         request = rf.delete(url)
         view = views.UserDetailsUpdateDestroyView.as_view()
 

@@ -54,7 +54,5 @@ class LogoutSerializer(BaseSerializer):
         return attrs
 
     def create(self, validated_data):
-        tokens.CustomRefreshToken(
-            validated_data.get("refresh"), verify=True
-        ).blacklist()
+        tokens.CustomRefreshToken(validated_data.get("refresh"), verify=True).blacklist()
         return True

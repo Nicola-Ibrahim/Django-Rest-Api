@@ -1,7 +1,8 @@
 from typing import Any
 
 from django.contrib.auth import get_user_model
-from django_filters.rest_framework import DjangoFilterBackend
+
+# from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
@@ -28,9 +29,7 @@ class VerifyAccount(base_views.BaseGenericAPIView):
     serializer_class = serializers.AccountVerificationSerializer
 
     def get(self, request):
-        serializer = self.get_serializer(
-            request.GET.get("token"), context={"request": request}
-        )
+        serializer = self.get_serializer(request.GET.get("token"), context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return responses.ActivatedAccount()
@@ -76,23 +75,17 @@ class UserCreateView(
         """
         Get the appropriate serializer depending on the url user_type param
         """
-        serializer_class = serializer_factory.get_create_serializer(
-            self.kwargs.get("user_type")
-        )
+        serializer_class = serializer_factory.get_create_serializer(self.kwargs.get("user_type"))
         return serializer_class
 
     def post(self, request, *args, **kwargs) -> Response:
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
 
         user = serializer.save()
 
         # Send welcome email
-        mailers.RegisterMailer(
-            full_name=user.email, password="sdf", to_emails=[user.email]
-        ).send_email()
+        mailers.RegisterMailer(full_name=user.email, password="sdf", to_emails=[user.email]).send_email()
 
         return responses.UserCreateResponse().with_data(user_data=serializer.data)
 
@@ -115,9 +108,7 @@ class UserDetailsUpdateDestroyView(
 
         elif self.request.method in ["PUT", "PATCH"]:
             user = self.get_object()
-            serializer_class = serializer_factory.get_update_serializer(
-                user_type=user.type
-            )
+            serializer_class = serializer_factory.get_update_serializer(user_type=user.type)
 
         return serializer_class
 
@@ -178,9 +169,7 @@ class ForgetPasswordRequestView(base_views.BaseGenericAPIView):
     serializer_class = serializers.ForgetPasswordRequestSerializer
 
     def post(self, request):
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=request.data, context={"request": request})
 
         # Validate user's email and check existence
         serializer.is_valid(raise_exception=True)
@@ -195,9 +184,7 @@ class ForgetPasswordRequestView(base_views.BaseGenericAPIView):
         ).send_email()
 
         user = serializer.validated_data.get("user")
-        return responses.ForgetPasswordRequestResponse().with_data(
-            access_token=user.get_tokens()["access"]
-        )
+        return responses.ForgetPasswordRequestResponse().with_data(access_token=user.get_tokens()["access"])
 
 
 class VerifyOTPNumberView(base_views.BaseGenericAPIView):
@@ -206,9 +193,7 @@ class VerifyOTPNumberView(base_views.BaseGenericAPIView):
     serializer_class = serializers.VerifyOTPNumberSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -226,9 +211,7 @@ class BaseResetPasswordView(base_views.BaseGenericAPIView):
         abstract = True
 
     def patch(self, request):
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
 

@@ -113,7 +113,7 @@ class UpdateUserPermission(BasePermission):
         data = request.data
 
         # Get the user's permission related to the Http method
-        perms = self.get_required_object_permissions(request.method, model_cls)
+        perms = self.get_required_object_permissions(request.method, model_cls)  # noqa: F841
 
         if user.type != User.Type.ADMIN:
             # Prevent the non admin user from multiple deleting
