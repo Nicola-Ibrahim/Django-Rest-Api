@@ -12,9 +12,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     last_name = factory.Faker(provider="last_name")
 
     # email will use first_name and last_name (the default or the one you provide)
-    email = factory.LazyAttribute(
-        lambda a: "{0}.{1}@gmail.com".format(a.first_name, a.last_name).lower()
-    )
+    email = factory.LazyAttribute(lambda a: f"{a.first_name}.{a.last_name}@gmail.com".lower())
 
     # type = fuzzy.FuzzyChoice(choices=[x[0] for x in models.User.Type])
 

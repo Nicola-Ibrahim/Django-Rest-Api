@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Iterable
+from collections.abc import Iterable
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -104,9 +104,7 @@ class RegisterMailer(BaseMailer):
 
         context = {"full_name": self.full_name, "password": self.password}
 
-        return render_to_string(
-            template_name="accounts/registration_email.html", context=context
-        )
+        return render_to_string(template_name="accounts/registration_email.html", context=context)
 
     def _get_subject(self) -> str:
         return settings.EMAIL_REGISTER_SUBJECT
@@ -139,9 +137,7 @@ class OTPMailer(BaseMailer):
         """
         context = {"email": self.to_emails[0], "otp_number": self.otp_number}
 
-        return render_to_string(
-            template_name="accounts/forget_password.html", context=context
-        )
+        return render_to_string(template_name="accounts/forget_password.html", context=context)
 
     def _get_subject(self) -> str:
         return settings.EMAIL_RESETPASSWORD_SUBJECT
@@ -186,9 +182,7 @@ class VerificationMailer(BaseMailer):
         current_site = get_current_site(self.request).domain
 
         # Get the url of the "email-verify" view
-        relativeLink = reverse(
-            "authentication:email-verify"
-        )  # -> /api/authentication/verify_email/
+        relativeLink = reverse("authentication:email-verify")  # -> /api/authentication/verify_email/
 
         # Sum up the final url for verification
         absurl = "http://" + current_site + relativeLink + "?token=" + str(token)
@@ -198,9 +192,7 @@ class VerificationMailer(BaseMailer):
             "link": absurl,
         }
 
-        return render_to_string(
-            template_name="authentication/account_verification.html", context=context
-        )
+        return render_to_string(template_name="authentication/account_verification.html", context=context)
 
     def _get_subject(self) -> str:
         return settings.EMAIL_EMAIL_VERIFICATION_SUBJECT

@@ -27,3 +27,18 @@ src/__pycache__
 **/values.dev.yaml
 LICENSE
 README.md
+
+
+
+# Ignore tests
+**/test
+
+.editorconfig
+.flake8
+.pre-commit-config.yaml
+
+
+# Ignore docker configuration
+.dockerignore
+docker-compose.dev.yml
+docker-compose.yml

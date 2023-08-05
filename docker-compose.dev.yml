@@ -1,22 +1,16 @@
-# Specify the version of the docker-compose file format
 version: "3.9"
 
-# Define the services that make up your application
 services:
   db:
-    # Use the postgres:15-alpine image from Docker Hub
     image: postgres:15.3-alpine
-
-    # Restart the container unless it is stopped by the user
+    container_name: db_container
     restart: unless-stopped
 
-    # Set environment variables for the database configuration
     environment:
       POSTGRES_DB: dauth
       POSTGRES_USER: dauth
       POSTGRES_PASSWORD: dauth
 
-    # Mount a named volume to persist the database data
     volumes:
       - postgresql-data:/var/lib/postgresql/data
 
@@ -31,13 +25,25 @@ services:
       # Fail the healthcheck after 3 retries
       retries: 3
 
+  pgadmin:
+    image: dpage/pgadmin4:7.3
+    container_name: pgadmin_container
+
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+
+    ports:
+      - 9001:80
+
+    depends_on:
+      - db
+
   backend:
     container_name: backend_container
 
-    # Restart the container unless it is stopped by the user
     restart: unless-stopped
 
-    # Use the backend image that is built from the Dockerfile in the current directory
     build:
       context: .
       dockerfile: ./Dockerfile
@@ -48,7 +54,6 @@ services:
     env_file:
       - ./.envs/.env.dev
 
-    # Mount a named volume to persist the backend django project
     volumes:
       - static_data:/backend/src/staticfiles
       - media_data:/backend/media
@@ -70,14 +75,12 @@ services:
     build:
       context: ./
       dockerfile: ./nginx/Dockerfile
-
-    # Restart the container unless it is stopped by the user
+    container_name: nginx_container
     restart: unless-stopped
 
     volumes:
       - static_data:/backend/src/staticfiles
       - media_data:/backend/media
-      # - nginx_data:/etc/nginx
 
     ports:
       - 80:80
@@ -89,4 +92,3 @@ volumes:
   postgresql-data:
   static_data:
   media_data:
-  nginx_data:

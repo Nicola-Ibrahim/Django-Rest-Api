@@ -10,17 +10,13 @@ class TestUserSerializer:
     def test_serialize_model_instance(self, one_user, rf):
         """Test properly serialize a Model instance"""
         request = rf.get("/")
-        serializer = serializers.UserListSerializer(
-            instance=one_user, context={"request": request}, many=False
-        )
+        serializer = serializers.UserListSerializer(instance=one_user, context={"request": request}, many=False)
         assert serializer.data
 
     def test_serialize_model_instances(self, users, rf):
         """Test properly serialize a Model instance"""
         request = rf.get("/")
-        serializer = serializers.UserListSerializer(
-            instance=users, context={"request": request}, many=True
-        )
+        serializer = serializers.UserListSerializer(instance=users, context={"request": request}, many=True)
         assert serializer.data
 
 
@@ -43,9 +39,7 @@ class TestAdminUserSerializer:
         }
 
         request = rf.get("/")
-        serializer = serializers.AdminUserCreateSerializer(
-            data=payload, context={"request": request}
-        )
+        serializer = serializers.AdminUserCreateSerializer(data=payload, context={"request": request})
 
         assert serializer.is_valid()
         assert serializer.errors == {}
@@ -72,9 +66,7 @@ class TestStudentUserSerializer:
         }
 
         request = rf.get("/")
-        serializer = serializers.StudentUserCreateSerializer(
-            data=payload, context={"request": request}
-        )
+        serializer = serializers.StudentUserCreateSerializer(data=payload, context={"request": request})
 
         assert serializer.is_valid()
         assert serializer.errors == {}
@@ -89,9 +81,7 @@ class TestTeacherUserSerializer:
         """Test serializing User instance to json."""
 
         request = rf.get("/")
-        serializer = serializers.UserDetailsSerializer(
-            instance=teacher, context={"request": request}
-        )
+        serializer = serializers.UserDetailsSerializer(instance=teacher, context={"request": request})
 
         expected_data = {
             "id": str(teacher.id),
@@ -127,9 +117,7 @@ class TestTeacherUserSerializer:
         }
 
         request = rf.get("/")
-        serializer = serializers.TeacherUserCreateSerializer(
-            data=payload, context={"request": request}
-        )
+        serializer = serializers.TeacherUserCreateSerializer(data=payload, context={"request": request})
 
         assert serializer.is_valid()
         assert serializer.errors == {}
@@ -141,9 +129,7 @@ class TestTeacherUserSerializer:
             st.builds(dict, tags=st.text()),
             st.builds(
                 dict,
-                tags=st.lists(
-                    st.text(min_size=25, max_size=25), min_size=1, max_size=1
-                ),
+                tags=st.lists(st.text(min_size=25, max_size=25), min_size=1, max_size=1),
             ),
             st.builds(dict, version=st.text(min_size=17, max_size=17)),
             st.builds(dict, is_public=st.integers()),
@@ -155,16 +141,12 @@ class TestTeacherUserSerializer:
         """Test fail to deserializing json data into User model (python datatypes)."""
 
         # Get the Teacher model fields
-        teacher_model_fields_names = [
-            field.name for field in models.Teacher._meta.get_fields()
-        ]
+        teacher_model_fields_names = [field.name for field in models.Teacher._meta.get_fields()]
 
         invalid_serialized_data = {
             k: v for k, v in user.__dict__.items() if k in teacher_model_fields_names
         } | wrong_field
-        serializer = serializers.TeacherUserCreateSerializer(
-            data=invalid_serialized_data
-        )
+        serializer = serializers.TeacherUserCreateSerializer(data=invalid_serialized_data)
 
         assert not serializer.is_valid()
         assert serializer.errors != {}
