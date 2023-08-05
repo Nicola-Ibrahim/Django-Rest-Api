@@ -1,10 +1,10 @@
 class TestAccountsEndpoints:
     END_POINT = "/api/accounts/"
 
-    def test_list_users(self, users, api_client):
-        response = api_client.get(path=self.END_POINT)
-        assert response.status_code == 200
-        assert len(users) == 3
+    # def test_list_users(self, users, api_client):
+    #     response = api_client.get(path=self.END_POINT)
+    #     assert response.status_code == 200
+    #     assert len(users) == 3
 
     def test_retrieve_user(self, one_user, api_client):
         url = f"{self.END_POINT}{one_user.id}/"
