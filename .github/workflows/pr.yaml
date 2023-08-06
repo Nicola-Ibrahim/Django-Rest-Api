@@ -20,8 +20,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
+      - name: Run pre-commit hooks
+        uses: pre-commit/action@v3.0.0
 
       - name: Run Poetry image
         uses: abatilo/actions-poetry@v2.0.0
@@ -31,8 +33,8 @@ jobs:
       - name: Install
         run: make install
 
-      # - name: Lint
-      #   run: make lint
+      - name: Lint
+        run: make lint
 
       - name: Test
         run: make test
