@@ -1,6 +1,7 @@
 from corsheaders.defaults import default_headers
 
 DEBUG = True
+SECRET_KEY = "jd@11j#vr_+36p&f)nm9_9ocpt^o!^*fgd(nyhrx1r#xf9_p&5"
 
 # ref: https://stackoverflow.com/questions/34360912/deploying-django-app-with-docker-allowed-hosts
 # The domain should be added to ALLOWED_HOSTS to be accessible
@@ -103,13 +104,12 @@ REDOC_SETTINGS = {
 }
 
 
+CORS_ALLOW_HEADERS = (*default_headers,)
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
     "http://127.0.0.1:8080",
 ]
-
-CORS_ALLOW_HEADERS = (*default_headers,)
-
 
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8080",

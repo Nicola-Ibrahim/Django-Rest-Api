@@ -23,11 +23,6 @@ if not os.path.isabs(LOCAL_SETTINGS_PATH):
 
 DJANGO_ENV = os.environ.get(f"{ENVVAR_SETTINGS_PREFIX}DJANGO_ENV", "development")
 
-if DJANGO_ENV == "development":
-    dotenv.load_dotenv(".envs/.env.dev")
-elif DJANGO_ENV == "productions":
-    dotenv.load_dotenv(".envs/.env.prod")
-
 include(
     "components/base.py",
     "components/database.py",
