@@ -4,11 +4,11 @@ from django.contrib.auth.password_validation import validate_password
 from django.db.models import signals
 from rest_framework import serializers
 
-from src.apps.accounts.api import exceptions
-from src.apps.accounts.models import models, profiles, utils, validators
-from src.apps.accounts.models.signals import create_student_profile, create_teacher_profile, signal_wrapper
 from src.apps.core.base_api.serializers import BaseModelSerializer, BaseSerializer
 
+from ...models import models, profiles, utils, validators
+from ...models.receivers import create_student_profile, create_teacher_profile, signal_reconnect
+from .. import exceptions
 from . import profile_serializers
 
 
@@ -202,8 +202,8 @@ class AdminUserCreateSerializer(UserCreateSerializer):
         profile_relation_field = "admin"
         profile_serializer = profile_serializers.AdminProfileSerializer
 
-    # Decorate create method to disconnect post_save signal for creating a profile
-    @signal_wrapper(
+    # Decorate create method to disconnect and reconnect post_save signal for creating a profile
+    @signal_reconnect(
         signal=signals.post_save,
         sender=models.Teacher,
         receiver=create_teacher_profile,
@@ -227,8 +227,8 @@ class TeacherUserCreateSerializer(UserCreateSerializer):
         profile_relation_field = "teacher"
         profile_serializer = profile_serializers.TeacherProfileSerializer
 
-    # Decorate create method to disconnect post_save signal for creating a profile
-    @signal_wrapper(
+    # Decorate create method to disconnect and reconnect post_save signal for creating a profile
+    @signal_reconnect(
         signal=signals.post_save,
         sender=models.Teacher,
         receiver=create_teacher_profile,
@@ -248,8 +248,8 @@ class StudentUserCreateSerializer(UserCreateSerializer):
         profile_relation_field = "student"
         profile_serializer = profile_serializers.StudentProfileSerializer
 
-    # Decorate create method to disconnect post_save signal for creating a profile
-    @signal_wrapper(
+    # Decorate create method to disconnect and reconnect post_save signal for creating a profile
+    @signal_reconnect(
         signal=signals.post_save,
         sender=models.Student,
         receiver=create_student_profile,
@@ -384,29 +384,22 @@ class ForgetPasswordRequestSerializer(BaseSerializer):
     class Meta:
         fields = ["email"]
 
-    def validate(self, attrs):
-        email = attrs.get("email", "")
-
-        # Check the user existence
-        user = get_user_model().objects.filter(email=email)
-
-        if not user.exists():
+    def validate_email(self, value):
+        # Check if the email exists in the user model
+        if not get_user_model().objects.filter(email=value).exists():
             raise exceptions.UserNotExists()
 
-        user = user.first()
-
-        attrs["email"] = email
-        attrs["otp"] = models.OTPNumber.get_number()
-        attrs["user"] = user
-        return attrs
+        return value
 
     def create(self, validated_data):
         """Create an OTP number for the user"""
+        email = validated_data.get("email")
+        user = get_user_model().objects.get(email=email)
 
         otp_instance, created = models.OTPNumber.objects.update_or_create(
             defaults={
-                "number": validated_data.get("otp"),
-                "user": validated_data.get("user"),
+                "number": models.OTPNumber.get_number(),
+                "user": user,
                 "is_verified": False,
             }
         )
@@ -414,13 +407,15 @@ class ForgetPasswordRequestSerializer(BaseSerializer):
 
 
 class VerifyOTPNumberSerializer(BaseSerializer):
+    email = serializers.EmailField(min_length=1, write_only=True)
     otp = serializers.CharField(min_length=1, write_only=True)
 
     def validate(self, attrs):
-        otp = attrs.get("otp", "")
+        user = get_user_model().objects.filter(email=attrs["email"]).exists()
+        if not user.exists():
+            raise exceptions.UserNotExists()
 
-        user = self.context["request"].user
-        otp_instance = models.OTPNumber.objects.filter(user=user, number=otp)
+        otp_instance = models.OTPNumber.objects.filter(user=user, number=attrs["otp"])
 
         # Check if the OTP number does not exists
         if not otp_instance.exists():
@@ -430,19 +425,11 @@ class VerifyOTPNumberSerializer(BaseSerializer):
         if not otp_instance.first().check_num(otp):
             raise exceptions.OTPExpired()
 
+        # Set the is_verified flag to True
+        otp_instance.is_verified = True
+        otp_instance.save()
+
         return attrs
-
-    def create(self, validated_data):
-        """Update the is_verified field after validate the otp number assigned to user"""
-
-        # Get the OTP number of the user
-        instance = models.OTPNumber.objects.get(user=self.context["request"].user, number=validated_data.get("otp"))
-
-        # Set OTP number to be verified
-        instance.is_verified = True
-        instance.save()
-
-        return True
 
 
 class ChangePasswordSerializer(BaseSerializer):
@@ -497,10 +484,8 @@ class ForgetPasswordSerializer(BaseSerializer):
     def validate(self, attrs: dict):
         """Validate the inserted data, passwords and otp number"""
 
-        otp = attrs.get("otp", "")
-
         user = self.context["request"].user
-        otp_instance = models.OTPNumber.objects.filter(user=user, number=otp)
+        otp_instance = models.OTPNumber.objects.filter(user=user, number=attrs["otp"])
 
         # Check if the OTP number does not exists
         if not otp_instance.exists():

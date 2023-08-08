@@ -1,5 +1,6 @@
-from src.apps.accounts.models import profiles
 from src.apps.core.base_api.serializers import BaseModelSerializer
+
+from ...models import profiles
 
 
 class AdminProfileSerializer(BaseModelSerializer):

@@ -11,6 +11,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from . import utils
 from .managers import CustomUserManager, ProxyUserManger
+from .signals import user_proxy_model_instance_saved
 from .validators import validate_name
 
 
@@ -75,7 +76,10 @@ class Teacher(User):
 
     def save(self, *args, **kwargs) -> None:
         self.type = User.Type.TEACHER
-        return super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
+
+        # Send and trigger the signal
+        user_proxy_model_instance_saved.send(sender=self.__class__, instance=self, created=True)
 
 
 class Student(User):
@@ -86,7 +90,10 @@ class Student(User):
 
     def save(self, *args, **kwargs) -> None:
         self.type = User.Type.STUDENT
-        return super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
+
+        # Send and trigger the signal
+        user_proxy_model_instance_saved.send(sender=self.__class__, instance=self, created=True)
 
 
 class Admin(User):
@@ -99,7 +106,10 @@ class Admin(User):
         self.is_staff = True
         self.is_superuser = True
         self.type = User.Type.ADMIN
-        return super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
+
+        # Send and trigger the signal
+        user_proxy_model_instance_saved.send(sender=self.__class__, instance=self, created=True)
 
 
 class OTPNumber(models.Model):

@@ -51,12 +51,17 @@ services:
     expose:
       - 8000
 
+    environment:
+      - DAUTH_SETTINGS_DJANGO_ENV=development
+      - DAUTH_SETTINGS_DATABASES={"default":{"HOST":"db"}}
+
     env_file:
-      - ./.envs/.env.dev
+      - ./.envs/.env
 
     volumes:
       - static_data:/backend/src/staticfiles
       - media_data:/backend/media
+      - ./src/:/backend/src
 
     depends_on:
       - db

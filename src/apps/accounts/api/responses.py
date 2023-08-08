@@ -6,7 +6,6 @@ import enum
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 
-from src.apps.accounts.models import models
 from src.apps.core.base_api.responses import BaseResponse
 
 
@@ -104,6 +103,12 @@ class VerifyOTPResponse(BaseResponse):
 
     status_ = status.HTTP_200_OK
 
+    def with_data(self, access_token: str):
+        if access_token:
+            self.data_["data"]["access_token"] = access_token
+
+        return super().with_data()
+
 
 class ResetPasswordResponse(BaseResponse):
     data_ = {
@@ -117,12 +122,5 @@ class ForgetPasswordRequestResponse(BaseResponse):
     data_ = {
         "code": OperationCode.Forget_Password.value,
         "detail": _("An OTP number has been sent to email."),
-        "data": {},
     }
     status_ = status.HTTP_200_OK
-
-    def with_data(self, access_token: str):
-        if access_token:
-            self.data_["data"]["access_token"] = access_token
-
-        return super().with_data()

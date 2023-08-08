@@ -45,8 +45,12 @@ services:
     expose:
       - 8000
 
+    environment:
+      - DAUTH_SETTINGS_DJANGO_ENV:production
+      - DAUTH_SETTINGS_DATABASES:'{"default":{"HOST":"db"}}'
+
     env_file:
-      - ./.envs/.env.prod
+      - ./.envs/.env
 
     # Mount a named volume to persist the backend django project
     volumes:

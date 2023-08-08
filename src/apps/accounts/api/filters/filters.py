@@ -1,6 +1,6 @@
 import django_filters.rest_framework as filters
 
-from src.apps.accounts.models import models
+from ...models import models
 
 
 class UserFilter(filters.FilterSet):

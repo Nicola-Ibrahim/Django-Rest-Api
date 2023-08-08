@@ -103,4 +103,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
 
 # OTP number's expiratoin time configuration (in seconds)
-DAUTH_SETTINGS_OTP_EXPIRATION = 300  # seconds
+OTP_EXPIRATION = 300  # seconds
+
+# Django Superuser configuration
+ROOT_USER_EMAIL = "admin@gmail.com"
+ROOT_USER_FIRSTNAME = "admin"
+ROOT_USER_LASTNAME = "admin"
+ROOT_USER_PASSWORD = "admin"

@@ -33,7 +33,6 @@ COPY ["poetry.lock", "pyproject.toml", "./"]
 RUN poetry config virtualenvs.in-project true --local \
     && poetry install $(test "$DJANGO_ENV" == production && echo "--without dev test") --no-root --no-interaction --no-ansi
 
-COPY . /backend
 
 
 ###############
@@ -44,8 +43,13 @@ COPY . /backend
 
 FROM python:3.11-buster
 
+
+
 # Copy source code from builder stage
 COPY --from=builder-dev /backend /backend
+COPY . /backend
+
+
 
 WORKDIR /backend
 

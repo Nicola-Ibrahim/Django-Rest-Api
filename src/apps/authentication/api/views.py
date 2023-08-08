@@ -1,7 +1,6 @@
 from src.apps.accounts.api.permissions.mixins import BasePermissionMixin
 from src.apps.core.base_api.views import BaseAPIView, BaseGenericAPIView
 
-from ...core import mailers
 from . import exceptions, responses
 from .serializers import serializers
 

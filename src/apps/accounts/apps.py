@@ -8,7 +8,7 @@ class AccountsConfig(AppConfig):
 
     def ready(self) -> None:
         try:
-            from .models import signals
+            from .models import receivers, signals
 
         except ImportError:
             pass

@@ -1,4 +1,3 @@
-from ..api import exceptions
 from ..models.models import Student, Teacher, User
 
 
