@@ -32,6 +32,7 @@ README.md
 
 # Ignore tests
 **/test
+.pytest_cache
 
 .editorconfig
 .flake8
