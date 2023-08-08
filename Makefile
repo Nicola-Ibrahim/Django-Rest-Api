@@ -19,7 +19,7 @@ migrate:
 
 .PHONY: run-server
 run-server:
-	poetry run python manage.py runserver 127.0.0.1:8000
+	poetry run python manage.py runserver localhost:80
 
 
 .PHONY: install
