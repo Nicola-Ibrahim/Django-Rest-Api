@@ -2,9 +2,10 @@ from django.contrib.auth import authenticate, get_user_model
 from rest_framework import serializers
 
 from src.apps.accounts.api import exceptions as accounts_exceptions
-from src.apps.authentication.api import exceptions
-from src.apps.core.base_api import tokens
+from src.apps.authentication.api import tokens
 from src.apps.core.base_api.serializers import BaseSerializer
+
+from .. import exceptions
 
 
 class LoginSerializer(BaseSerializer):

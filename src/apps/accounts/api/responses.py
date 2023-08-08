@@ -6,7 +6,6 @@ import enum
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 
-from src.apps.accounts.models import models
 from src.apps.core.base_api.responses import BaseResponse
 
 

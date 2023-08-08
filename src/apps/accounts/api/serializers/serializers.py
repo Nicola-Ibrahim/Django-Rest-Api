@@ -4,11 +4,11 @@ from django.contrib.auth.password_validation import validate_password
 from django.db.models import signals
 from rest_framework import serializers
 
-from src.apps.accounts.api import exceptions
-from src.apps.accounts.models import models, profiles, utils, validators
-from src.apps.accounts.models.receivers import create_student_profile, create_teacher_profile, signal_reconnect
 from src.apps.core.base_api.serializers import BaseModelSerializer, BaseSerializer
 
+from ...models import models, profiles, utils, validators
+from ...models.receivers import create_student_profile, create_teacher_profile, signal_reconnect
+from .. import exceptions
 from . import profile_serializers
 
 
