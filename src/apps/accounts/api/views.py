@@ -13,7 +13,6 @@ from rest_framework.mixins import (
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from src.apps.core import mailers
 from src.apps.core.base_api import views as base_views
 
 from . import responses
@@ -81,11 +80,7 @@ class UserCreateView(
     def post(self, request, *args, **kwargs) -> Response:
         serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
-
-        user = serializer.save()
-
-        # Send welcome email
-        mailers.RegisterMailer(full_name=user.email, password="sdf", to_emails=[user.email]).send_email()
+        serializer.save()
 
         return responses.UserCreateResponse().with_data(user_data=serializer.data)
 
@@ -154,9 +149,6 @@ class UserDetailsUpdateDestroyView(
 
         return responses.UserUpdateResponse().with_data(user_data=serializer.data)
 
-    def get_object(self):
-        return super().get_object()
-
     def delete(self, request, *args, **kwargs):
         user = self.get_object()
         self.perform_destroy(user)
@@ -167,37 +159,35 @@ class ForgetPasswordRequestView(base_views.BaseGenericAPIView):
     """View for sending an OTP number to the user's email for changing the password"""
 
     serializer_class = serializers.ForgetPasswordRequestSerializer
+    permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(data=request.data)
 
         # Validate user's email and check existence
         serializer.is_valid(raise_exception=True)
 
         # Create OTP number for the user
-        otp_instance = serializer.save()
+        serializer.save()
 
-        # Send reset password message with OTP to user's email
-        mailers.OTPMailer(
-            otp_number=serializer.validated_data.get("otp"),
-            to_emails=[otp_instance.user.email],
-        ).send_email()
-
-        user = serializer.validated_data.get("user")
-        return responses.ForgetPasswordRequestResponse().with_data(access_token=user.get_tokens()["access"])
+        return responses.ForgetPasswordRequestResponse()
 
 
 class VerifyOTPNumberView(base_views.BaseGenericAPIView):
     """View for verifying the generated OTP number for the user who wants to change password."""
 
     serializer_class = serializers.VerifyOTPNumberSerializer
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return responses.VerifyOTPResponse()
+        # Add access token to the response
+        user = get_user_model().objects.get(email=request.data.get("email"))
+
+        return responses.VerifyOTPResponse().with_data(access_token=user.get_tokens()["access"])
 
 
 class BaseResetPasswordView(base_views.BaseGenericAPIView):
