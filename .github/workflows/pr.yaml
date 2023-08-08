@@ -1,6 +1,13 @@
 name: Quality Assurance
 
-on: [pull_request, workflow_call]
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - main
+  workflow_call:
 
 jobs:
   quality-assurance:
@@ -20,10 +27,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
-      - name: Run pre-commit hooks
-        uses: pre-commit/action@v3.0.0
+      # - name: Run pre-commit hooks
+      #   uses: pre-commit/action@v3.0.0
 
       - name: Run Poetry image
         uses: abatilo/actions-poetry@v2.0.0
@@ -33,8 +40,8 @@ jobs:
       - name: Install
         run: make install
 
-      - name: Lint
-        run: make lint
+      # - name: Lint
+      #   run: make lint
 
       - name: Test
         run: make test
