@@ -9,6 +9,7 @@ INSTALLED_APPS += (  # type: ignore # noqa: F821
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
+    "graphene_django",
 )
 
 SIMPLE_JWT = {
@@ -52,4 +53,9 @@ REST_FRAMEWORK = {
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.AcceptHeaderVersioning",
     "DEFAULT_VERSION": "1.0",
     "ALLOWED_VERSIONS": ["1.0", "2.0"],
+}
+
+
+GRAPHENE = {
+    "SCHEMA": "django_root.schema.schema",
 }
