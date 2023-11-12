@@ -25,11 +25,11 @@ class User(AbstractUser):
 
     # Set username to none
     username = None
-    USERNAME_FIELD = "email"  # Set email field as a username
-    REQUIRED_FIELDS = ["password"]  # Remove email from required fields
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["password"]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
     email = models.EmailField(_("email address"), unique=True, validators=[validate_email])
     first_name = models.CharField(_("first name"), max_length=150, blank=True, validators=[validate_name])
     last_name = models.CharField(_("last name"), max_length=150, blank=True, validators=[validate_name])

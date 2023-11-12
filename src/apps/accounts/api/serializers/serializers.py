@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.auth.password_validation import validate_password
@@ -159,7 +161,7 @@ class UserCreateSerializer(BaseModelSerializer):
 
         return attrs
 
-    def create(self, validated_data: dict[str, str]):
+    def create(self, validated_data: dict[str, Any]):
         """Create a new user with the profile data
 
         Args:
@@ -411,25 +413,33 @@ class VerifyOTPNumberSerializer(BaseSerializer):
     otp = serializers.CharField(min_length=1, write_only=True)
 
     def validate(self, attrs):
-        user = get_user_model().objects.filter(email=attrs["email"]).exists()
+        user = get_user_model().objects.filter(email=attrs["email"])
         if not user.exists():
             raise exceptions.UserNotExists()
 
-        otp_instance = models.OTPNumber.objects.filter(user=user, number=attrs["otp"])
+        otp_instance = models.OTPNumber.objects.filter(user=user.first(), number=attrs["otp"])
 
         # Check if the OTP number does not exists
         if not otp_instance.exists():
             raise exceptions.WrongOTP()
 
+        otp_instance = otp_instance.first()
+
         # If the OTP number is expired
-        if not otp_instance.first().check_num(otp):
+        if not otp_instance.check_num(attrs["otp"]):
             raise exceptions.OTPExpired()
+
+        return attrs
+
+    def create(self, validated_data):
+        email = validated_data["email"]
+        user = get_user_model().objects.get(email=email)
+        otp_instance = models.OTPNumber.objects.get(user=user, number=validated_data["otp"])
 
         # Set the is_verified flag to True
         otp_instance.is_verified = True
         otp_instance.save()
-
-        return attrs
+        return otp_instance
 
 
 class ChangePasswordSerializer(BaseSerializer):

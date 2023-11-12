@@ -3,9 +3,13 @@
 
 from datetime import timedelta
 
+from config.settings.utils.misc import get_singing_key
+
 INSTALLED_APPS += (  # type: ignore # noqa: F821
     "rest_framework",
     "rest_framework_simplejwt",
+    "corsheaders",
+    "graphene_django",
 )
 
 SIMPLE_JWT = {
@@ -15,7 +19,7 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": False,
     "ALGORITHM": "HS256",
-    "SIGNING_KEY": SECRET_KEY,  # type: ignore # noqa: F821
+    "SIGNING_KEY": get_singing_key("./config/settings/.keys/jwtHS256.key"),
     "VERIFYING_KEY": None,
     "AUDIENCE": None,
     "ISSUER": None,
@@ -49,4 +53,9 @@ REST_FRAMEWORK = {
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.AcceptHeaderVersioning",
     "DEFAULT_VERSION": "1.0",
     "ALLOWED_VERSIONS": ["1.0", "2.0"],
+}
+
+
+GRAPHENE = {
+    "SCHEMA": "django_root.schema.schema",
 }

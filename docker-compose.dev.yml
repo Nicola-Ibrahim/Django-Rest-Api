@@ -61,7 +61,6 @@ services:
     volumes:
       - static_data:/backend/src/staticfiles
       - media_data:/backend/media
-      - ./src/:/backend/src
 
     depends_on:
       - db

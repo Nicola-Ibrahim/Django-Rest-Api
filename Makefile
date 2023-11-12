@@ -66,3 +66,7 @@ test-cov:
 .PHONY: dev-docker
 dev-docker:
 	docker-compose -f docker-compose.dev.yml up --build
+
+.PHONY: generate_key
+generate_key:
+	openssl rand -base64 32 > ./config/settings/.keys/jwtHS256.key

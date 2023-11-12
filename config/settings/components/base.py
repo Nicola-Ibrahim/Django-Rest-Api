@@ -22,8 +22,6 @@ INSTALLED_APPS = [
     # Created apps
     "src.apps.authentication",
     "src.apps.accounts",
-    # Third-part apps
-    "corsheaders",
 ]
 
 MIDDLEWARE = [

@@ -1,9 +1,17 @@
+"""
+settings module
+this module contains many sub-configuration file for the project.
+It gathers them all and treat them as a one settings file.
+
+INSPIRATION FROM:
+    - https://github.com/thenewboston-developers/Cooking-Core/tree/068c56d2190da814a6d64543ce4fb2abcf5fcda9/cooking_core/project/settings
+"""
+
 import logging
 import os
 import os.path
 from pathlib import Path
 
-import dotenv
 from split_settings.tools import include, optional
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -28,11 +36,11 @@ include(
     "components/database.py",
     "components/email.py",
     "components/custom.py",
-    "envvars.py",
+    "components/third_party.py",
     # Select the right env:
     f"environments/{DJANGO_ENV}.py",
     optional(LOCAL_SETTINGS_PATH),
-    "components/third_party.py",
+    "envvars.py",
 )
 
 

@@ -4,11 +4,19 @@ exclude =
     .git,
     __pycache__,
     .venv
+    .tox,
+    */migrations/*,
+    */static/CACHE/*,
+    docs,
+    node_modules,
+    venv,
+    .venv,
+    .script-venv
 filename = *.py
 accept-encodings = utf-8
 inline-quotes = single
 max-complexity = 12
 max-linenumber = 500
-max-line-length = 120
+max-line-length = 119
 multiline-quotes = double
-per-file-ignores =
+# per-file-ignores =
