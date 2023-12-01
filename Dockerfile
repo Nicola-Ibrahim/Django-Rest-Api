@@ -61,9 +61,9 @@ WORKDIR /backend
 # USER appuser
 
 
-# Make the dockerized-dauth-run script executable
-RUN chmod +x /backend/scripts/dockerized-dauth-run.sh
+# Make the dockerized-drest-run script executable
+RUN chmod +x /backend/scripts/dockerized-drest-run.sh
 
 
-# Run the dockerized-dauth-run script as the default command when starting the container
-ENTRYPOINT ["/backend/scripts/dockerized-dauth-run.sh"]
+# Run the dockerized-drest-run script as the default command when starting the container
+ENTRYPOINT ["/backend/scripts/dockerized-drest-run.sh"]

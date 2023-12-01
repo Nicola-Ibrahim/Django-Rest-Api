@@ -1,0 +1,50 @@
+name: Quality Assurance
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - main
+  workflow_call:
+
+jobs:
+  quality-assurance:
+    name: Quality Assurance
+    runs-on: ubuntu-latest
+    container: python:3.11-buster
+
+    services:
+      db:
+        image: postgres:15.3-alpine
+        env:
+          POSTGRES_DB: drest
+          POSTGRES_USER: drest
+          POSTGRES_PASSWORD: drest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # Run pre-commit hooks using pre-commit/action
+      - name: Run Poetry image
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: 1.5.1
+
+      # Install dependencies using Poetry
+      - name: Install dependencies
+        run: make install
+
+
+      # Lint code
+      - name: Lint code
+        run: make lint
+
+      - name: Test code
+        run: make test
+        env:
+          DREST_SETTINGS_DATABASES: '{"default":{"HOST":"db"}}'
