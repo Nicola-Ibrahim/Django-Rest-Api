@@ -62,12 +62,6 @@ LOGGING = {
 }
 
 
-# Model graph configurations
-GRAPH_MODELS = {
-    "all_applications": True,
-    "group_models": True,
-}
-
 # Debugger configurations
 MIDDLEWARE += ("debug_toolbar.middleware.DebugToolbarMiddleware",)
 INTERNAL_IPS = [

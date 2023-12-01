@@ -25,5 +25,5 @@ $RUN_MANAGE_PY migrate --noinput
 
 $RUN_MANAGE_PY makesuperuser
 
-echo "-----Starting the DAUTH API------"
+echo "-----Starting the DREST API------"
 exec gunicorn --bind 0.0.0.0:8000 config.wsgi:application

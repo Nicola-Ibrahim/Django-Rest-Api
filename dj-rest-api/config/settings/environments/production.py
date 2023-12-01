@@ -1,4 +1,4 @@
-# In production mode, override DAUTH_SETTINGS_SECRET_KEY and assign value to it
+# In production mode, override DREST_SETTINGS_SECRET_KEY and assign value to it
 SECRET_KEY = NotImplemented
 
 DEBUG = False

@@ -18,7 +18,7 @@ from split_settings.tools import include
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Namespace the custom environment variables
-ENVVAR_SETTINGS_PREFIX = "DAUTH_SETTINGS_"
+ENVVAR_SETTINGS_PREFIX = "DREST_SETTINGS_"
 
 DJANGO_ENV = os.environ.get(f"{ENVVAR_SETTINGS_PREFIX}DJANGO_ENV", "development")
 

@@ -6,7 +6,7 @@ from .misc import yaml_coerce
 def get_settings_from_environment(prefix):
     """
     For example:
-    DAUTH_SETTINGS_IN_DOCKER = 1
+    DREST_SETTINGS_IN_DOCKER = 1
     -> convert to ->
     {
         IN_DOCKER = 1

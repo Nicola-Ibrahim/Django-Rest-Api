@@ -8,8 +8,8 @@ django-auth/
 │   └── .env.example
 ├── scripts/ # Contains custom scripts or utilities for Django project
 │   ├── production_data.py # The script to create data for production (e.g SECRET_KEY, ...)
-│   └── dockerized-dauth-run.sh # The script to run as entrypoint for docker container starting
-├── DAUTH/  # Contains source files for Django project
+│   └── dockerized-drest-run.sh # The script to run as entrypoint for docker container starting
+├── dj-rest-api/  # Contains source files for Django project
 │   ├── apps/ # Contains apps for Django project
 │   │   ├── accounts/
 │   │   ├── authentication/

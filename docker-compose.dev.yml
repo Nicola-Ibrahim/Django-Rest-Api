@@ -7,9 +7,9 @@ services:
     restart: unless-stopped
 
     environment:
-      POSTGRES_DB: dauth
-      POSTGRES_USER: dauth
-      POSTGRES_PASSWORD: dauth
+      POSTGRES_DB: drest
+      POSTGRES_USER: drest
+      POSTGRES_PASSWORD: drest
 
     volumes:
       - postgresql-data:/var/lib/postgresql/data
@@ -17,7 +17,7 @@ services:
     # Add a healthcheck option
     healthcheck:
       # Use pg_isready to check if the database is accepting connections
-      test: pg_isready -U dauth -d dauth || exit 1
+      test: pg_isready -U drest -d drest || exit 1
       # Run the healthcheck every 10 seconds
       interval: 10s
       # Wait for 5 seconds before the first healthcheck
@@ -52,8 +52,8 @@ services:
       - 8000
 
     environment:
-      - DAUTH_SETTINGS_DJANGO_ENV=development
-      - DAUTH_SETTINGS_DATABASES={"default":{"HOST":"db"}}
+      - DREST_SETTINGS_DJANGO_ENV=development
+      - DREST_SETTINGS_DATABASES={"default":{"HOST":"db"}}
 
     env_file:
       - ./.envs/.env
