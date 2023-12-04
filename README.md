@@ -1,15 +1,19 @@
-# Django authentication RestAPI
+# Django REST Api
+
+This project is a RESTful API that provides user authentication and authorization for Django applications. It allows users to register, login, logout, update, and delete their accounts using JSON web tokens (JWT). It also supports password reset and email verification features.
+
+This project was created to demonstrate how to use Django REST framework and django-rest-auth to build a secure and scalable API for web and mobile applications.
 
 ## Project structure
 
 ```bash
-django-auth/
+Django-Rest-Api/
 ├── .envs/ # Contains environment variables files for different environments
 │   └── .env.example
 ├── scripts/ # Contains custom scripts or utilities for Django project
 │   ├── production_data.py # The script to create data for production (e.g SECRET_KEY, ...)
 │   └── dockerized-drest-run.sh # The script to run as entrypoint for docker container starting
-├── dj-rest-api/  # Contains source files for Django project
+├── dj_rest_api/  # Contains source files for Django project
 │   ├── apps/ # Contains apps for Django project
 │   │   ├── accounts/
 │   │   ├── authentication/

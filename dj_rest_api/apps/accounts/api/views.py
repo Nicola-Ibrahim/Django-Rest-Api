@@ -14,10 +14,7 @@ from rest_framework.mixins import (
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from . import responses
-from .permissions import mixins as permissions_mixins
-from .serializers import factories as serializer_factory
-from .serializers import serializers
+from . import permissions, responses, serializers
 
 
 class VerifyAccount(base_views.BaseGenericAPIView):
@@ -35,7 +32,7 @@ class VerifyAccount(base_views.BaseGenericAPIView):
 
 class UserListView(
     # filters_mixins.FilterMixin,
-    permissions_mixins.ListUserPermissionMixin,
+    permissions.ListUserPermissionMixin,
     ListModelMixin,
     base_views.BaseGenericAPIView,
 ):
@@ -73,7 +70,7 @@ class UserCreateView(
         """
         Get the appropriate serializer depending on the url user_type param
         """
-        serializer_class = serializer_factory.get_create_serializer(self.kwargs.get("user_type"))
+        serializer_class = serializers.get_create_serializer(self.kwargs.get("user_type"))
         return serializer_class
 
     def post(self, request, *args, **kwargs) -> Response:
@@ -102,7 +99,7 @@ class UserDetailsUpdateDestroyView(
 
         elif self.request.method in ["PUT", "PATCH"]:
             user = self.get_object()
-            serializer_class = serializer_factory.get_update_serializer(user_type=user.type)
+            serializer_class = serializers.get_update_serializer(user_type=user.type)
 
         return serializer_class
 

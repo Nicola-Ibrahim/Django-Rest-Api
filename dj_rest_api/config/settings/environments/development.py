@@ -93,6 +93,16 @@ SWAGGER_SETTINGS = {
 }
 
 
+# Override default DB configuration to create sqlite db if no PostgresDB foundDATABASES = {
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "db.sqlite3",
+        "ATOMIC_REQUESTS": True,
+    }
+}
+
+
 REDOC_SETTINGS = {
     "LAZY_RENDERING": False,
 }

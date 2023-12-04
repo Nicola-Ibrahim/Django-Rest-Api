@@ -1,4 +1,4 @@
-from ..models.models import Student, Teacher, User
+from .models import Student, Teacher, User
 
 
 def get_model(user_type: str) -> User:  # type:ignore # noqa: A002

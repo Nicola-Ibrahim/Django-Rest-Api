@@ -1,8 +1,7 @@
 from apps.accounts.api.permissions.mixins import BasePermissionMixin
 from apps.core.base_api.views import BaseAPIView, BaseGenericAPIView
 
-from . import exceptions, responses
-from .serializers import serializers
+from . import exceptions, responses, serializers
 
 
 class LoginView(BaseGenericAPIView):

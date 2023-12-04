@@ -1,11 +1,10 @@
+from apps.core.mailers import BaseMailer
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
 from rest_framework.reverse import reverse
 from rest_framework_simplejwt.tokens import RefreshToken
-
-from apps.core.mailers import BaseMailer
 
 
 class RegisterMailer(BaseMailer):

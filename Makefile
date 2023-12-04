@@ -3,9 +3,9 @@ lang:=en
 
 .PHONY: superuser
 superuser:
-	poetry run python dj-rest-api/manage.py makesuperuser
+	poetry run python dj_rest_api/manage.py makesuperuser
 users:
-	poetry run python dj-rest-api/manage.py generate_users
+	poetry run python dj_rest_api/manage.py generate_users
 
 .PHONY: lint
 lint:
@@ -14,15 +14,15 @@ lint:
 
 .PHONY: migrations
 migrations:
-	poetry run python dj-rest-api/manage.py makemigrations
+	poetry run python dj_rest_api/manage.py makemigrations
 
 .PHONY: migrate
 migrate:
-	poetry run python dj-rest-api/manage.py migrate
+	poetry run python dj_rest_api/manage.py migrate
 
 .PHONY: run-server
 run-server:
-	poetry run python dj-rest-api/manage.py runserver localhost:80
+	poetry run python dj_rest_api/manage.py runserver localhost:80
 
 
 .PHONY: install
@@ -41,20 +41,20 @@ update: migrations migrate	install-pre-commit
 
 .PHONY: shell
 shell:
-	poetry run python dj-rest-api/manage.py shell_plus
+	poetry run python dj_rest_api/manage.py shell_plus
 
 .PHONY: flush-tokens
 flush-tokens:
-	poetry run python dj-rest-api/manage.py flushexpiredtokens.py
+	poetry run python dj_rest_api/manage.py flushexpiredtokens.py
 
 .PHONY: check-deploy
 check-deploy:
-	poetry run python dj-rest-api/manage.py check.py --deploy
+	poetry run python dj_rest_api/manage.py check.py --deploy
 
 
 .PHONY: db-graph
 db-graph:
-	poetry run python dj-rest-api/manage.py graph_models.py -a -g -o lineup_models_visualized.png
+	poetry run python dj_rest_api/manage.py graph_models.py -a -g -o lineup_models_visualized.png
 
 
 .PHONY: test
@@ -68,11 +68,15 @@ test-cov:
 
 .PHONY: dev-docker
 dev-docker:
-	docker-compose -f docker-compose.dev.yml up --build
+	docker-compose -f docker-compose.dev.yml up --build -d --force-recreate
+
+.PHONY: prod-docker
+prod-docker:
+	docker-compose -f docker-compose.yml up --build -d --force-recreate
 
 .PHONY: generate_key
 generate_key:
-	openssl rand -base64 32 > ./config/settings/.keys/jwtHS256.key
+	openssl rand -base64 32 > dj_rest_api/config/settings/.keys/jwtHS256.key
 
 
 .PHONY: translate
