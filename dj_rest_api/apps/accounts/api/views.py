@@ -2,6 +2,8 @@ from typing import Any
 
 from apps.core.base_api import views as base_views
 from django.contrib.auth import get_user_model
+from django.db.models.query import QuerySet
+from drf_yasg.utils import swagger_auto_schema
 
 # from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.mixins import (
@@ -11,16 +13,17 @@ from rest_framework.mixins import (
     RetrieveModelMixin,
     UpdateModelMixin,
 )
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from . import permissions, responses, serializers
 
 
-class VerifyAccount(base_views.BaseGenericAPIView):
+class VerifyUserAccount(
+    permissions.VerifyUserAccountPermissionMixin,
+    base_views.BaseGenericAPIView,
+):
     """Verify the user by the token send it to the email"""
 
-    permission_classes = (AllowAny,)
     serializer_class = serializers.AccountVerificationSerializer
 
     def get(self, request):
@@ -30,19 +33,72 @@ class VerifyAccount(base_views.BaseGenericAPIView):
         return responses.ActivatedAccount()
 
 
-class UserListView(
-    # filters_mixins.FilterMixin,
-    permissions.ListUserPermissionMixin,
+class UserListCreateView(
+    permissions.UserListCreatePermissionMixin,
     ListModelMixin,
+    CreateModelMixin,
     base_views.BaseGenericAPIView,
 ):
+    """
+    A view for listing and creating users.
 
-    """View for listing a new user."""
+    Inherits from ListModelMixin and CreateModelMixin to provide
+    GET and POST methods for user listing and creation. Additionally,
+    includes permission handling with UserListCreatePermissionMixin.
 
-    queryset = get_user_model().objects.all()
-    serializer_class = serializers.UserListSerializer
+    Attributes:
+        queryset (QuerySet): The queryset for retrieving users.
+        serializer_class (Serializer): The serializer class for user data.
+
+    Methods:
+        get_serializer_class(): Returns the appropriate serializer class
+        based on the HTTP request method.
+
+        get(request, *args, **kwargs): Handles GET requests for listing users.
+        Paginates and serializes the queryset.
+
+        post(request, *args, **kwargs): Handles POST requests for creating users.
+        Validates the request data, saves the user, and returns a response.
+
+    Example:
+        To list users, send a GET request to the endpoint.
+        To create a user, send a POST request with the required data.
+    """
+
+    def get_queryset(self):
+        if self.request.method == "GET":
+            return get_user_model().objects.all()
+
+        return QuerySet()
+
+    def get_serializer_class(self):
+        """
+        Returns the appropriate serializer class based on the HTTP request method.
+
+        Returns:
+            Serializer: The serializer class for the current request method.
+        """
+        if self.request.method == "GET":
+            return serializers.UserListSerializer
+
+        if self.request.method == "POST":
+            serializer_class = serializers.get_create_serializer(self.kwargs.get("user_type"))
+            return serializer_class
 
     def get(self, request, *args, **kwargs):
+        """
+        Handles GET requests for listing users.
+
+        Retrieves the queryset, paginates it, and serializes the data.
+
+        Args:
+            request: The HTTP request object.
+            *args: Additional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Response: The paginated user data response.
+        """
         queryset = self.filter_queryset(self.get_queryset())
 
         page = self.paginate_queryset(queryset)
@@ -53,27 +109,23 @@ class UserListView(
         serializer = self.get_serializer(queryset, many=True)
         return responses.UserListResponse().with_data(users_data=serializer.data)
 
-
-class UserCreateView(
-    # FilterMixin,
-    # permissions_mixins.ListUserPermissionMixin,
-    ListModelMixin,
-    CreateModelMixin,
-    base_views.BaseGenericAPIView,
-):
-
-    """View for creating a user.
-    It supports creating different user types.
-    """
-
-    def get_serializer_class(self):
-        """
-        Get the appropriate serializer depending on the url user_type param
-        """
-        serializer_class = serializers.get_create_serializer(self.kwargs.get("user_type"))
-        return serializer_class
-
+    @swagger_auto_schema(
+        request_body=serializers.StudentUserCreateSerializer,
+    )
     def post(self, request, *args, **kwargs) -> Response:
+        """
+        Handles POST requests for creating users.
+
+        Validates the request data, saves the user, and returns a response.
+
+        Args:
+            request: The HTTP request object.
+            *args: Additional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Response: The user creation response.
+        """
         serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -82,16 +134,55 @@ class UserCreateView(
 
 
 class UserDetailsUpdateDestroyView(
-    # permissions_mixins.BasePermissionMixin,
+    permissions.UserDetailsUpdateDestroyPermissionMixin,
     RetrieveModelMixin,
     UpdateModelMixin,
     DestroyModelMixin,
     base_views.BaseGenericAPIView,
 ):
+    """
+    A view for retrieving, updating, and deleting user details.
+
+    Inherits from RetrieveModelMixin, UpdateModelMixin, and DestroyModelMixin
+    to provide GET, PUT, PATCH, and DELETE methods for user details.
+    Additionally, includes permission handling with BasePermissionMixin.
+
+    Attributes:
+        queryset (QuerySet): The queryset for retrieving users.
+        lookup_field (str): The lookup field for retrieving users by ID.
+
+    Methods:
+        get_serializer_class(): Returns the appropriate serializer class
+        based on the HTTP request method.
+
+        get(request, *args, **kwargs): Handles GET requests for retrieving user details.
+        Retrieves the user, serializes the data, and returns the response.
+
+        put(request, *args, **kwargs): Handles PUT requests for updating user details.
+        Validates the request data, performs the update, and returns the response.
+
+        patch(request, *args, **kwargs): Handles PATCH requests for partially updating user details.
+        Validates the request data, performs the partial update, and returns the response.
+
+        delete(request, *args, **kwargs): Handles DELETE requests for deleting a user.
+        Performs the deletion and returns the response.
+
+    Example:
+        To retrieve user details, send a GET request to the endpoint with the user's ID.
+        To update user details, send a PUT or PATCH request with the updated data.
+        To delete a user, send a DELETE request with the user's ID.
+    """
+
     queryset = get_user_model().objects.all()
     lookup_field = "id"
 
     def get_serializer_class(self, *args, **kwargs):
+        """
+        Returns the appropriate serializer class based on the HTTP request method.
+
+        Returns:
+            Serializer: The serializer class for the current request method.
+        """
         serializer_class = None
 
         if self.request.method == "GET":
@@ -104,11 +195,37 @@ class UserDetailsUpdateDestroyView(
         return serializer_class
 
     def get(self, request, *args, **kwargs) -> Response:
+        """
+        Handles GET requests for retrieving user details.
+
+        Retrieves the user, serializes the data, and returns the response.
+
+        Args:
+            request: The HTTP request object.
+            *args: Additional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Response: The user details response.
+        """
         user = self.get_object()
         serializer = self.get_serializer(instance=user, context={"request": request})
         return responses.UserDetailsResponse().with_data(serializer.data)
 
     def put(self, request, *args, **kwargs):
+        """
+        Handles PUT requests for updating user details.
+
+        Validates the request data, performs the update, and returns the response.
+
+        Args:
+            request: The HTTP request object.
+            *args: Additional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Response: The user update response.
+        """
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
         serializer = self.get_serializer(
@@ -128,6 +245,19 @@ class UserDetailsUpdateDestroyView(
         return responses.UserUpdateResponse().with_data(user_data=serializer.data)
 
     def patch(self, request, *args, **kwargs):
+        """
+        Handles PATCH requests for partially updating user details.
+
+        Validates the request data, performs the partial update, and returns the response.
+
+        Args:
+            request: The HTTP request object.
+            *args: Additional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Response: The user update response.
+        """
         instance = self.get_object()
         serializer = self.get_serializer(
             instance=instance,
@@ -146,18 +276,57 @@ class UserDetailsUpdateDestroyView(
         return responses.UserUpdateResponse().with_data(user_data=serializer.data)
 
     def delete(self, request, *args, **kwargs):
+        """
+        Handles DELETE requests for deleting a user.
+
+        Performs the deletion and returns the response.
+
+        Args:
+            request: The HTTP request object.
+            *args: Additional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Response: The user deletion response.
+        """
         user = self.get_object()
         self.perform_destroy(user)
         return responses.UserDestroyResponse()
 
 
-class ForgetPasswordRequestView(base_views.BaseGenericAPIView):
-    """View for sending an OTP number to the user's email for changing the password"""
+class ForgetPasswordRequestView(
+    permissions.ForgetPasswordRequestPermissionMixin,
+    base_views.BaseGenericAPIView,
+):
+    """
+    View for sending an OTP number to the user's email for changing the password.
+
+    Attributes:
+        serializer_class: The serializer class for validating and processing the request data.
+        permission_classes: The permission classes for allowing access to the view.
+
+    Methods:
+        post(request): Handles POST requests for sending an OTP number to the user's email.
+        Validates the user's email, checks existence, creates an OTP number, and returns the response.
+
+    Example:
+        To request a password reset, send a POST request with the user's email.
+    """
 
     serializer_class = serializers.ForgetPasswordRequestSerializer
-    permission_classes = [AllowAny]
 
     def post(self, request):
+        """
+        Handles POST requests for sending an OTP number to the user's email.
+
+        Validates the user's email, checks existence, creates an OTP number, and returns the response.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            Response: The password reset request response.
+        """
         serializer = self.get_serializer(data=request.data)
 
         # Validate user's email and check existence
@@ -169,13 +338,41 @@ class ForgetPasswordRequestView(base_views.BaseGenericAPIView):
         return responses.ForgetPasswordRequestResponse()
 
 
-class VerifyOTPNumberView(base_views.BaseGenericAPIView):
-    """View for verifying the generated OTP number for the user who wants to change password."""
+class VerifyOTPNumberView(
+    permissions.VerifyOTPNumberPermissionMixin,
+    base_views.BaseGenericAPIView,
+):
+    """
+    View for verifying the generated OTP number for the user who wants to change password.
+
+    Attributes:
+        serializer_class: The serializer class for validating and processing the request data.
+        permission_classes: The permission classes for allowing access to the view.
+
+    Methods:
+        post(request, *args, **kwargs): Handles POST requests for verifying the OTP number.
+        Validates the OTP number, updates verification status, and returns the response.
+
+    Example:
+        To verify the OTP number, send a POST request with the user's email and OTP number.
+    """
 
     serializer_class = serializers.VerifyOTPNumberSerializer
-    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
+        """
+        Handles POST requests for verifying the generated OTP number.
+
+        Validates the OTP number, updates verification status, and returns the response.
+
+        Args:
+            request: The HTTP request object.
+            *args: Additional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Response: The OTP verification response with an access token.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -188,15 +385,36 @@ class VerifyOTPNumberView(base_views.BaseGenericAPIView):
 
 class BaseResetPasswordView(base_views.BaseGenericAPIView):
     """
-    Abstract base view for setting new password
-    This model implements patch method, so the
-    concrete ResetPassword class only have to set serializer_class attribute.
+    Abstract base view for setting a new password.
+    This view implements the patch method, so the concrete ResetPassword class
+    only has to set the serializer_class attribute.
+
+    Attributes:
+        Meta: The metadata class indicating that this is an abstract view.
+
+    Methods:
+        patch(request): Handles PATCH requests for setting a new password.
+        Validates the request data, performs the password reset, and returns the response.
+
+    Example:
+        To set a new password, send a PATCH request with the required data.
     """
 
     class Meta:
         abstract = True
 
     def patch(self, request):
+        """
+        Handles PATCH requests for setting a new password.
+
+        Validates the request data, performs the password reset, and returns the response.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            Response: The password reset response.
+        """
         serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -205,18 +423,54 @@ class BaseResetPasswordView(base_views.BaseGenericAPIView):
 
 
 class ForgetPasswordView(BaseResetPasswordView):
-    """View for resetting the forgotten password"""
+    """
+    View for processing forget password requests and setting a new password.
+
+    Attributes:
+        serializer_class: The serializer class for validating and processing the request data.
+
+    Methods:
+        patch(request): Handles PATCH requests for setting a new password after forget password request.
+        Validates the request data, performs the password reset, and returns the response.
+
+    Example:
+        To set a new password after forget password request, send a PATCH request with the required data.
+    """
 
     serializer_class = serializers.ForgetPasswordSerializer
 
 
 class ChangePasswordView(BaseResetPasswordView):
-    """View for changing password"""
+    """
+    View for processing change password requests and setting a new password.
+
+    Attributes:
+        serializer_class: The serializer class for validating and processing the request data.
+
+    Methods:
+        patch(request): Handles PATCH requests for setting a new password after change password request.
+        Validates the request data, performs the password reset, and returns the response.
+
+    Example:
+        To set a new password after change password request, send a PATCH request with the required data.
+    """
 
     serializer_class = serializers.ChangePasswordSerializer
 
 
 class FirstTimePasswordView(BaseResetPasswordView):
-    """View for setting the first time password"""
+    """
+    View for processing first time password requests and setting a new password.
+
+    Attributes:
+        serializer_class: The serializer class for validating and processing the request data.
+
+    Methods:
+        patch(request): Handles PATCH requests for setting a new password as a first-time password.
+        Validates the request data, performs the password reset, and returns the response.
+
+    Example:
+        To set a new password as a first-time password, send a PATCH request with the required data.
+    """
 
     serializer_class = serializers.FirstTimePasswordSerializer

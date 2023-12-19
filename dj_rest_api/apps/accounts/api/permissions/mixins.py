@@ -1,6 +1,12 @@
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from .permissions import BasePermission, DeleteUserPermission, ListUserPermission, UpdateUserPermission
+from .permissions import (
+    BasePermission,
+    UserCreatePermission,
+    UserDeletePermission,
+    UserListPermission,
+    UserUpdatePermission,
+)
 
 
 class IsAuthenticatedMixin:
@@ -11,13 +17,21 @@ class BasePermissionMixin:
     permission_classes = [BasePermission, IsAuthenticated]
 
 
-class ListUserPermissionMixin:
-    permission_classes = [ListUserPermission]
+class UserListCreatePermissionMixin:
+    permission_classes = [UserListPermission, UserCreatePermission]
 
 
-class DeleteUserPermissionMixin:
-    permission_classes = [DeleteUserPermission, IsAuthenticated]
+class UserDetailsUpdateDestroyPermissionMixin:
+    permission_classes = [UserUpdatePermission, UserDeletePermission, IsAuthenticated]
 
 
-class UpdateUserPermissionMixin:
-    permission_classes = [UpdateUserPermission, IsAuthenticated]
+class VerifyUserAccountPermissionMixin:
+    permission_classes = [AllowAny]
+
+
+class VerifyOTPNumberPermissionMixin:
+    permission_classes = [AllowAny]
+
+
+class ForgetPasswordRequestPermissionMixin:
+    permission_classes = [AllowAny]

@@ -7,6 +7,9 @@ from .serializers import (
     FirstTimePasswordSerializer,
     ForgetPasswordRequestSerializer,
     ForgetPasswordSerializer,
+    StudentUserCreateSerializer,
+    TeacherUserCreateSerializer,
+    TeacherUserUpdateSerializer,
     UserListSerializer,
     VerifyOTPNumberSerializer,
 )
@@ -23,4 +26,7 @@ __all__ = [
     "VerifyOTPNumberSerializer",
     "ForgetPasswordSerializer",
     "FirstTimePasswordSerializer",
+    "StudentUserCreateSerializer",
+    "TeacherUserCreateSerializer",
+    "TeacherUserUpdateSerializer",
 ]

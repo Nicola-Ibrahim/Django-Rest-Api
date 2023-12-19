@@ -4,7 +4,7 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.status import HTTP_403_FORBIDDEN
 
-from ...models.models import User
+from ...models import User
 
 SAFE_METHODS = ("GET", "HEAD", "OPTIONS")
 
@@ -26,7 +26,7 @@ class BasePermission(permissions.DjangoObjectPermissions):
     }
 
 
-class ListUserPermission(BasePermission):
+class UserListPermission(BasePermission):
     def has_permission(self, request, view):
         if request.method == "GET" and request.user and request.user.is_authenticated:
             return True
@@ -34,7 +34,15 @@ class ListUserPermission(BasePermission):
         return False
 
 
-class DeleteUserPermission(BasePermission):
+class UserCreatePermission(BasePermission):
+    def has_permission(self, request, view):
+        if request.method == "POST":
+            return True
+
+        return False
+
+
+class UserDeletePermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         """Override the has_object_permission for adding more constraints on users
 
@@ -56,6 +64,9 @@ class DeleteUserPermission(BasePermission):
         model_cls = queryset.model
         user = request.user
         ids = request.data["ids"]
+
+        if request.method not in ["DELETE"]:
+            return None
 
         # Get the user's permission related to the Http method
         perms = self.get_required_object_permissions(request.method, model_cls)
@@ -89,7 +100,7 @@ class DeleteUserPermission(BasePermission):
         return True
 
 
-class UpdateUserPermission(BasePermission):
+class UserUpdatePermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         """Override the has_object_permission for adding more constraints on users
 
@@ -111,6 +122,9 @@ class UpdateUserPermission(BasePermission):
         model_cls = queryset.model
         user = request.user
         data = request.data
+
+        if request.method not in ["PUT", "PATCH"]:
+            return None
 
         # Get the user's permission related to the Http method
         perms = self.get_required_object_permissions(request.method, model_cls)  # noqa: F841

@@ -1,15 +1,19 @@
 from .mixins import (
     BasePermissionMixin,
-    DeleteUserPermissionMixin,
+    ForgetPasswordRequestPermissionMixin,
     IsAuthenticatedMixin,
-    ListUserPermissionMixin,
-    UpdateUserPermissionMixin,
+    UserDetailsUpdateDestroyPermissionMixin,
+    UserListCreatePermissionMixin,
+    VerifyOTPNumberPermissionMixin,
+    VerifyUserAccountPermissionMixin,
 )
 
 __all__ = [
     "BasePermissionMixin",
-    "DeleteUserPermissionMixin",
     "IsAuthenticatedMixin",
-    "ListUserPermissionMixin",
-    "UpdateUserPermissionMixin",
+    "UserListCreatePermissionMixin",
+    "UserDetailsUpdateDestroyPermissionMixin",
+    "VerifyUserAccountPermissionMixin",
+    "ForgetPasswordRequestPermissionMixin",
+    "VerifyOTPNumberPermissionMixin",
 ]
