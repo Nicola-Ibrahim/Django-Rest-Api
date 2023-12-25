@@ -2,66 +2,50 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 
 from django.conf import settings
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
 
 
 class BaseMailer(ABC):
-    """An abstract mailer for sending an email.
+    """
+    An factory abstract mailer for sending an email.
 
     This class provides a common interface and functionality for different
-    email services. It uses a factory method to create suitable email services
-    depending on the settings. It also defines an abstract method to edit the
-    body if additional data should be added.
+    email services. Subclasses can customize subject, body, and from_email.
     """
 
-    def __init__(self, to_emails: Iterable[str]) -> None:
-        """Initialize the BaseMailer with the given arguments.
+    subject = ""
+    body = ""
+    from_email = settings.EMAIL_HOST_USER
+
+    def __init__(self, to_emails: Iterable[str], from_email=None) -> None:
+        """
+        Initialize the BaseMailer with the given arguments.
 
         Args:
-            subject (str): The subject of the email.
-            body (str): The body of the email.
-            to_emails (str): The recipient of the email.
+            to_emails (iterable): The recipient(s) of the email.
+            from_email (str, optional): The sender's email address. Defaults to settings.DEFAULT_FROM_EMAIL.
         """
-        # Subject of the sent email
-        self.subject = self._get_subject()
+        self.from_email = from_email or self.from_email
+        self.to_emails = [to_emails] if not isinstance(to_emails, list) else to_emails
 
-        # Body of the sent email
-        self.body = self._get_body()
-
-        # Main website email
-        self.from_email = settings.EMAIL_HOST_USER
-
-        # To user/s email
-        self.to_emails = to_emails
-
-        self._create_mail_service()
-
-    def _create_mail_service(self):
-        # Create an email services depending on the configuration settings
-        self.mail = EmailMessage(
+    def create_service(self) -> EmailMultiAlternatives:
+        """
+        Create an EmailMultiAlternatives instance for sending the email.
+        """
+        mail = EmailMultiAlternatives(
             subject=self.subject,
             body=self.body,
             from_email=self.from_email,
             to=self.to_emails,
         )
 
-    def send_email(self) -> None:
-        """Send the email to the user/s"""
-        self.mail.send(fail_silently=False)
+        # Add HTML content as an alternative
+        html_content = self._get_html_content()
+        mail.attach_alternative(html_content, "text/html")
+
+        return mail
 
     @abstractmethod
-    def _get_body(self) -> str:
-        """Inject additional data to email body.
-
-        An abstract method that should be implemented by subclasses of BaseMailer
-        to modify the body attribute if necessary. For example, adding a signature or a
-        greeting.
-        """
-
-    @abstractmethod
-    def _get_subject(self) -> str:
-        """Get the subject of the email.
-
-        An abstract method that should be implemented by subclasses of BaseMailer
-        to modify the subject attribute if necessary.
-        """
+    def _get_html_content(self) -> str:
+        """Get the html data to render in the email body."""
+        return ""

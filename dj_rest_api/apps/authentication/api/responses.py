@@ -1,6 +1,3 @@
-"""
-This script defines custom formatted responses for the api views.
-"""
 import enum
 
 from apps.core.base_api.responses import BaseResponse
@@ -14,7 +11,10 @@ class OperationCode(enum.Enum):
     Deleted = _("deleted")
     Login = _("login")
     Logout = _("logout")
-
+    Verified_OTP = _("verified_OTP")
+    Reset_Password = _("reset_password")
+    Forget_Password = _("forget_password")
+    First_Time_Password = _("first_time_password")
     JWT_Checked = _("JWT_checked")
     Activated_Account = _("activated_account")
 
@@ -44,5 +44,37 @@ class ActivatedAccount(BaseResponse):
     data_ = {
         "code": OperationCode.Activated_Account.value,
         "detail": _("The account has been activated successfully."),
+    }
+    status_ = status.HTTP_200_OK
+
+
+class VerifyOTPResponse(BaseResponse):
+    data_ = {
+        "code": OperationCode.Verified_OTP.value,
+        "detail": _("The OTP number has been verified"),
+        "data": {},
+    }
+
+    status_ = status.HTTP_200_OK
+
+    def with_data(self, access_token: str):
+        if access_token:
+            self.data_["data"]["access_token"] = access_token
+
+        return super().with_data()
+
+
+class ResetPasswordResponse(BaseResponse):
+    data_ = {
+        "code": OperationCode.Reset_Password.value,
+        "detail": _("The password reset successfully"),
+    }
+    status_ = status.HTTP_200_OK
+
+
+class ForgetPasswordRequestResponse(BaseResponse):
+    data_ = {
+        "code": OperationCode.Forget_Password.value,
+        "detail": _("An OTP number has been sent to email."),
     }
     status_ = status.HTTP_200_OK

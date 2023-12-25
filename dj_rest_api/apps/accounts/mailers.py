@@ -1,99 +1,56 @@
 from apps.core.mailers import BaseMailer
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
+from django.utils.translation import gettext_lazy as _
 from rest_framework.reverse import reverse
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class RegisterMailer(BaseMailer):
-    """Concrete Mailer for sending a welcome email with password to the user.
+    """
+    Mailer for sending a welcome email to the client with a token value.
 
-    This class inherits from BaseMailer and implements the _get_body method to add the
-    user's full name and password to the body.
-
+    This class inherits from BaseMailer and customizes the email body by rendering a template.
     """
 
-    def __init__(self, full_name, password, to_emails: list[str]) -> None:
+    template_name = "accounts/emails/appointment_welcome_email.html"
+    subject = _("Welcome to Our Service")
+
+    def __init__(self, full_name: str, to_emails: list[str]) -> None:
         """Initialize the RegisterMailer with the given arguments.
 
         Args:
             to_email (str): The recipient of the email.
             full_name (str): The user's full name.
-            password (str): The user's password.
         """
         self.full_name = full_name
-        self.password = password
         super().__init__(to_emails=to_emails)
 
-    def _get_body(self) -> str:
-        """Edit body by adding the user's full name and password.
+    def _get_html_content(self) -> str:
+        context = {
+            "full_name": self.full_name,
+        }
 
-        This method overrides the abstract method of BaseMailer and appends the user's full
-        name and password to the body attribute.
-
-        """
-
-        context = {"full_name": self.full_name, "password": self.password}
-
-        return render_to_string(template_name="accounts/registration_email.html", context=context)
-
-    def _get_subject(self) -> str:
-        return settings.EMAIL_REGISTER_SUBJECT
-
-
-class OTPMailer(BaseMailer):
-    """Concrete Mailer for sending an email with OTP number to the user.
-
-    This class inherits from BaseMailer and implements the _get_body method to add the
-    OTP number to the body.
-
-    """
-
-    def __init__(self, otp_number: str, to_emails: list[str]) -> None:
-        """Initialize the OTPMailer with the given arguments.
-
-        Args:
-            to_email (str): The recipient of the email.
-            otp_number (str): The OTP number for resetting the password.
-        """
-        self.otp_number = otp_number
-        self.to_emails = to_emails
-        super().__init__(to_emails=to_emails)
-
-    def _get_body(self) -> str:
-        """Edit body by adding the OTP number.
-
-        This method overrides the abstract method of BaseMailer and appends the OTP number
-        to the body attribute.
-
-        """
-        context = {"email": self.to_emails[0], "otp_number": self.otp_number}
-
-        return render_to_string(template_name="accounts/forget_password.html", context=context)
-
-    def _get_subject(self) -> str:
-        return settings.EMAIL_RESETPASSWORD_SUBJECT
+        return render_to_string(template_name=self.template_name, context=context)
 
 
 class VerificationMailer(BaseMailer):
-    """Concrete Mailer for sending a verification email to the new registered user with token value.
+    """Mailer for sending a verification email to the new registered user with token value.
 
-    This class inherits from BaseMailer and implements the _get_body method to add a link
-    with a token value for verifying the user's email.
-
+    This class inherits from BaseMailer and customizes the email body by rendering a template.
     """
 
-    def __init__(self, token: str, to_emails: list[str], request) -> None:
+    template_name = "accounts/emails/account_verification.html"
+    subject = _("Verify your account")
+
+    def __init__(self, to_emails: list[str], request) -> None:
         """Initialize the VerificationMailer with the given arguments.
 
         Args:
             to_email (str): The recipient of the email.
-            token (str): The token value for verifying the email.
             request (HttpRequest): The request object that contains information about the current site domain.
         """
-        self.token = token
         self.request = request
 
         super().__init__(to_emails=to_emails)
@@ -127,6 +84,3 @@ class VerificationMailer(BaseMailer):
         }
 
         return render_to_string(template_name="authentication/account_verification.html", context=context)
-
-    def _get_subject(self) -> str:
-        return settings.EMAIL_EMAIL_VERIFICATION_SUBJECT

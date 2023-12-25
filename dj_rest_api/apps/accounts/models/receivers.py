@@ -1,9 +1,10 @@
 import functools
 
+from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .. import mailers
+from ..tasks import send_account_created_email, send_account_verification_email
 from . import models, profiles
 from .signals import user_proxy_model_instance_saved
 
@@ -39,19 +40,15 @@ from .signals import user_proxy_model_instance_saved
 
 
 @receiver(user_proxy_model_instance_saved)
-def send_welcome_email_to_new_user(sender, instance, created, **kwargs):
+def send_appointment_created_email(sender, instance, created, **kwargs):
     """Send welcome email"""
 
     if created:
-        mailers.RegisterMailer(full_name=instance.email, password="sdf", to_emails=[instance.email]).send_email()
-
-
-@receiver(post_save, sender=models.OTPNumber)
-def send_otp_number_to_user(sender, instance, **kwargs):
-    """Send otp number to user for password resetting"""
-
-    # Send reset password message with OTP to user's email
-    mailers.OTPMailer(otp_number=instance.number, to_emails=[instance.user.email]).send_email()
+        # Defer sending email until after transaction commit
+        # * Using transaction to ensure the instance is save completely with its services.
+        transaction.on_commit(
+            lambda: send_account_created_email.delay(full_name=instance.email, user_email=instance.email)
+        )
 
 
 @receiver(post_save, sender=models.Admin, dispatch_uid="admin_post_save")

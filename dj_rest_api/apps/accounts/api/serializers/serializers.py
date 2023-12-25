@@ -7,7 +7,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.db.models import signals
 from rest_framework import serializers
 
-from ...models import models, profiles, utils, validators
+from ...models import models, profiles, utils
 from ...models.receivers import create_student_profile, create_teacher_profile, signal_reconnect
 from .. import exceptions
 from . import profile_serializers
@@ -116,7 +116,7 @@ class UserDetailsSerializer(BaseModelSerializer):
         return serializer.data
 
 
-class UserCreateSerializer(BaseModelSerializer):
+class BaseUserCreateSerializer(BaseModelSerializer):
     """Template base serializer is responsible for creation and updating a user"""
 
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
@@ -189,16 +189,16 @@ class UserCreateSerializer(BaseModelSerializer):
         return user
 
 
-class AdminUserCreateSerializer(UserCreateSerializer):
+class AdminUserCreateSerializer(BaseUserCreateSerializer):
     """
-    A subclass of UserCreateSerializer for handling teacher users
+    A subclass of BaseUserCreateSerializer for handling teacher users
     """
 
     profile = profile_serializers.AdminProfileSerializer(source="admin_profile")
 
-    class Meta(UserCreateSerializer.Meta):
+    class Meta(BaseUserCreateSerializer.Meta):
         model = models.Admin
-        fields = UserCreateSerializer.Meta.fields + ["profile"]
+        fields = BaseUserCreateSerializer.Meta.fields + ["profile"]
         profile_related_name = "admin_profile"
         profile_relation_field = "admin"
         profile_serializer = profile_serializers.AdminProfileSerializer
@@ -214,16 +214,16 @@ class AdminUserCreateSerializer(UserCreateSerializer):
         return super().create(validated_data)
 
 
-class TeacherUserCreateSerializer(UserCreateSerializer):
+class TeacherUserCreateSerializer(BaseUserCreateSerializer):
     """
-    A subclass of UserCreateSerializer for handling teacher users
+    A subclass of BaseUserCreateSerializer for handling teacher users
     """
 
     profile = profile_serializers.TeacherProfileSerializer(source="teacher_profile")
 
-    class Meta(UserCreateSerializer.Meta):
+    class Meta(BaseUserCreateSerializer.Meta):
         model = models.Teacher
-        fields = UserCreateSerializer.Meta.fields + ["profile"]
+        fields = BaseUserCreateSerializer.Meta.fields + ["profile"]
         profile_related_name = "teacher_profile"
         profile_relation_field = "teacher"
         profile_serializer = profile_serializers.TeacherProfileSerializer
@@ -239,12 +239,12 @@ class TeacherUserCreateSerializer(UserCreateSerializer):
         return super().create(validated_data)
 
 
-class StudentUserCreateSerializer(UserCreateSerializer):
+class StudentUserCreateSerializer(BaseUserCreateSerializer):
     profile = profile_serializers.StudentProfileSerializer(source="student_profile")
 
-    class Meta(UserCreateSerializer.Meta):
+    class Meta(BaseUserCreateSerializer.Meta):
         model = models.Student
-        fields = UserCreateSerializer.Meta.fields + ["profile"]
+        fields = BaseUserCreateSerializer.Meta.fields + ["profile"]
         profile_related_name = "student_profile"
         profile_relation_field = "student"
         profile_serializer = profile_serializers.StudentProfileSerializer
@@ -260,7 +260,7 @@ class StudentUserCreateSerializer(UserCreateSerializer):
         return super().create(validated_data)
 
 
-class UserUpdateSerializer(BaseModelSerializer):
+class BaseUserUpdateSerializer(BaseModelSerializer):
     """Serializer is responsible for creation and updating a user"""
 
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
@@ -313,42 +313,42 @@ class UserUpdateSerializer(BaseModelSerializer):
         return user
 
 
-class AdminUserUpdateSerializer(UserUpdateSerializer):
+class AdminUserUpdateSerializer(BaseUserUpdateSerializer):
     """
-    A subclass of UserUpdateSerializer for handling teacher users
+    A subclass of BaseUserUpdateSerializer for handling teacher users
     """
 
     profile = profile_serializers.AdminProfileSerializer(source="admin_profile")
 
-    class Meta(UserUpdateSerializer.Meta):
+    class Meta(BaseUserUpdateSerializer.Meta):
         model = models.Admin
-        fields = UserUpdateSerializer.Meta.fields + ["profile"]
+        fields = BaseUserUpdateSerializer.Meta.fields + ["profile"]
         profile_related_name = "admin_profile"
         profile_relation_field = "admin"
         profile_serializer = profile_serializers.AdminProfileSerializer
 
 
-class TeacherUserUpdateSerializer(UserUpdateSerializer):
+class TeacherUserUpdateSerializer(BaseUserUpdateSerializer):
     """
-    A subclass of UserUpdateSerializer for handling teacher users
+    A subclass of BaseUserUpdateSerializer for handling teacher users
     """
 
     profile = profile_serializers.TeacherProfileSerializer(source="teacher_profile")
 
-    class Meta(UserUpdateSerializer.Meta):
+    class Meta(BaseUserUpdateSerializer.Meta):
         model = models.Teacher
-        fields = UserUpdateSerializer.Meta.fields + ["profile"]
+        fields = BaseUserUpdateSerializer.Meta.fields + ["profile"]
         profile_related_name = "teacher_profile"
         profile_relation_field = "teacher"
         profile_serializer = profile_serializers.TeacherProfileSerializer
 
 
-class StudentUserUpdateSerializer(UserUpdateSerializer):
+class StudentUserUpdateSerializer(BaseUserUpdateSerializer):
     profile = profile_serializers.StudentProfileSerializer(source="student_profile")
 
-    class Meta(UserUpdateSerializer.Meta):
+    class Meta(BaseUserUpdateSerializer.Meta):
         model = models.Student
-        fields = UserUpdateSerializer.Meta.fields + ["profile"]
+        fields = BaseUserUpdateSerializer.Meta.fields + ["profile"]
         profile_related_name = "student_profile"
         profile_relation_field = "student"
         profile_serializer = profile_serializers.StudentProfileSerializer
@@ -374,191 +374,4 @@ class AccountVerificationSerializer(BaseSerializer):
             user.is_verified = True
             user.save()
 
-        return user
-
-
-class ForgetPasswordRequestSerializer(BaseSerializer):
-    """This serializer is responsible for creating a number for the user who requested password reset"""
-
-    email = serializers.EmailField(min_length=2, required=True)
-
-    class Meta:
-        fields = ["email"]
-
-    def validate_email(self, value):
-        # Check if the email exists in the user model
-        if not get_user_model().objects.filter(email=value).exists():
-            raise exceptions.UserNotExists()
-
-        return value
-
-    def create(self, validated_data):
-        """Create an OTP number for the user"""
-        email = validated_data.get("email")
-        user = get_user_model().objects.get(email=email)
-
-        otp_instance, created = models.OTPNumber.objects.update_or_create(
-            defaults={
-                "number": models.OTPNumber.get_number(),
-                "user": user,
-                "is_verified": False,
-            }
-        )
-        return otp_instance
-
-
-class VerifyOTPNumberSerializer(BaseSerializer):
-    email = serializers.EmailField(min_length=1, write_only=True)
-    otp = serializers.CharField(min_length=1, write_only=True)
-
-    def validate(self, attrs):
-        user = get_user_model().objects.filter(email=attrs["email"])
-        if not user.exists():
-            raise exceptions.UserNotExists()
-
-        otp_instance = models.OTPNumber.objects.filter(user=user.first(), number=attrs["otp"])
-
-        # Check if the OTP number does not exists
-        if not otp_instance.exists():
-            raise exceptions.WrongOTP()
-
-        otp_instance = otp_instance.first()
-
-        # If the OTP number is expired
-        if not otp_instance.check_num(attrs["otp"]):
-            raise exceptions.OTPExpired()
-
-        return attrs
-
-    def create(self, validated_data):
-        email = validated_data["email"]
-        user = get_user_model().objects.get(email=email)
-        otp_instance = models.OTPNumber.objects.get(user=user, number=validated_data["otp"])
-
-        # Set the is_verified flag to True
-        otp_instance.is_verified = True
-        otp_instance.save()
-        return otp_instance
-
-
-class ChangePasswordSerializer(BaseSerializer):
-    """This serializer is responsible for setting a new password of the user"""
-
-    old_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    new_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    confirmed_password = serializers.CharField(max_length=128, write_only=True, required=True)
-
-    def validate(self, attrs: dict):
-        """Validate the inserted data, passwords and otp number"""
-
-        # Validate the if the old password is correct for the request user
-        user = self.context["request"].user
-        if not user.check_password(attrs["old_password"]):
-            raise exceptions.WrongPassword()
-
-        # Check if the two inserted password are similar
-        if attrs["new_password"] != attrs["confirmed_password"]:
-            raise exceptions.NotSimilarPasswords()
-
-        # Validate the password if it meets all validator requirements
-        validators.user_validate_password(attrs["new_password"], self.context["request"].user)
-
-        return attrs
-
-    def create(self, validated_data):
-        """Update the user's password"""
-
-        # Get user from the request
-        user = self.context["request"].user
-
-        # Set the new password for the user
-        password = validated_data.get("new_password")
-        user.set_password(password)
-
-        # Delete otp number for the user
-        models.OTPNumber.objects.filter(user=user).delete()
-
-        user.save()
-
-        return user
-
-
-class ForgetPasswordSerializer(BaseSerializer):
-    """This serializer is responsible for setting a new password of the user"""
-
-    new_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    confirmed_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    otp = serializers.CharField(min_length=1, write_only=True, required=True)
-
-    def validate(self, attrs: dict):
-        """Validate the inserted data, passwords and otp number"""
-
-        user = self.context["request"].user
-        otp_instance = models.OTPNumber.objects.filter(user=user, number=attrs["otp"])
-
-        # Check if the OTP number does not exists
-        if not otp_instance.exists():
-            raise exceptions.WrongOTP()
-
-        # Check if the user OTP number is verified
-        if not otp_instance.first().is_verified:
-            raise exceptions.OTPNotVerified()
-
-        # Check if the two inserted password are similar
-        if attrs["new_password"] != attrs["confirmed_password"]:
-            raise exceptions.NotSimilarPasswords()
-
-        # Validate the password if it meets all validator requirements
-        validators.user_validate_password(attrs["new_password"], self.context["request"].user)
-
-        return attrs
-
-    def create(self, validated_data):
-        """Update the user's password"""
-
-        # Get user from the request
-        user = self.context["request"].user
-
-        # Set the new password for the user
-        password = validated_data.get("new_password")
-        user.set_password(password)
-
-        # Delete otp number for the user
-        models.OTPNumber.objects.filter(user=user).delete()
-
-        user.save()
-
-        return user
-
-
-class FirstTimePasswordSerializer(BaseSerializer):
-    """This serializer is responsible for setting a first time password of the user"""
-
-    new_password = serializers.CharField(max_length=128, write_only=True, required=True)
-    confirmed_password = serializers.CharField(max_length=128, write_only=True, required=True)
-
-    def validate(self, attrs: dict):
-        """Validate the inserted data, validate passwords and otp number"""
-
-        # Check if the two inserted password are similar
-        if attrs["new_password"] != attrs["confirmed_password"]:
-            raise exceptions.NotSimilarPasswords()
-
-        # Validate the password if it meets all validator requirements
-        validators.user_validate_password(attrs["new_password"], self.context["request"].user)
-
-        return attrs
-
-    def create(self, validated_data):
-        """Update the user's password"""
-        user = self.context["request"].user
-        password = validated_data.get("new_password")
-        user.set_password(password)
-
-        # Set password changed to true
-        if not user.is_password_changed:
-            user.is_password_changed = True
-            user.save()
-
-        user.save()
         return user

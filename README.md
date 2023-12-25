@@ -18,7 +18,7 @@ Django-Rest-Api/
 │   │   ├── accounts/
 │   │   ├── authentication/
 │   │   └── core/
-│   ├── test/ # Contains tests for Django project
+│   │
 │   ├── config/ # Contains configuration files for Django project
 │   │   ├── settings/ # Contains settings modules for different environments
 │   │   │   ├── components/ # Contains common settings components for all environments
@@ -35,11 +35,14 @@ Django-Rest-Api/
 │   │   │   ├── __init__.py # Contains using of split_settings module for multiple settings
 │   │   │   └── envvars.py # Contains mechanism for overriding settings configuration from .env file
 │   │   ├── urls.py
+│   │   ├── celery.py # Contains specific settings for celery configurations
 │   │   ├── asgi.py
 │   │   └── wsgi.py
+│   │
+│   ├── test/ # Contains tests for Django project
+│   └── manage.py
 │
 ├── Makefile # The make utility for Django project
-├── manage.py
 ├── poetry.lock
 ├── pyproject.toml
 ├── .dockerignore
@@ -114,14 +117,14 @@ Before you begin, ensure you have the following prerequisites installed:
 1. Clone the repository:
 
 ```bash
- git clone https://github.com/Nicola-Ibrahim/django-auth.git
+ git clone https://github.com/Nicola-Ibrahim/Django-Rest-Api.git
 
 ```
 
 2. Navigate to the project directory:
 
   ```bash
-    cd django-auth
+    cd Django-Rest-Api
   ```
 
 3. Edit the poetry configuration to create virtualenv in the root directory
@@ -163,3 +166,57 @@ To start the server, use the following command:
 ```bash
   make run-server
 ```
+
+### Installing and Running Redis
+
+- Windows:
+  To install Redis on a Windows system, follow these steps:
+
+  1. Download Redis for Windows from Microsoft Archive.
+  2. Extract the downloaded zip file to a directory of your choice.
+  3. Open a Command Prompt and navigate to the Redis directory.
+  4. Run the following command to start the Redis server:
+
+   ```bash
+   redis-server.exe
+   ```
+
+- Linux:
+  To install Redis on a Linux system, follow these steps:
+
+  1. Open a terminal.
+  2. Update the package list to ensure you have the latest information on available packages:
+
+   ```bash
+    sudo apt update
+   ```
+
+  3. Install Redis by running:
+
+   ```bash
+    sudo apt install redis-server
+   ```
+
+  4. Start the Redis server:
+
+    ```bash
+    sudo systemctl start redis-server
+   ```
+
+### Running Celery
+
+After setting up Redis, you can run Celery to perform background tasks in your Django project. Make sure you are in your project directory (Django-Rest-Api) and your virtual environment is activated.
+
+- Windows:
+  To run Celery on Windows, use the following command:
+
+  ```bash
+  poetry run celery -A dj_rest_api worker --loglevel=info --pool=solo
+  ```
+
+- Linux:
+  To run Celery on Linux, use the following command:
+
+  ```bash
+  poetry run celery -A dj_rest_api worker --loglevel=info
+  ```

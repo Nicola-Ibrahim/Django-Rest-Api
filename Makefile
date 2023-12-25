@@ -86,3 +86,8 @@ translate:
 .PHONY: compile-translate
 compile-translate:
 	django-admin compilemessages --ignore=.venv
+
+
+.PHONY: run-celery
+run-celery:
+	celery -A dj_rest_api worker --loglevel=info --pool=solo

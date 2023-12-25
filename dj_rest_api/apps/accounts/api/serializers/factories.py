@@ -1,7 +1,7 @@
 from . import serializers
 
 
-def get_create_serializer(user_type: str) -> serializers.UserCreateSerializer:
+def get_create_serializer(user_type: str) -> serializers.BaseUserCreateSerializer:
     """Get the suitable serializer for user relying on its type
 
     This method uses a dictionary of serializers_classes to get the UserCreateSerializer subclass
@@ -29,7 +29,7 @@ def get_create_serializer(user_type: str) -> serializers.UserCreateSerializer:
     return serializer
 
 
-def get_update_serializer(user_type: str) -> serializers.UserCreateSerializer:
+def get_update_serializer(user_type: str) -> serializers.BaseUserUpdateSerializer:
     """Get the suitable serializer for user relying on its type
 
     This method uses a dictionary of serializers_classes to get the UserCreateSerializer subclass

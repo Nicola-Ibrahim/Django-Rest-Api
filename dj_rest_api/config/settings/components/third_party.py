@@ -1,6 +1,3 @@
-"""Third-party package configuration settings"""
-
-
 from datetime import timedelta
 
 from config.settings.utils.misc import get_singing_key
@@ -38,6 +35,7 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
 }
 
+# REST api configurations
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "apps.core.base_api.authentication.CustomJWTAuthentication",
@@ -53,3 +51,17 @@ REST_FRAMEWORK = {
     "DEFAULT_VERSION": "1.0",
     "ALLOWED_VERSIONS": ["1.0", "2.0"],
 }
+
+
+# Celery configurations
+CELERY_BROKER_URL = "redis://localhost:6379/0"  # Adjust this URL to your Redis server.
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "Europe/Berlin"
+# Optional: Specify the location for Celery's results backend if needed
+# CELERY_RESULT_BACKEND = 'db+sqlite:///results.sqlite3'
+CELERY_RESULT_BACKEND = "django-db"
+CELERY_CACHE_BACKEND = "django-cache"
+
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
