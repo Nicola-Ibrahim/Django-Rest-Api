@@ -220,3 +220,11 @@ After setting up Redis, you can run Celery to perform background tasks in your D
   ```bash
   poetry run celery -A dj_rest_api worker --loglevel=info
   ```
+
+## Running dockerized
+
+To start the server, use the following command:
+
+```bash
+  make dev-docker
+```

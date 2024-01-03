@@ -1,7 +1,7 @@
-from apps.core.base_api.views import BaseGenericAPIView
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
 from drf_yasg.utils import swagger_auto_schema
+from lib.api.views import BaseGenericAPIView
 
 # from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.mixins import (

@@ -1,5 +1,5 @@
 from apps.accounts.api.serializers import serializers
-from apps.accounts.models import models, profiles
+from apps.accounts.models import Teacher, User
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra.django import from_model
@@ -72,10 +72,10 @@ class TestStudentUserSerializer:
 
 
 class TestTeacherUserSerializer:
-    user_strategy = from_model(models.User)
+    user_strategy = from_model(User)
 
     @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
-    @given(teacher=from_model(models.Teacher))
+    @given(teacher=from_model(Teacher))
     def test_serialize_teacher_instance(self, teacher, rf):
         """Test serializing User instance to json."""
 
@@ -134,13 +134,13 @@ class TestTeacherUserSerializer:
             st.builds(dict, is_public=st.integers()),
             st.builds(dict, is_public=st.text()),
         ),
-        user=from_model(models.User),
+        user=from_model(User),
     )
     def test_fail_deserialize_json(self, wrong_field, user, db):
         """Test fail to deserializing json data into User model (python datatypes)."""
 
         # Get the Teacher model fields
-        teacher_model_fields_names = [field.name for field in models.Teacher._meta.get_fields()]
+        teacher_model_fields_names = [field.name for field in Teacher._meta.get_fields()]
 
         invalid_serialized_data = {
             k: v for k, v in user.__dict__.items() if k in teacher_model_fields_names

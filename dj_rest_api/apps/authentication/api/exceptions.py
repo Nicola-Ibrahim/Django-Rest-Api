@@ -4,8 +4,8 @@ This script defines custom formatted exceptions for handling errors in the syste
 
 import enum
 
-from apps.core.base_api.exceptions import BaseException
 from django.utils.translation import gettext_lazy as _
+from lib.api.exceptions import BaseException
 from rest_framework import status
 
 

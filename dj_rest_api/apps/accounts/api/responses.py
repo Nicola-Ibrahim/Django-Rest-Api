@@ -1,7 +1,7 @@
 import enum
 
-from apps.core.base_api.responses import BaseResponse
 from django.utils.translation import gettext_lazy as _
+from lib.api.responses import BaseResponse
 from rest_framework import status
 
 

@@ -38,14 +38,14 @@ SIMPLE_JWT = {
 # REST api configurations
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "apps.core.base_api.authentication.CustomJWTAuthentication",
+        "lib.api.authentication.CustomJWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
     "DEFAULT_PARSER_CLASSES": [
         "rest_framework.parsers.JSONParser",
         "rest_framework.parsers.FormParser",
         "rest_framework.parsers.MultiPartParser",
-        "apps.core.base_api.parsers.PlainTextParser",
+        "lib.api.parsers.PlainTextParser",
     ],
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.AcceptHeaderVersioning",
     "DEFAULT_VERSION": "1.0",

@@ -1,6 +1,6 @@
 from apps.accounts.api.permissions.mixins import BasePermissionMixin
-from apps.core.base_api.views import BaseAPIView, BaseGenericAPIView
 from django.contrib.auth import get_user_model
+from lib.api.views import BaseAPIView, BaseGenericAPIView
 
 from . import exceptions, permissions, responses, serializers
 

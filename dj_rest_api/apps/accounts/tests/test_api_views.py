@@ -1,15 +1,16 @@
-from apps.accounts.api import views
-from apps.accounts.models import models
 from django.urls import reverse
 from hypothesis import HealthCheck, Verbosity, example, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra.django import from_model
 from rest_framework.test import force_authenticate
 
+from ..api import views
+from ..models import User
+
 
 class TestAccountsViews:
     # Define a strategy for generating users
-    user_strategy: st.SearchStrategy = from_model(models.User)
+    user_strategy: st.SearchStrategy = from_model(User)
 
     # Edit suppress_health_check for using `mocker` fixture
     @settings(
@@ -96,7 +97,7 @@ class TestAccountsViews:
 #     verbosity=Verbosity.verbose,
 #     max_examples=20,
 # )
-# @given(user=from_model(models.User))
+# @given(user=from_model(User))
 # def test_send_forget_password_request_view(self, user, mocker, rf):
 #     """Test sending the request to reset forgotten password for the user."""
 
@@ -123,7 +124,7 @@ class TestAccountsViews:
 #     verbosity=Verbosity.verbose,
 #     deadline=20000,
 # )
-# @given(user=from_model(models.User), new_password=st.text(min_size=8, max_size=128))
+# @given(user=from_model(User), new_password=st.text(min_size=8, max_size=128))
 # def test_set_first_time_password_view(self, user, new_password, rf):
 #     """Test setting first time password for the user."""
 #     # Arrange

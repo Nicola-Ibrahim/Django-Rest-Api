@@ -1,6 +1,6 @@
-from apps.core.mailers import BaseMailer
 from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
+from lib.mailers import BaseMailer
 from rest_framework_simplejwt.tokens import RefreshToken
 
 

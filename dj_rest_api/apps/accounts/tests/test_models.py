@@ -1,4 +1,4 @@
-from apps.accounts.models import models, profiles
+from apps.accounts.models import Admin, Student, Teacher, User
 from hypothesis import HealthCheck, Verbosity, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra.django import from_model
@@ -6,7 +6,7 @@ from hypothesis.stateful import Bundle, RuleBasedStateMachine, precondition, rul
 
 
 class TestUserModel:
-    user_strategy: st.SearchStrategy = from_model(models.User)
+    user_strategy: st.SearchStrategy = from_model(User)
 
     @settings(
         suppress_health_check=[HealthCheck.function_scoped_fixture],
@@ -32,7 +32,7 @@ class TestUserModel:
 
 
 class TestAdminModel:
-    user_admin_strategy: st.SearchStrategy = from_model(models.Admin)
+    user_admin_strategy: st.SearchStrategy = from_model(Admin)
 
     @settings(
         suppress_health_check=[HealthCheck.function_scoped_fixture],
@@ -42,13 +42,13 @@ class TestAdminModel:
     )
     @given(user=user_admin_strategy)
     def test_is_admin(self, user):
-        assert isinstance(user, models.Admin)
-        assert user.type == models.User.Type.ADMIN
+        assert isinstance(user, Admin)
+        assert user.type == User.Type.ADMIN
         assert user.is_staff and user.is_superuser
 
 
 class TestStudentModel:
-    user_student_strategy: st.SearchStrategy = from_model(models.Student)
+    user_student_strategy: st.SearchStrategy = from_model(Student)
 
     @settings(
         suppress_health_check=[HealthCheck.function_scoped_fixture],
@@ -56,13 +56,13 @@ class TestStudentModel:
     )
     @given(student=user_student_strategy)
     def test_is_student(self, student):
-        assert isinstance(student, models.Student)
-        assert student.type == models.User.Type.STUDENT
+        assert isinstance(student, Student)
+        assert student.type == User.Type.STUDENT
         assert not (student.is_staff or student.is_superuser)
 
 
 class TestTeacherModel:
-    user_teacher_strategy: st.SearchStrategy = from_model(models.Teacher)
+    user_teacher_strategy: st.SearchStrategy = from_model(Teacher)
 
     @settings(
         suppress_health_check=[HealthCheck.function_scoped_fixture],
@@ -72,8 +72,8 @@ class TestTeacherModel:
     )
     @given(user=user_teacher_strategy)
     def test_is_teacher(self, user):
-        assert isinstance(user, models.Teacher)
-        assert user.type == models.User.Type.TEACHER
+        assert isinstance(user, Teacher)
+        assert user.type == User.Type.TEACHER
         assert not (user.is_staff or user.is_superuser)
 
 
@@ -84,7 +84,7 @@ class TestTeacherModel:
 #     @rule(target=teachers, email=st.emails(), password=st.text(min_size=8))
 #     def create_user(self, email, password):
 #         # This will create a unique User object and save it in the database
-#         return models.User.objects.create_user(email=email, password=password)
+#         return User.objects.create_user(email=email, password=password)
 
 #     @rule(target=profiles, teacher=teachers)
 #     def create_profile(self, teacher):

@@ -1,8 +1,8 @@
-from apps.core.mailers import BaseMailer
 from django.contrib.auth import get_user_model
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
+from lib.mailers import BaseMailer
 from rest_framework.reverse import reverse
 from rest_framework_simplejwt.tokens import RefreshToken
 

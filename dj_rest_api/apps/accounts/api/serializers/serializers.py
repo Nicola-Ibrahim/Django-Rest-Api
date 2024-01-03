@@ -1,10 +1,10 @@
 from typing import Any
 
-from apps.core.base_api.serializers import BaseModelSerializer, BaseSerializer
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.auth.password_validation import validate_password
 from django.db.models import signals
+from lib.api.serializers import BaseModelSerializer, BaseSerializer
 from rest_framework import serializers
 
 from ...models import models, profiles, utils

@@ -1,4 +1,4 @@
-from apps.core.base_api.serializers import BaseModelSerializer
+from lib.api.serializers import BaseModelSerializer
 
 from ...models import profiles
 

@@ -1,8 +1,8 @@
 from apps.accounts.api.exceptions import FirstTimePasswordError, UserNotActive, UserNotExists
 from apps.accounts.models.validators import user_validate_password
 from apps.authentication.api import tokens
-from apps.core.base_api.serializers import BaseSerializer
 from django.contrib.auth import authenticate, get_user_model
+from lib.api.serializers import BaseSerializer
 from rest_framework import serializers
 
 from ... import models
