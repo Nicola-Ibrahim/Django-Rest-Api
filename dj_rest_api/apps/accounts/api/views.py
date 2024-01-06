@@ -13,6 +13,7 @@ from rest_framework.mixins import (
 )
 from rest_framework.response import Response
 
+from ..services import TeacherUserAndProfileBuilder
 from . import permissions, responses, serializers
 
 
@@ -82,9 +83,7 @@ class UserListCreateView(
         serializer = self.get_serializer(queryset, many=True)
         return responses.UserListResponse().with_data(users_data=serializer.data)
 
-    @swagger_auto_schema(
-        request_body=serializers.StudentUserCreateSerializer,
-    )
+    @swagger_auto_schema(request_body=serializers.StudentUserCreateSerializer)
     def post(self, request, *args, **kwargs) -> Response:
         """
         Handles POST requests for creating users.
@@ -101,7 +100,8 @@ class UserListCreateView(
         """
         serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+
+        TeacherUserAndProfileBuilder.construct(user_data=serializer.data)
 
         return responses.UserCreateResponse().with_data(user_data=serializer.data)
 

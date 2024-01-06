@@ -1,14 +1,10 @@
-from typing import Any
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.auth.password_validation import validate_password
-from django.db.models import signals
 from lib.api.serializers import BaseModelSerializer, BaseSerializer
 from rest_framework import serializers
 
 from ...models import models, profiles, utils
-from ...models.receivers import create_student_profile, create_teacher_profile, signal_reconnect
 from .. import exceptions
 from . import profile_serializers
 
@@ -117,17 +113,13 @@ class UserDetailsSerializer(BaseModelSerializer):
 
 
 class BaseUserCreateSerializer(BaseModelSerializer):
-    """Template base serializer is responsible for creation and updating a user"""
+    """Template base serializer is responsible for validation the data for a new user"""
 
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     confirm_password = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = None
-        ordering = ["-id"]
-        profile_related_name = ""
-        profile_relation_field = ""
-        profile_serializer = None
 
         fields = [
             "email",
@@ -160,104 +152,35 @@ class BaseUserCreateSerializer(BaseModelSerializer):
 
         return attrs
 
-    def create(self, validated_data: dict[str, Any]):
-        """Create a new user with the profile data
-
-        Args:
-            validated_data (dict[str, str]): validated data by the serializer
-
-        Returns:
-            User: a new inserted user
-        """
-        # Get the profile data of the user
-        user_profile_data = validated_data.pop(self.Meta.profile_related_name)  # type: ignore # noqa:F841
-
-        # Remove confirm_password field value from the inserted data
-        validated_data.pop("confirm_password")
-
-        # Create a new user
-        user = self.Meta.model.objects.create_user(**validated_data)
-
-        # Create profile data for the user
-        user_profile_data[self.Meta.profile_relation_field] = user.id
-        profile_serializer = self.Meta.profile_serializer(data=user_profile_data)
-        profile_serializer.is_valid(raise_exception=True)
-
-        # Save the user's profile
-        profile_serializer.save()
-
-        return user
-
 
 class AdminUserCreateSerializer(BaseUserCreateSerializer):
-    """
-    A subclass of BaseUserCreateSerializer for handling teacher users
-    """
+    """A subclass of BaseUserCreateSerializer for handling the validation of creating an admin user"""
 
     profile = profile_serializers.AdminProfileSerializer(source="admin_profile")
 
     class Meta(BaseUserCreateSerializer.Meta):
         model = models.Admin
         fields = BaseUserCreateSerializer.Meta.fields + ["profile"]
-        profile_related_name = "admin_profile"
-        profile_relation_field = "admin"
-        profile_serializer = profile_serializers.AdminProfileSerializer
-
-    # Decorate create method to disconnect and reconnect post_save signal for creating a profile
-    @signal_reconnect(
-        signal=signals.post_save,
-        sender=models.Teacher,
-        receiver=create_teacher_profile,
-        dispatch_uid="admin_post_save",
-    )
-    def create(self, validated_data: dict[str, str]):
-        return super().create(validated_data)
 
 
 class TeacherUserCreateSerializer(BaseUserCreateSerializer):
-    """
-    A subclass of BaseUserCreateSerializer for handling teacher users
-    """
+    """A subclass of BaseUserCreateSerializer for handling the validation of creating a teacher user"""
 
     profile = profile_serializers.TeacherProfileSerializer(source="teacher_profile")
 
     class Meta(BaseUserCreateSerializer.Meta):
         model = models.Teacher
         fields = BaseUserCreateSerializer.Meta.fields + ["profile"]
-        profile_related_name = "teacher_profile"
-        profile_relation_field = "teacher"
-        profile_serializer = profile_serializers.TeacherProfileSerializer
-
-    # Decorate create method to disconnect and reconnect post_save signal for creating a profile
-    @signal_reconnect(
-        signal=signals.post_save,
-        sender=models.Teacher,
-        receiver=create_teacher_profile,
-        dispatch_uid="teacher_post_save",
-    )
-    def create(self, validated_data: dict[str, str]):
-        return super().create(validated_data)
 
 
 class StudentUserCreateSerializer(BaseUserCreateSerializer):
+    """A subclass of BaseUserCreateSerializer for handling the validation of creating an admin user"""
+
     profile = profile_serializers.StudentProfileSerializer(source="student_profile")
 
     class Meta(BaseUserCreateSerializer.Meta):
         model = models.Student
         fields = BaseUserCreateSerializer.Meta.fields + ["profile"]
-        profile_related_name = "student_profile"
-        profile_relation_field = "student"
-        profile_serializer = profile_serializers.StudentProfileSerializer
-
-    # Decorate create method to disconnect and reconnect post_save signal for creating a profile
-    @signal_reconnect(
-        signal=signals.post_save,
-        sender=models.Student,
-        receiver=create_student_profile,
-        dispatch_uid="student_post_save",
-    )
-    def create(self, validated_data: dict[str, str]):
-        return super().create(validated_data)
 
 
 class BaseUserUpdateSerializer(BaseModelSerializer):
