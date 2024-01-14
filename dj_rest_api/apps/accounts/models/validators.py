@@ -90,4 +90,4 @@ def user_validate_password(password: str, user=None, password_validators=None):
             errors.append(error.message)
 
     if errors:
-        raise exceptions.PasswordNotValid().format_data(errors=errors)
+        raise exceptions.PasswordNotValid().format_response(errors=errors)

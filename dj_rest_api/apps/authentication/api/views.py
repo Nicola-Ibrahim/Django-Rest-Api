@@ -1,8 +1,8 @@
-from django.contrib.auth import get_user_model
 from lib.api.permissions import BasePermission
 from lib.api.views import BaseAPIView, BaseGenericAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
+from .. import services
 from . import exceptions, permissions, responses, serializers
 
 
@@ -33,14 +33,16 @@ class LoginView(BaseGenericAPIView):
             **kwargs: Additional keyword arguments.
 
         Returns:
-            LoginResponse: A response containing user details upon successful login.
+            LoginAPIResponse: A response containing user details upon successful login.
         """
         serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
 
-        user = serializer.validated_data.get("user")
+        email, password = serializer.data.get("email"), serializer.data.get("password")
 
-        return responses.LoginResponse().format_data(user_details=user.get_user_details())
+        user = services.login(request=request, email=email, password=password)
+
+        return responses.LoginAPIResponse(data=user.get_user_details())
 
 
 class LogoutView(BaseGenericAPIView):
@@ -70,16 +72,18 @@ class LogoutView(BaseGenericAPIView):
         Returns:
             LogoutResponse: A response indicating successful user logout.
         """
+
+        # Validate token
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+
+        # Logout user
+        services.logout(refresh_token=serializer.data.get("refresh_token"))
 
         return responses.LogoutResponse()
 
 
-class ForgetPasswordRequestView(
-    BaseGenericAPIView,
-):
+class ForgetPasswordRequestView(BaseGenericAPIView):
     """
     View for sending an OTP number to the user's email for changing the password.
 
@@ -112,17 +116,14 @@ class ForgetPasswordRequestView(
         serializer.is_valid(raise_exception=True)
 
         # Create OTP number for the user
-        serializer.save()
+        services.create_otp_number_for_user(email=serializer.data.get("email"))
 
-        return responses.ForgetPasswordRequestResponse()
+        return responses.ForgetPasswordRequestAPIResponse()
 
 
-class VerifyOTPNumberView(
-    BaseGenericAPIView,
-):
+class VerifyOTPNumberView(BaseGenericAPIView):
     """
     View for verifying the generated OTP number for the user who wants to change password.
-
 
     Methods:
         post(request, *args, **kwargs): Handles POST requests for verifying the OTP number.
@@ -141,43 +142,86 @@ class VerifyOTPNumberView(
 
         Validates the OTP number, updates verification status, and returns the response.
 
-        Args:
-            request: The HTTP request object.
-            *args: Additional arguments.
-            **kwargs: Additional keyword arguments.
-
         Returns:
             Response: The OTP verification response with an access token.
         """
+
+        # Validate user and otp number
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
 
         # Add access token to the response
-        user = get_user_model().objects.get(email=request.data.get("email"))
+        verified, user = services.verify_otp_number_for_user(
+            email=serializer.data.get("email"), number=serializer.data.get("opt_number")
+        )
 
-        return responses.VerifyOTPResponse().format_data(access_token=user.get_tokens()["access"])
+        return responses.VerifyOTPAPIResponse(data=user.get_tokens()["access"])
 
 
-class BaseResetPasswordView(BaseGenericAPIView):
+class ForgetPasswordView(BaseGenericAPIView):
     """
-    Abstract base view for setting a new password.
-    This view implements the patch method, so the concrete ResetPassword class
-    only has to set the serializer_class attribute.
-
-    Attributes:
-        Meta: The metadata class indicating that this is an abstract view.
+    View for processing forget password requests and setting a new password.
 
     Methods:
-        patch(request): Handles PATCH requests for setting a new password.
+        patch(request): Handles PATCH requests for setting a new password after forget password request.
         Validates the request data, performs the password reset, and returns the response.
 
     Example:
-        To set a new password, send a PATCH request with the required data.
+        To set a new password after forget password request, send a PATCH request with the required data.
     """
 
-    class Meta:
-        abstract = True
+    serializer_class = serializers.ForgetPasswordSerializer
+
+    def patch(self, request, *args, **kwargs):
+        # Validate passed password
+        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+
+        # Set first time password
+        services.set_new_password_for_user(user=request.User, password=serializer.data.get("new_password"))
+
+        return responses.ResetPasswordAPIResponse()
+
+
+class ChangePasswordView(BaseGenericAPIView):
+    """
+    View for processing change password requests and setting a new password.
+
+    Methods:
+        patch(request): Handles PATCH requests for setting a new password after change password request.
+        Validates the request data, performs the password reset, and returns the response.
+
+    Example:
+        To set a new password after change password request, send a PATCH request with the required data.
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = serializers.ChangePasswordSerializer
+
+    def patch(self, request, *args, **kwargs):
+        # Validate passed password
+        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+
+        # Set first time password
+        services.set_new_password_for_user(user=request.User, password=serializer.data.get("new_password"))
+
+        return responses.ResetPasswordAPIResponse()
+
+
+class FirstTimePasswordView(BaseGenericAPIView):
+    """
+    View for processing first time password requests and setting a new password.
+
+    Methods:
+        patch(request): Handles PATCH requests for setting a new password as a first-time password.
+        Validates the request data, performs the password reset, and returns the response.
+
+    Example:
+        To set a new password as a first-time password, send a PATCH request with the required data.
+    """
+
+    serializer_class = serializers.FirstTimePasswordSerializer
 
     def patch(self, request):
         """
@@ -191,65 +235,14 @@ class BaseResetPasswordView(BaseGenericAPIView):
         Returns:
             Response: The password reset response.
         """
+        # Validate passed password
         serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
-        serializer.save()
 
-        return responses.ResetPasswordResponse()
+        # Set first time password
+        services.set_first_time_password_for_user(user=request.User, password=serializer.data.get("password"))
 
-
-class ForgetPasswordView(BaseResetPasswordView):
-    """
-    View for processing forget password requests and setting a new password.
-
-    Attributes:
-        serializer_class: The serializer class for validating and processing the request data.
-
-    Methods:
-        patch(request): Handles PATCH requests for setting a new password after forget password request.
-        Validates the request data, performs the password reset, and returns the response.
-
-    Example:
-        To set a new password after forget password request, send a PATCH request with the required data.
-    """
-
-    serializer_class = serializers.ForgetPasswordSerializer
-
-
-class ChangePasswordView(BaseResetPasswordView):
-    """
-    View for processing change password requests and setting a new password.
-
-    Attributes:
-        serializer_class: The serializer class for validating and processing the request data.
-
-    Methods:
-        patch(request): Handles PATCH requests for setting a new password after change password request.
-        Validates the request data, performs the password reset, and returns the response.
-
-    Example:
-        To set a new password after change password request, send a PATCH request with the required data.
-    """
-
-    serializer_class = serializers.ChangePasswordSerializer
-
-
-class FirstTimePasswordView(BaseResetPasswordView):
-    """
-    View for processing first time password requests and setting a new password.
-
-    Attributes:
-        serializer_class: The serializer class for validating and processing the request data.
-
-    Methods:
-        patch(request): Handles PATCH requests for setting a new password as a first-time password.
-        Validates the request data, performs the password reset, and returns the response.
-
-    Example:
-        To set a new password as a first-time password, send a PATCH request with the required data.
-    """
-
-    serializer_class = serializers.FirstTimePasswordSerializer
+        return responses.ResetPasswordAPIResponse()
 
 
 class CheckJWTTokenView(BaseAPIView):
@@ -257,6 +250,6 @@ class CheckJWTTokenView(BaseAPIView):
 
     def post(self, request, *args, **kwargs):
         if not request.user.is_password_changed:
-            raise exceptions.FirstTimePasswordError().format_data(token=self.request.user.get_tokens()["access"])
+            raise exceptions.FirstTimePasswordError(data=self.request.user.get_tokens()["access"])
 
         return responses.CheckJWTTokenResponse(user=request.user)

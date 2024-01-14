@@ -161,7 +161,7 @@ class UserCreateSerializer(BaseModelSerializer):
             user data: the user data after validation
         """
         if attrs["password"] != attrs["confirm_password"]:
-            raise exceptions.NotSimilarPasswords()
+            raise exceptions.NotSimilarPasswordsAPIException()
 
         return attrs
 

@@ -13,7 +13,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 
-from .. import models
+from .. import models, services
 from . import exceptions, filters, permissions, responses, serializers
 
 
@@ -91,13 +91,8 @@ class UserListCreateView(
         serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
 
-        try:
-            # Perform the user insertion
-            user_crud = models.get_crud_instance(user_type=serializer.data.get("type"))
-            user_crud.create_user(data=serializer.data)
-
-        except models.exceptions.UserNotCreatedException:
-            raise exceptions.UserNotCreatedAPIException() from None
+        # Create a user
+        services.create_user(data=serializer.data)
 
         headers = self.get_success_headers(serializer.data)
 
@@ -251,7 +246,7 @@ class VerifyUserAccount(BaseGenericAPIView):
         serializer = self.get_serializer(request.GET.get("token"), context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return responses.ActivatedAccount()
+        return responses.ActivatedAccountAPIResponse()
 
 
 class ProfileDetailsUpdateView(RetrieveModelMixin, UpdateModelMixin, BaseGenericAPIView):

@@ -1,63 +1,38 @@
-from apps.accounts.api.exceptions import FirstTimePasswordError, UserNotActive, UserNotExists
+from apps.accounts.api.exceptions import UserNotFoundAPIException
+from apps.accounts.models import User
 from apps.accounts.models.validators import user_validate_password
-from apps.authentication.api import tokens
-from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import get_user_model
 from lib.api.serializers import BaseSerializer
 from rest_framework import serializers
 
-from ... import models
-from .. import exceptions
+from .. import models
+from . import exceptions
 
 
 class LoginSerializer(BaseSerializer):
-    email = serializers.CharField()
-    password = serializers.CharField()
+    email = serializers.CharField(required=True)
+    password = serializers.CharField(required=True)
 
-    def validate(self, attrs):
-        attrs = super().validate(attrs)
-
-        email = attrs["email"]
-        password = attrs["password"]
-
-        if email and password:
-            # Check if the user is exists
-            user = get_user_model().objects.filter(email=email)
+    def validate_email(self, value):
+        if value:
+            # Check if the email exists in the user mode
+            user = User.objects.filter(email=value)
             if not user.exists():
-                raise UserNotExists()
+                raise UserNotFoundAPIException()
 
             user = user.first()
             # Check if the user is inactive
             if not user.is_active:
-                raise UserNotActive()
+                raise exceptions.UserNotActiveAPIException()
 
             # if not user.is_password_changed:
             #     raise FirstTimePasswordError(user=user)
 
-            # Authenticate the user
-            user = authenticate(
-                request=self.context["request"],
-                username=email,
-                password=password,
-            )
-
-            if not user:
-                raise exceptions.CredentialsNotValid()
-
-            attrs["user"] = user
-        return attrs
+        return value
 
 
 class LogoutSerializer(BaseSerializer):
     refresh = serializers.CharField()
-
-    def validate(self, attrs):
-        self.token = attrs.get("refresh")
-
-        return attrs
-
-    def create(self, validated_data):
-        tokens.CustomRefreshToken(validated_data.get("refresh"), verify=True).blacklist()
-        return True
 
 
 class ForgetPasswordRequestSerializer(BaseSerializer):
@@ -71,23 +46,9 @@ class ForgetPasswordRequestSerializer(BaseSerializer):
     def validate_email(self, value):
         # Check if the email exists in the user model
         if not get_user_model().objects.filter(email=value).exists():
-            raise exceptions.UserNotExists()
+            raise UserNotFoundAPIException()
 
         return value
-
-    def create(self, validated_data):
-        """Create an OTP number for the user"""
-        email = validated_data.get("email")
-        user = get_user_model().objects.get(email=email)
-
-        otp_instance, created = models.OTPNumber.objects.update_or_create(
-            defaults={
-                "number": models.OTPNumber.get_number(),
-                "user": user,
-                "is_verified": False,
-            }
-        )
-        return otp_instance
 
 
 class VerifyOTPNumberSerializer(BaseSerializer):
@@ -97,31 +58,21 @@ class VerifyOTPNumberSerializer(BaseSerializer):
     def validate(self, attrs):
         user = get_user_model().objects.filter(email=attrs["email"])
         if not user.exists():
-            raise exceptions.UserNotExists()
+            raise UserNotFoundAPIException()
 
         otp_instance = models.OTPNumber.objects.filter(user=user.first(), number=attrs["otp"])
 
         # Check if the OTP number does not exists
         if not otp_instance.exists():
-            raise exceptions.WrongOTP()
+            raise exceptions.WrongOTPAPIException()
 
         otp_instance = otp_instance.first()
 
         # If the OTP number is expired
         if not otp_instance.check_num(attrs["otp"]):
-            raise exceptions.OTPExpired()
+            raise exceptions.ExpiredOTPAPIException()
 
         return attrs
-
-    def create(self, validated_data):
-        email = validated_data["email"]
-        user = get_user_model().objects.get(email=email)
-        otp_instance = models.OTPNumber.objects.get(user=user, number=validated_data["otp"])
-
-        # Set the is_verified flag to True
-        otp_instance.is_verified = True
-        otp_instance.save()
-        return otp_instance
 
 
 class ChangePasswordSerializer(BaseSerializer):
@@ -137,33 +88,16 @@ class ChangePasswordSerializer(BaseSerializer):
         # Validate the if the old password is correct for the request user
         user = self.context["request"].user
         if not user.check_password(attrs["old_password"]):
-            raise exceptions.WrongPassword()
+            raise exceptions.WrongPasswordAPIException()
 
         # Check if the two inserted password are similar
         if attrs["new_password"] != attrs["confirmed_password"]:
-            raise exceptions.NotSimilarPasswords()
+            raise exceptions.NotSimilarPasswordsAPIException()
 
         # Validate the password if it meets all validator requirements
         user_validate_password(attrs["new_password"], self.context["request"].user)
 
         return attrs
-
-    def create(self, validated_data):
-        """Update the user's password"""
-
-        # Get user from the request
-        user = self.context["request"].user
-
-        # Set the new password for the user
-        password = validated_data.get("new_password")
-        user.set_password(password)
-
-        # Delete otp number for the user
-        models.OTPNumber.objects.filter(user=user).delete()
-
-        user.save()
-
-        return user
 
 
 class ForgetPasswordSerializer(BaseSerializer):
@@ -181,7 +115,7 @@ class ForgetPasswordSerializer(BaseSerializer):
 
         # Check if the OTP number does not exists
         if not otp_instance.exists():
-            raise exceptions.WrongOTP()
+            raise exceptions.WrongOTPAPIException()
 
         # Check if the user OTP number is verified
         if not otp_instance.first().is_verified:
@@ -189,29 +123,12 @@ class ForgetPasswordSerializer(BaseSerializer):
 
         # Check if the two inserted password are similar
         if attrs["new_password"] != attrs["confirmed_password"]:
-            raise exceptions.NotSimilarPasswords()
+            raise exceptions.NotSimilarPasswordsAPIException()
 
         # Validate the password if it meets all validator requirements
-        validators.user_validate_password(attrs["new_password"], self.context["request"].user)
+        user_validate_password(attrs["new_password"], self.context["request"].user)
 
         return attrs
-
-    def create(self, validated_data):
-        """Update the user's password"""
-
-        # Get user from the request
-        user = self.context["request"].user
-
-        # Set the new password for the user
-        password = validated_data.get("new_password")
-        user.set_password(password)
-
-        # Delete otp number for the user
-        models.OTPNumber.objects.filter(user=user).delete()
-
-        user.save()
-
-        return user
 
 
 class FirstTimePasswordSerializer(BaseSerializer):
@@ -225,23 +142,9 @@ class FirstTimePasswordSerializer(BaseSerializer):
 
         # Check if the two inserted password are similar
         if attrs["new_password"] != attrs["confirmed_password"]:
-            raise exceptions.NotSimilarPasswords()
+            raise exceptions.NotSimilarPasswordsAPIException()
 
         # Validate the password if it meets all validator requirements
-        validators.user_validate_password(attrs["new_password"], self.context["request"].user)
+        user_validate_password(attrs["new_password"], self.context["request"].user)
 
         return attrs
-
-    def create(self, validated_data):
-        """Update the user's password"""
-        user = self.context["request"].user
-        password = validated_data.get("new_password")
-        user.set_password(password)
-
-        # Set password changed to true
-        if not user.is_password_changed:
-            user.is_password_changed = True
-            user.save()
-
-        user.save()
-        return user

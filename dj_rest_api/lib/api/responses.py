@@ -1,4 +1,5 @@
 import enum
+from typing import Any
 
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status as rest_status
@@ -15,6 +16,8 @@ class OperationCode(enum.Enum):
 
 
 class BaseAPIResponse(Response):
+    default_status = rest_status.HTTP_200_OK
+
     def __init__(
         self,
         data=None,
@@ -24,12 +27,15 @@ class BaseAPIResponse(Response):
         exception=False,
         content_type=None,
     ):
-        status = status or rest_status.HTTP_200_OK
+        status = status or self.default_status
 
-        super().__init__(data, status, template_name, headers, exception, content_type)
+        formatted_data = self.format_response(data)
 
-    def format_data(self, **kwargs) -> None:
+        super().__init__(formatted_data, status, template_name, headers, exception, content_type)
+
+    def format_response(self, *args, **kwargs) -> dict | list:
         """Update the data in The Response"""
+        return []
 
 
 class LanguagesListResponse(BaseAPIResponse):
@@ -50,8 +56,8 @@ class LanguagesListResponse(BaseAPIResponse):
         exception=False,
         content_type=None,
     ):
-        self.format_data(languages=languages)
+        self.format_response(languages=languages)
         super().__init__(data, status, template_name, headers, exception, content_type)
 
-    def format_data(self, languages: list) -> None:
+    def format_response(self, languages: list) -> None:
         self.data_["data"]["languages"] = [{"code": code, "name": _(name)} for code, name in languages]

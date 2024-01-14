@@ -6,92 +6,48 @@ from rest_framework import status as rest_status
 
 
 class UserListResponse(BaseAPIResponse):
-    def __init__(
-        self,
-        data=None,
-        status=rest_status.HTTP_200_OK,
-        template_name=None,
-        headers=None,
-        exception=False,
-        content_type=None,
-    ):
-        formatted_data = self.format_data(data)
+    default_status = rest_status.HTTP_200_OK
 
-        super().__init__(formatted_data, status, template_name, headers, exception, content_type)
-
-    def format_data(self, data: Any) -> dict:
+    def format_response(self, data: Any) -> dict | list:
         if data:
             return {
                 "code": OperationCode.Listing.value,
                 "detail": _(f"{len(data)} users have been found"),
                 "data": data,
             }
-        return {}
+        return super().format_response()
 
 
 class UserCreatedAPIResponse(BaseAPIResponse):
-    def __init__(
-        self,
-        data=None,
-        status=rest_status.HTTP_201_CREATED,
-        template_name=None,
-        headers=None,
-        exception=False,
-        content_type=None,
-    ):
-        formatted_data = self.format_data(data)
+    default_status = rest_status.HTTP_201_CREATED
 
-        super().__init__(formatted_data, status, template_name, headers, exception, content_type)
-
-    def format_data(self, data: Any):
+    def format_response(self, data: Any) -> dict | list:
         if data:
             return {
                 "code": OperationCode.Created.value,
                 "detail": _("The user has been created"),
             }
 
-        return {}
+        return super().format_response()
 
 
 class UserUpdateAPIResponse(BaseAPIResponse):
-    def __init__(
-        self,
-        data=None,
-        status=rest_status.HTTP_200_OK,
-        template_name=None,
-        headers=None,
-        exception=False,
-        content_type=None,
-    ):
-        formatted_data = self.format_data(data)
+    default_status = rest_status.HTTP_200_OK
 
-        super().__init__(formatted_data, status, template_name, headers, exception, content_type)
-
-    def format_data(self, data: Any):
+    def format_response(self, data: Any) -> dict | list:
         if data:
             return {
                 "code": OperationCode.Created.value,
                 "detail": _("The user has been updated"),
             }
 
-        return {}
+        return super().format_response()
 
 
 class UserDetailsAPIResponse(BaseAPIResponse):
-    def __init__(
-        self,
-        data=None,
-        status=rest_status.HTTP_200_OK,
-        template_name=None,
-        headers=None,
-        exception=False,
-        content_type=None,
-    ):
-        formatted_data = self.format_data(data)
+    default_status = rest_status.HTTP_200_OK
 
-        super().__init__(formatted_data, status, template_name, headers, exception, content_type)
-
-    def format_data(self, data: Any):
+    def format_response(self, data: Any) -> dict | list:
         if data:
             return {
                 "code": OperationCode.Detail.value,
@@ -99,28 +55,17 @@ class UserDetailsAPIResponse(BaseAPIResponse):
                 "data": data,
             }
 
-        return {}
+        return super().format_response()
 
 
 class UserDestroyAPIResponse(BaseAPIResponse):
-    def __init__(
-        self,
-        data=None,
-        status=rest_status.HTTP_204_NO_CONTENT,
-        template_name=None,
-        headers=None,
-        exception=False,
-        content_type=None,
-    ):
-        formatted_data = self.format_data(data)
+    default_status = rest_status.HTTP_204_NO_CONTENT
 
-        super().__init__(formatted_data, status, template_name, headers, exception, content_type)
-
-    def format_data(self, data: Any):
+    def format_response(self, data: Any) -> dict | list:
         if data:
             return {
                 "code": OperationCode.Deleted.value,
                 "detail": _("The user has been deleted"),
             }
 
-        return {}
+        return super().format_response()

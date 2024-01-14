@@ -1,4 +1,5 @@
 import enum
+from typing import Any
 
 from django.utils.translation import gettext_lazy as _
 from lib.api.responses import BaseAPIResponse
@@ -6,9 +7,6 @@ from rest_framework import status
 
 
 class OperationCode(enum.Enum):
-    Created = _("created")
-    Updated = _("updated")
-    Deleted = _("deleted")
     Login = _("login")
     Logout = _("logout")
     Verified_OTP = _("verified_OTP")
@@ -19,62 +17,72 @@ class OperationCode(enum.Enum):
     Activated_Account = _("activated_account")
 
 
-class LoginResponse(BaseAPIResponse):
-    data_ = {
-        "code": OperationCode.Login.value,
-        "detail": _("The user has been logged in"),
-        "data": {},
-    }
-    status_ = status.HTTP_200_OK
+class LoginAPIResponse(BaseAPIResponse):
+    default_status = status.HTTP_200_OK
 
-    def format_data(self, user_details):
-        self.data_["data"] = user_details
-        return super().format_data()
+    def format_response(self, data: Any) -> dict | list:
+        if data:
+            return {
+                "code": OperationCode.Login.value,
+                "detail": _("The user has been logged in"),
+                "data": data,
+            }
+
+        return super().format_response()
 
 
 class LogoutResponse(BaseAPIResponse):
-    data_ = {
-        "code": OperationCode.Logout.value,
-        "detail": _("The user has been logout"),
-    }
-    status_ = status.HTTP_204_NO_CONTENT
+    default_status = status.HTTP_204_NO_CONTENT
+
+    def format_response(self) -> dict:
+        return {
+            "code": OperationCode.Logout.value,
+            "detail": _("The user has been logout"),
+        }
 
 
-class ActivatedAccount(BaseAPIResponse):
-    data_ = {
-        "code": OperationCode.Activated_Account.value,
-        "detail": _("The account has been activated successfully."),
-    }
-    status_ = status.HTTP_200_OK
+class ActivatedAccountAPIResponse(BaseAPIResponse):
+    default_status = status.HTTP_200_OK
+
+    def format_response(self, data: Any) -> dict | list:
+        if data:
+            return {
+                "code": OperationCode.Activated_Account.value,
+                "detail": _("The account has been activated successfully."),
+            }
+
+        return super().format_response()
 
 
-class VerifyOTPResponse(BaseAPIResponse):
-    data_ = {
-        "code": OperationCode.Verified_OTP.value,
-        "detail": _("The OTP number has been verified"),
-        "data": {},
-    }
+class VerifyOTPAPIResponse(BaseAPIResponse):
+    default_status = status.HTTP_200_OK
 
-    status_ = status.HTTP_200_OK
+    def format_response(self, data: Any) -> dict | list:
+        if data:
+            return {
+                "code": OperationCode.Verified_OTP.value,
+                "detail": _("The OTP number has been verified"),
+                "data": data,
+            }
 
-    def format_data(self, access_token: str):
-        if access_token:
-            self.data_["data"]["access_token"] = access_token
-
-        return super().format_data()
+        return super().format_response()
 
 
-class ResetPasswordResponse(BaseAPIResponse):
-    data_ = {
-        "code": OperationCode.Reset_Password.value,
-        "detail": _("The password reset successfully"),
-    }
-    status_ = status.HTTP_200_OK
+class ResetPasswordAPIResponse(BaseAPIResponse):
+    default_status = status.HTTP_200_OK
+
+    def format_response(self) -> dict:
+        return {
+            "code": OperationCode.Reset_Password.value,
+            "detail": _("The password reset successfully"),
+        }
 
 
-class ForgetPasswordRequestResponse(BaseAPIResponse):
-    data_ = {
-        "code": OperationCode.Forget_Password.value,
-        "detail": _("An OTP number has been sent to email."),
-    }
-    status_ = status.HTTP_200_OK
+class ForgetPasswordRequestAPIResponse(BaseAPIResponse):
+    default_status = status.HTTP_200_OK
+
+    def format_response(self, data) -> dict:
+        return {
+            "code": OperationCode.Forget_Password.value,
+            "detail": _("An OTP number has been sent to email."),
+        }

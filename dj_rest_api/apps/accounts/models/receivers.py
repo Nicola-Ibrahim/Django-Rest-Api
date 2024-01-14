@@ -5,7 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from ..tasks import send_account_created_email, send_account_verification_email
-from . import models, profiles
+from . import models
 from .signals import user_proxy_model_instance_saved
 
 # @receiver(post_save, sender=models.Teacher)
@@ -54,19 +54,19 @@ def send_account_created_email_receiver(sender, instance, created, **kwargs):
 @receiver(post_save, sender=models.Admin, dispatch_uid="admin_post_save")
 def create_admin_profile(sender, instance, created, **kwargs):
     if created:
-        profiles.AdminProfile.objects.create(admin=instance)
+        models.AdminProfile.objects.create(admin=instance)
 
 
 @receiver(post_save, sender=models.Student, dispatch_uid="student_post_save")
 def create_student_profile(sender, instance, created, **kwargs):
     if created:
-        profiles.StudentProfile.objects.create(student=instance)
+        models.StudentProfile.objects.create(student=instance)
 
 
 @receiver(post_save, sender=models.Teacher, dispatch_uid="teacher_post_save")
 def create_teacher_profile(sender, instance, created, **kwargs):
     if created:
-        profiles.TeacherProfile.objects.create(teacher=instance)
+        models.TeacherProfile.objects.create(teacher=instance)
 
 
 def signal_reconnect(signal, sender, receiver, dispatch_uid):
