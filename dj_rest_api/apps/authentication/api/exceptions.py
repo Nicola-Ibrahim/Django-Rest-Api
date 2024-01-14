@@ -5,7 +5,7 @@ This script defines custom formatted exceptions for handling errors in the syste
 import enum
 
 from django.utils.translation import gettext_lazy as _
-from lib.api.exceptions import BaseException
+from lib.api.exceptions import BaseAPIException
 from rest_framework import status
 
 
@@ -13,7 +13,7 @@ class ErrorCode(enum.Enum):
     Credential_Error = _("credential_error")
 
 
-class CredentialsNotValid(BaseException):
+class CredentialsNotValid(BaseAPIException):
     detail_ = {
         "code": ErrorCode.Credential_Error.value,
         "detail": _("Unable to log in with provided credentials."),

@@ -17,7 +17,7 @@ class ErrorCode(enum.Enum):
     Field_Error = "field_error"
 
 
-class BaseException(APIException):
+class BaseAPIException(APIException):
     """
     Base class for exceptions.
     Subclasses should provide `.detail_` and `.status_code` properties.
@@ -28,14 +28,9 @@ class BaseException(APIException):
     status_code = status.HTTP_200_OK
 
     def __init__(self, detail=None, code=None, status_code=None):
-        if status_code is not None:
-            self.status_code = status_code
-
-        if detail is None:
-            detail = self.detail_
-
-        if code is None:
-            code = self.status_code
+        detail = detail or self.detail_
+        code = code or self.status_code
+        status_code = status_code or self.status_code
 
         # For  failures, we may collect many errors together,
         # so the details should always be coerced to a list if not already.
@@ -46,14 +41,11 @@ class BaseException(APIException):
 
         self.detail = _get_error_details(detail, code)
 
-    def with_data(self, **kwargs):
+    def format_data(self, **kwargs):
         """Update the data dictionary in The Response"""
 
-        # Return self instance to ensure raising an APIException, not method's returned value
-        return self
 
-
-class NotAuthenticated(BaseException):
+class NotAuthenticated(BaseAPIException):
     detail_ = {
         "code": ErrorCode.Not_Authenticated.value,
         "detail": "Authentication credentials were not provided.",
@@ -61,7 +53,7 @@ class NotAuthenticated(BaseException):
     status_code = status.HTTP_401_UNAUTHORIZED
 
 
-class JWTAccessTokenNotValid(BaseException):
+class JWTAccessTokenNotValid(BaseAPIException):
     detail_ = {
         "code": ErrorCode.JWT_token_not_valid.value,
         "detail": _("Given access token not valid for any token type or expired."),
@@ -69,7 +61,7 @@ class JWTAccessTokenNotValid(BaseException):
     status_code = status.HTTP_401_UNAUTHORIZED
 
 
-class JWTAccessTokenNotExists(BaseException):
+class JWTAccessTokenNotExists(BaseAPIException):
     detail_ = {
         "code": ErrorCode.Not_Exists.value,
         "detail": _("The access token does not exists in the header."),
@@ -77,7 +69,7 @@ class JWTAccessTokenNotExists(BaseException):
     status_code = status.HTTP_404_NOT_FOUND
 
 
-class JWTAccessTokenHasNoType(BaseException):
+class JWTAccessTokenHasNoType(BaseAPIException):
     detail_ = {
         "code": ErrorCode.JWT_No_Type.value,
         "detail": _("The access token has no type."),
@@ -85,7 +77,7 @@ class JWTAccessTokenHasNoType(BaseException):
     status_code = status.HTTP_404_NOT_FOUND
 
 
-class JWTAccessTokenHasWrongType(BaseException):
+class JWTAccessTokenHasWrongType(BaseAPIException):
     detail_ = {
         "code": ErrorCode.JWT_Wrong_Type.value,
         "detail": _("The access token has wrong type."),
@@ -93,7 +85,7 @@ class JWTAccessTokenHasWrongType(BaseException):
     status_code = status.HTTP_400_BAD_REQUEST
 
 
-class JWTAccessTokenHasNoId(BaseException):
+class JWTAccessTokenHasNoId(BaseAPIException):
     detail_ = {
         "code": ErrorCode.JWT_No_Id.value,
         "detail": _("The access token has no id."),
@@ -101,7 +93,7 @@ class JWTAccessTokenHasNoId(BaseException):
     status_code = status.HTTP_404_NOT_FOUND
 
 
-class JWTRefreshTokenHasNoType(BaseException):
+class JWTRefreshTokenHasNoType(BaseAPIException):
     detail_ = {
         "code": ErrorCode.JWT_No_Type.value,
         "detail": _("The refresh token has no type."),
@@ -109,7 +101,7 @@ class JWTRefreshTokenHasNoType(BaseException):
     status_code = status.HTTP_404_NOT_FOUND
 
 
-class JWTRefreshTokenHasWrongType(BaseException):
+class JWTRefreshTokenHasWrongType(BaseAPIException):
     detail_ = {
         "code": ErrorCode.JWT_Wrong_Type.value,
         "detail": _("The refresh token has wrong type."),
@@ -117,7 +109,7 @@ class JWTRefreshTokenHasWrongType(BaseException):
     status_code = status.HTTP_400_BAD_REQUEST
 
 
-class JWTRefreshTokenHasNoId(BaseException):
+class JWTRefreshTokenHasNoId(BaseAPIException):
     detail_ = {
         "code": ErrorCode.JWT_No_Id.value,
         "detail": _("The refresh token has no id."),
@@ -125,7 +117,7 @@ class JWTRefreshTokenHasNoId(BaseException):
     status_code = status.HTTP_404_NOT_FOUND
 
 
-class JWTAuthenticationFailed(BaseException):
+class JWTAuthenticationFailed(BaseAPIException):
     detail_ = {
         "code": ErrorCode.Bad_Authorization_Header.value,
         "detail": _("Authorization header must contain two space-delimited values."),
@@ -133,7 +125,7 @@ class JWTAuthenticationFailed(BaseException):
     status_code = status.HTTP_401_UNAUTHORIZED
 
 
-class PermissionDenied(BaseException):
+class PermissionDenied(BaseAPIException):
     detail_ = {
         "code": ErrorCode.Permission_Denied.value,
         "detail": "You do not have permission to perform this action.",
@@ -141,7 +133,7 @@ class PermissionDenied(BaseException):
     status_code = status.HTTP_403_FORBIDDEN
 
 
-class SerializerFieldsError(BaseException):
+class SerializerFieldsError(BaseAPIException):
     detail_ = {
         "code": ErrorCode.Field_Error.value,
         "detail": [],
@@ -149,7 +141,11 @@ class SerializerFieldsError(BaseException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_code = "invalid"
 
-    def with_data(self, errors: dict):
+    def __init__(self, errors: dict, detail=None, code=None, status_code=None):
+        self.format_data(errors=errors)
+        super().__init__(detail, code, status_code)
+
+    def format_data(self, errors: dict):
         def _get_error_code(error_detail):
             """Get the error code associated with the occurred error"""
             if hasattr(error_detail, "code"):
@@ -180,5 +176,3 @@ class SerializerFieldsError(BaseException):
         self.detail_["detail"] = []
 
         _create_error_list(errors=errors)
-
-        return super().with_data()

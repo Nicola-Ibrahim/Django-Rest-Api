@@ -1,6 +1,7 @@
-from apps.accounts.api.permissions.mixins import BasePermissionMixin
 from django.contrib.auth import get_user_model
+from lib.api.permissions import BasePermission
 from lib.api.views import BaseAPIView, BaseGenericAPIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from . import exceptions, permissions, responses, serializers
 
@@ -39,15 +40,12 @@ class LoginView(BaseGenericAPIView):
 
         user = serializer.validated_data.get("user")
 
-        return responses.LoginResponse().with_data(user_details=user.get_user_details())
+        return responses.LoginResponse().format_data(user_details=user.get_user_details())
 
 
-class LogoutView(BasePermissionMixin, BaseGenericAPIView):
+class LogoutView(BaseGenericAPIView):
     """
     View for processing user logout requests.
-
-    Attributes:
-        serializer_class (class): The serializer class for validating and processing the request data.
 
     Methods:
         post(request): Handles POST requests for user logout.
@@ -57,6 +55,7 @@ class LogoutView(BasePermissionMixin, BaseGenericAPIView):
         To log out a user, send a POST request.
     """
 
+    permission_classes = [BasePermission, IsAuthenticated]
     serializer_class = serializers.LogoutSerializer
 
     def post(self, request, *args, **kwargs):
@@ -79,15 +78,10 @@ class LogoutView(BasePermissionMixin, BaseGenericAPIView):
 
 
 class ForgetPasswordRequestView(
-    permissions.ForgetPasswordRequestPermissionMixin,
     BaseGenericAPIView,
 ):
     """
     View for sending an OTP number to the user's email for changing the password.
-
-    Attributes:
-        serializer_class: The serializer class for validating and processing the request data.
-        permission_classes: The permission classes for allowing access to the view.
 
     Methods:
         post(request): Handles POST requests for sending an OTP number to the user's email.
@@ -97,6 +91,7 @@ class ForgetPasswordRequestView(
         To request a password reset, send a POST request with the user's email.
     """
 
+    permission_classes = [AllowAny]
     serializer_class = serializers.ForgetPasswordRequestSerializer
 
     def post(self, request):
@@ -123,15 +118,11 @@ class ForgetPasswordRequestView(
 
 
 class VerifyOTPNumberView(
-    permissions.VerifyOTPNumberPermissionMixin,
     BaseGenericAPIView,
 ):
     """
     View for verifying the generated OTP number for the user who wants to change password.
 
-    Attributes:
-        serializer_class: The serializer class for validating and processing the request data.
-        permission_classes: The permission classes for allowing access to the view.
 
     Methods:
         post(request, *args, **kwargs): Handles POST requests for verifying the OTP number.
@@ -141,6 +132,7 @@ class VerifyOTPNumberView(
         To verify the OTP number, send a POST request with the user's email and OTP number.
     """
 
+    permission_classes = [AllowAny]
     serializer_class = serializers.VerifyOTPNumberSerializer
 
     def post(self, request, *args, **kwargs):
@@ -164,7 +156,7 @@ class VerifyOTPNumberView(
         # Add access token to the response
         user = get_user_model().objects.get(email=request.data.get("email"))
 
-        return responses.VerifyOTPResponse().with_data(access_token=user.get_tokens()["access"])
+        return responses.VerifyOTPResponse().format_data(access_token=user.get_tokens()["access"])
 
 
 class BaseResetPasswordView(BaseGenericAPIView):
@@ -260,9 +252,11 @@ class FirstTimePasswordView(BaseResetPasswordView):
     serializer_class = serializers.FirstTimePasswordSerializer
 
 
-class CheckJWTTokenView(BasePermissionMixin, BaseAPIView):
+class CheckJWTTokenView(BaseAPIView):
+    permission_classes = [BasePermission, IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
         if not request.user.is_password_changed:
-            raise exceptions.FirstTimePasswordError().with_data(token=self.request.user.get_tokens()["access"])
+            raise exceptions.FirstTimePasswordError().format_data(token=self.request.user.get_tokens()["access"])
 
         return responses.CheckJWTTokenResponse(user=request.user)

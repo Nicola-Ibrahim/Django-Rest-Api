@@ -1,10 +1,10 @@
 import enum
 
-from rest_framework import permissions
+from lib.api.permissions import BasePermission
 from rest_framework.response import Response
 from rest_framework.status import HTTP_403_FORBIDDEN
 
-from ...models import User
+from ..models import User
 
 SAFE_METHODS = ("GET", "HEAD", "OPTIONS")
 
@@ -12,18 +12,6 @@ SAFE_METHODS = ("GET", "HEAD", "OPTIONS")
 class PermissionGroupsName(enum.Enum):
     TEACHER_GROUP = "warehouses_group"
     STUDENT_GROUP = "doctors_group"
-
-
-class BasePermission(permissions.DjangoObjectPermissions):
-    perms_map = {
-        "GET": ["%(app_label)s.view_%(model_name)s"],
-        "OPTIONS": [],
-        "HEAD": [],
-        "POST": ["%(app_label)s.add_%(model_name)s"],
-        "PUT": ["%(app_label)s.change_%(model_name)s"],
-        "PATCH": ["%(app_label)s.change_%(model_name)s"],
-        "DELETE": ["%(app_label)s.delete_%(model_name)s"],
-    }
 
 
 class UserListPermission(BasePermission):

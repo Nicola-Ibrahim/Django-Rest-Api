@@ -40,7 +40,7 @@ from .signals import user_proxy_model_instance_saved
 
 
 @receiver(user_proxy_model_instance_saved)
-def send_appointment_created_email(sender, instance, created, **kwargs):
+def send_account_created_email_receiver(sender, instance, created, **kwargs):
     """Send welcome email"""
 
     if created:
@@ -70,7 +70,31 @@ def create_teacher_profile(sender, instance, created, **kwargs):
 
 
 def signal_reconnect(signal, sender, receiver, dispatch_uid):
-    """Wrapper to disconnect signal and reconnect after finish executing func"""
+    """
+    Decorator to temporarily disconnect a Django signal, execute the decorated function,
+    and then reconnect the signal afterward.
+
+    Usage Example:
+    ```
+    @signal_reconnect(
+        signal=signals.post_save,
+        sender=models.Student,
+        receiver=create_student_profile,
+        dispatch_uid="student_post_save",
+    )
+    def my_function():
+        # Your function implementation here
+    ```
+
+    Args:
+        signal: The Django signal to disconnect and reconnect.
+        sender: The sender of the signal.
+        receiver: The signal receiver function.
+        dispatch_uid: The unique identifier for the signal dispatch.
+
+    Returns:
+        A decorator function.
+    """
 
     def decorator(func):
         @functools.wraps(func)

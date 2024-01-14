@@ -1,7 +1,7 @@
 import enum
 
 from django.utils.translation import gettext_lazy as _
-from lib.api.responses import BaseResponse
+from lib.api.responses import BaseAPIResponse
 from rest_framework import status
 
 
@@ -19,7 +19,7 @@ class OperationCode(enum.Enum):
     Activated_Account = _("activated_account")
 
 
-class LoginResponse(BaseResponse):
+class LoginResponse(BaseAPIResponse):
     data_ = {
         "code": OperationCode.Login.value,
         "detail": _("The user has been logged in"),
@@ -27,12 +27,12 @@ class LoginResponse(BaseResponse):
     }
     status_ = status.HTTP_200_OK
 
-    def with_data(self, user_details):
+    def format_data(self, user_details):
         self.data_["data"] = user_details
-        return super().with_data()
+        return super().format_data()
 
 
-class LogoutResponse(BaseResponse):
+class LogoutResponse(BaseAPIResponse):
     data_ = {
         "code": OperationCode.Logout.value,
         "detail": _("The user has been logout"),
@@ -40,7 +40,7 @@ class LogoutResponse(BaseResponse):
     status_ = status.HTTP_204_NO_CONTENT
 
 
-class ActivatedAccount(BaseResponse):
+class ActivatedAccount(BaseAPIResponse):
     data_ = {
         "code": OperationCode.Activated_Account.value,
         "detail": _("The account has been activated successfully."),
@@ -48,7 +48,7 @@ class ActivatedAccount(BaseResponse):
     status_ = status.HTTP_200_OK
 
 
-class VerifyOTPResponse(BaseResponse):
+class VerifyOTPResponse(BaseAPIResponse):
     data_ = {
         "code": OperationCode.Verified_OTP.value,
         "detail": _("The OTP number has been verified"),
@@ -57,14 +57,14 @@ class VerifyOTPResponse(BaseResponse):
 
     status_ = status.HTTP_200_OK
 
-    def with_data(self, access_token: str):
+    def format_data(self, access_token: str):
         if access_token:
             self.data_["data"]["access_token"] = access_token
 
-        return super().with_data()
+        return super().format_data()
 
 
-class ResetPasswordResponse(BaseResponse):
+class ResetPasswordResponse(BaseAPIResponse):
     data_ = {
         "code": OperationCode.Reset_Password.value,
         "detail": _("The password reset successfully"),
@@ -72,7 +72,7 @@ class ResetPasswordResponse(BaseResponse):
     status_ = status.HTTP_200_OK
 
 
-class ForgetPasswordRequestResponse(BaseResponse):
+class ForgetPasswordRequestResponse(BaseAPIResponse):
     data_ = {
         "code": OperationCode.Forget_Password.value,
         "detail": _("An OTP number has been sent to email."),

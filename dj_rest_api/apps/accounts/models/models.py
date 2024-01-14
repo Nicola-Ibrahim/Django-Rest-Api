@@ -1,15 +1,11 @@
 import uuid
-from datetime import timedelta
 
-from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import validate_email
 from django.db import models
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from . import utils
 from .managers import CustomUserManager, ProxyUserManger
 from .signals import user_proxy_model_instance_saved
 from .validators import validate_name
@@ -19,9 +15,9 @@ class User(AbstractUser):
     objects = CustomUserManager()
 
     class Type(models.TextChoices):
-        STUDENT = "Student", _("student")
-        TEACHER = "Teacher", _("teacher")
-        ADMIN = "Admin", _("admin")
+        STUDENT = "student", _("Student")
+        TEACHER = "teacher", _("Teacher")
+        ADMIN = "admin", _("Admin")
 
     # Set username to none
     username = None
@@ -110,3 +106,39 @@ class Admin(User):
 
         # Send and trigger the signal
         user_proxy_model_instance_saved.send(sender=self.__class__, instance=self, created=True)
+
+
+class AdminProfile(models.Model):
+    admin = models.OneToOneField(
+        Admin,
+        related_name="admin_profile",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+    section = models.CharField(_("section"), max_length=50)
+
+
+class StudentProfile(models.Model):
+    student = models.OneToOneField(
+        Student,
+        related_name="student_profile",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+
+    study_hours = models.IntegerField(default=0)
+
+
+class TeacherProfile(models.Model):
+    teacher = models.OneToOneField(
+        Teacher,
+        related_name="teacher_profile",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+
+    num_courses = models.IntegerField(default=0)
+    is_idle = models.BooleanField(default=False)

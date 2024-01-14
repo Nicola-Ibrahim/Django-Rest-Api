@@ -3,17 +3,41 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.password_validation import validate_password
 from lib.api.serializers import BaseModelSerializer, BaseSerializer
 from rest_framework import serializers
+from rest_framework.utils.serializer_helpers import ReturnDict
 
-from ...models import models, profiles, utils
-from .. import exceptions
-from . import profile_serializers
+from .. import models
+from . import exceptions
+
+
+class AdminProfileSerializer(BaseModelSerializer):
+    class Meta:
+        model = models.AdminProfile
+        fields = [
+            "section",
+        ]
+
+
+class TeacherProfileSerializer(BaseModelSerializer):
+    class Meta:
+        model = models.TeacherProfile
+        fields = [
+            "num_courses",
+        ]
+
+
+class StudentProfileSerializer(BaseModelSerializer):
+    class Meta:
+        model = models.StudentProfile
+        fields = [
+            "study_hours",
+        ]
 
 
 class UserListSerializer(BaseModelSerializer):
-    """An abstract serializer for managing User model"""
+    """Serializer for listing user details."""
 
     url = serializers.HyperlinkedIdentityField(
-        view_name="accounts-api:user-details-update-destroy",
+        view_name="api:accounts-api:user-details-update-destroy",
         lookup_field="id",
         read_only=True,
     )
@@ -28,7 +52,11 @@ class UserListSerializer(BaseModelSerializer):
         allow_null=True,
     )
 
-    profile = serializers.SerializerMethodField()
+    profile = serializers.HyperlinkedIdentityField(
+        view_name="api:accounts-api:profile-details-update",
+        lookup_field="id",
+        read_only=True,
+    )
 
     class Meta:
         model = get_user_model()
@@ -48,22 +76,6 @@ class UserListSerializer(BaseModelSerializer):
             "type",
             "profile",
         ]
-
-    def get_profile(self, obj):
-        """Get the appropriate profile data for different user type"""
-        profiles_serializers = {
-            "admin": profile_serializers.AdminProfileSerializer(
-                instance=profiles.AdminProfile.objects.filter(admin=obj.id).first()
-            ),
-            "teacher": profile_serializers.TeacherProfileSerializer(
-                instance=profiles.TeacherProfile.objects.filter(teacher=obj.id).first()
-            ),
-            "student": profile_serializers.StudentProfileSerializer(
-                instance=profiles.StudentProfile.objects.filter(student=obj.id).first()
-            ),
-        }
-        serializer = profiles_serializers.get(obj.type.lower(), None)
-        return serializer.data
 
 
 class UserDetailsSerializer(BaseModelSerializer):
@@ -98,28 +110,22 @@ class UserDetailsSerializer(BaseModelSerializer):
     def get_profile(self, obj):
         """Get the appropriate profile data for different user type"""
         profiles_serializers = {
-            "admin": profile_serializers.AdminProfileSerializer(
-                instance=profiles.AdminProfile.objects.filter(admin=obj.id).first()
-            ),
-            "teacher": profile_serializers.TeacherProfileSerializer(
-                instance=profiles.TeacherProfile.objects.filter(teacher=obj.id).first()
-            ),
-            "student": profile_serializers.StudentProfileSerializer(
-                instance=profiles.StudentProfile.objects.filter(student=obj.id).first()
-            ),
+            "admin": AdminProfileSerializer(instance=models.AdminProfile.objects.filter(admin=obj.id).first()),
+            "teacher": TeacherProfileSerializer(instance=models.TeacherProfile.objects.filter(teacher=obj.id).first()),
+            "student": StudentProfileSerializer(instance=models.StudentProfile.objects.filter(student=obj.id).first()),
         }
         serializer = profiles_serializers.get(obj.type.lower(), None)
         return serializer.data
 
 
-class BaseUserCreateSerializer(BaseModelSerializer):
+class UserCreateSerializer(BaseModelSerializer):
     """Template base serializer is responsible for validation the data for a new user"""
 
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
-    confirm_password = serializers.CharField(write_only=True, required=True)
+    password = serializers.CharField(required=True, validators=[validate_password])
+    confirm_password = serializers.CharField(required=True)
 
     class Meta:
-        model = None
+        model = models.User
 
         fields = [
             "email",
@@ -133,7 +139,14 @@ class BaseUserCreateSerializer(BaseModelSerializer):
             "street",
             "zipcode",
             "identification",
+            "type",
         ]
+
+    @property
+    def data(self):
+        ret = super().data
+        ret.pop("confirm_password")
+        return ReturnDict(ret, serializer=self)
 
     def validate(self, attrs):
         """Override validate method to ensure user entered the same password values
@@ -153,44 +166,14 @@ class BaseUserCreateSerializer(BaseModelSerializer):
         return attrs
 
 
-class AdminUserCreateSerializer(BaseUserCreateSerializer):
-    """A subclass of BaseUserCreateSerializer for handling the validation of creating an admin user"""
-
-    profile = profile_serializers.AdminProfileSerializer(source="admin_profile")
-
-    class Meta(BaseUserCreateSerializer.Meta):
-        model = models.Admin
-        fields = BaseUserCreateSerializer.Meta.fields + ["profile"]
-
-
-class TeacherUserCreateSerializer(BaseUserCreateSerializer):
-    """A subclass of BaseUserCreateSerializer for handling the validation of creating a teacher user"""
-
-    profile = profile_serializers.TeacherProfileSerializer(source="teacher_profile")
-
-    class Meta(BaseUserCreateSerializer.Meta):
-        model = models.Teacher
-        fields = BaseUserCreateSerializer.Meta.fields + ["profile"]
-
-
-class StudentUserCreateSerializer(BaseUserCreateSerializer):
-    """A subclass of BaseUserCreateSerializer for handling the validation of creating an admin user"""
-
-    profile = profile_serializers.StudentProfileSerializer(source="student_profile")
-
-    class Meta(BaseUserCreateSerializer.Meta):
-        model = models.Student
-        fields = BaseUserCreateSerializer.Meta.fields + ["profile"]
-
-
-class BaseUserUpdateSerializer(BaseModelSerializer):
+class UserUpdateSerializer(BaseModelSerializer):
     """Serializer is responsible for creation and updating a user"""
 
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     confirm_password = serializers.CharField(write_only=True, required=True)
 
     class Meta:
-        model = None
+        model = models.User
         ordering = ["-id"]
         profile_related_name = ""
         profile_relation_field = ""
@@ -199,6 +182,8 @@ class BaseUserUpdateSerializer(BaseModelSerializer):
         fields = [
             "first_name",
             "last_name",
+            "password",
+            "confirm_password",
             "phone_number",
             "state",
             "city",
@@ -236,45 +221,45 @@ class BaseUserUpdateSerializer(BaseModelSerializer):
         return user
 
 
-class AdminUserUpdateSerializer(BaseUserUpdateSerializer):
+class AdminUserUpdateSerializer(UserUpdateSerializer):
     """
-    A subclass of BaseUserUpdateSerializer for handling teacher users
+    A subclass of UserUpdateSerializer for handling teacher users
     """
 
-    profile = profile_serializers.AdminProfileSerializer(source="admin_profile")
+    profile = AdminProfileSerializer(source="admin_profile")
 
-    class Meta(BaseUserUpdateSerializer.Meta):
+    class Meta(UserUpdateSerializer.Meta):
         model = models.Admin
-        fields = BaseUserUpdateSerializer.Meta.fields + ["profile"]
+        fields = UserUpdateSerializer.Meta.fields + ["profile"]
         profile_related_name = "admin_profile"
         profile_relation_field = "admin"
-        profile_serializer = profile_serializers.AdminProfileSerializer
+        profile_serializer = AdminProfileSerializer
 
 
-class TeacherUserUpdateSerializer(BaseUserUpdateSerializer):
+class TeacherUserUpdateSerializer(UserUpdateSerializer):
     """
-    A subclass of BaseUserUpdateSerializer for handling teacher users
+    A subclass of UserUpdateSerializer for handling teacher users
     """
 
-    profile = profile_serializers.TeacherProfileSerializer(source="teacher_profile")
+    profile = TeacherProfileSerializer(source="teacher_profile")
 
-    class Meta(BaseUserUpdateSerializer.Meta):
+    class Meta(UserUpdateSerializer.Meta):
         model = models.Teacher
-        fields = BaseUserUpdateSerializer.Meta.fields + ["profile"]
+        fields = UserUpdateSerializer.Meta.fields + ["profile"]
         profile_related_name = "teacher_profile"
         profile_relation_field = "teacher"
-        profile_serializer = profile_serializers.TeacherProfileSerializer
+        profile_serializer = TeacherProfileSerializer
 
 
-class StudentUserUpdateSerializer(BaseUserUpdateSerializer):
-    profile = profile_serializers.StudentProfileSerializer(source="student_profile")
+class StudentUserUpdateSerializer(UserUpdateSerializer):
+    profile = StudentProfileSerializer(source="student_profile")
 
-    class Meta(BaseUserUpdateSerializer.Meta):
+    class Meta(UserUpdateSerializer.Meta):
         model = models.Student
-        fields = BaseUserUpdateSerializer.Meta.fields + ["profile"]
+        fields = UserUpdateSerializer.Meta.fields + ["profile"]
         profile_related_name = "student_profile"
         profile_relation_field = "student"
-        profile_serializer = profile_serializers.StudentProfileSerializer
+        profile_serializer = StudentProfileSerializer
 
 
 class AccountVerificationSerializer(BaseSerializer):

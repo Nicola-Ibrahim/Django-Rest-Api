@@ -2,10 +2,40 @@ import logging
 
 from django.core import exceptions
 from django.core.management.base import BaseCommand, CommandParser
-from tests.accounts.fixtures import factories
+
+from ...tests.fixtures import factories  # Import your factories module
 
 
 class Command(BaseCommand):
+    """
+    Management command to create users of a given type and count.
+
+    This command allows you to create users of different types (admin, student, teacher)
+    with a specified count.
+
+    Attributes:
+        help (str): Help message for the command.
+        logger (logging.Logger): Logger instance for logging messages.
+        user_types (list): List of available user types.
+
+    Methods:
+        get_input_data(field, message, default=None): Override for customized data inputs or validation exceptions.
+        add_arguments(parser): Add command-line arguments to the parser.
+        handle(*args, **options): Handle the command execution.
+
+    Usage Example:
+        ```bash
+        python manage.py generate_users --type student --count 5
+        ```
+
+    Note:
+        This command prompts the user for the type of users to create and the count.
+        It then utilizes factory functions to create users based on the provided inputs.
+
+    Reference:
+        - Django BaseCommand: https://docs.djangoproject.com/en/stable/howto/custom-management-commands/
+    """
+
     help = "Create users of a given type and count"
     logger = logging.getLogger(__name__)
     user_types = ["admin", "student", "teacher"]
@@ -27,6 +57,12 @@ class Command(BaseCommand):
         return val
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """
+        Add command-line arguments to the parser.
+
+        Args:
+            parser (CommandParser): The command parser instance.
+        """
         parser.add_argument(
             "--type",
             type=str,
@@ -37,6 +73,13 @@ class Command(BaseCommand):
         parser.add_argument("--count", type=int, default=1, help="The number of users to create")
 
     def handle(self, *args, **options):
+        """
+        Handle the command execution.
+
+        Args:
+            *args: Additional command-line arguments.
+            **options: Additional command-line options.
+        """
         # Prompt for user type.
         user_type = None
         while user_type is None:

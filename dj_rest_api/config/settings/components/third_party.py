@@ -37,6 +37,7 @@ SIMPLE_JWT = {
 
 # REST api configurations
 REST_FRAMEWORK = {
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "lib.api.authentication.CustomJWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",

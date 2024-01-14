@@ -73,7 +73,7 @@ class VerificationMailer(BaseMailer):
         current_site = get_current_site(self.request).domain
 
         # Get the url of the "email-verify" view
-        relativeLink = reverse("authentication:email-verify")  # -> /api/authentication/verify_email/
+        relativeLink = reverse("accounts-api:email-verify")  # -> /api/authentication/verify_email/
 
         # Sum up the final url for verification
         absurl = "http://" + current_site + relativeLink + "?token=" + str(token)

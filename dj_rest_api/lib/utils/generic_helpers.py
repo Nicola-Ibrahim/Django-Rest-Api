@@ -1,6 +1,3 @@
-"""
-Utils module for generic helpers
-"""
 import importlib
 import os
 import sys
