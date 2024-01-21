@@ -1,65 +1,28 @@
-from corsheaders.defaults import default_headers
-
 DEBUG = True
 SECRET_KEY = "jd@11j#vr_+36p&f)nm9_9ocpt^o!^*fgd(nyhrx1r#xf9_p&5"
 
-# ref: https://stackoverflow.com/questions/34360912/deploying-django-app-with-docker-allowed-hosts
-# The domain should be added to ALLOWED_HOSTS to be accessible
+SIMPLE_JWT["SIGNING_KEY"] = "jd@11j#vr_+36p&f)nm9_9ocpt^o!^*fgd(nyhrx1r#xf9_p&5"
 
+
+# Add third-party development apps
 INSTALLED_APPS += (  # type: ignore # noqa: F821
     "drf_yasg",
     "debug_toolbar",
     "django_extensions",
 )
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
-
-# Logger configurations
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "standard": {"format": "%(asctime)s %(levelname)s %(name)s %(message)s"},
-        "colored": {
-            "()": "colorlog.ColoredFormatter",
-            "format": "%(log_color)s%(asctime)s %(levelname)s %(name)s %(bold_white)s%(message)s",
-        },
-    },
-    "handlers": {
-        "console": {
-            "level": "INFO",
-            "class": "colorlog.StreamHandler",
-            "formatter": "colored",
-            "filters": [],
-        },
-        # "file": {
-        #     "level": "DEBUG",
-        #     "class": "logging.FileHandler",
-        #     "filename": "/logging/django.log",
-        #     "formatter": "colored",
-        # },
-    },
-    "loggers": {
-        logger_name: {
-            "handlers": ["console"],
-            "level": "WARNING",
-            "propagate": True,
-        }
-        for logger_name in (
-            "django",
-            "django.request",
-            "django.db.backends",
-            "django.template",
-            "core",
-            "urllib3",
-            "asyncio",
-        )
-    },
-    "root": {
-        "level": "DEBUG",
-        "handlers": ["console"],
-    },
+# Override default DB configuration to create sqlite db
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "dev-db.sqlite3",
+        "ATOMIC_REQUESTS": True,
+    }
 }
+
+
+# Use a dummy email backend during tests (optional)
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 
 # Debugger configurations
@@ -93,28 +56,15 @@ SWAGGER_SETTINGS = {
 }
 
 
-# Override default DB configuration to create sqlite db if no PostgresDB foundDATABASES = {
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "db.sqlite3",
-        "ATOMIC_REQUESTS": True,
-    }
-}
-
-
 REDOC_SETTINGS = {
     "LAZY_RENDERING": False,
 }
 
+# ref: https://stackoverflow.com/questions/34360912/deploying-django-app-with-docker-allowed-hosts
+# The domain should be added to ALLOWED_HOSTS to be accessible
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
-CORS_ALLOW_HEADERS = (*default_headers,)
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
-]
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1:8080",
+    "http://localhost:80",
 ]

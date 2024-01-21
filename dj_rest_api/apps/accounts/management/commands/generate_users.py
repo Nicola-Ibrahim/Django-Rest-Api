@@ -3,7 +3,7 @@ import logging
 from django.core import exceptions
 from django.core.management.base import BaseCommand, CommandParser
 
-from ...tests.fixtures import factories  # Import your factories module
+from ...accounts.fixtures import factories  # Import your factories module
 
 
 class Command(BaseCommand):

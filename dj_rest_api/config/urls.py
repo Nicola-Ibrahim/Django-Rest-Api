@@ -7,7 +7,7 @@ app_name = "accounts"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/", include("lib.api.urls", namespace="api")),
+    path("api/", include("apps.api.urls", namespace="api")),
 ]
 
 

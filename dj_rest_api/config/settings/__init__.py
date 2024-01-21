@@ -24,10 +24,10 @@ DJANGO_ENV = os.environ.get(f"{ENVVAR_SETTINGS_PREFIX}DJANGO_ENV", "development"
 
 include(
     "components/base.py",
+    "components/custom.py",
     "components/i18n.py",
     "components/database.py",
     "components/email.py",
-    "components/custom.py",
     "components/third_party.py",
     f"environments/{DJANGO_ENV}.py",  # Select the right env
     "envvars.py",

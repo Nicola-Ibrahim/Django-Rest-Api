@@ -1,7 +1,5 @@
 from datetime import timedelta
 
-from config.settings.utils.misc import get_singing_key
-
 INSTALLED_APPS += (  # type: ignore # noqa: F821
     "rest_framework",
     "rest_framework_simplejwt",
@@ -15,7 +13,7 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": False,
     "ALGORITHM": "HS256",
-    "SIGNING_KEY": get_singing_key("./config/settings/.keys/jwtHS256.key"),
+    "SIGNING_KEY": NotImplemented,
     "VERIFYING_KEY": None,
     "AUDIENCE": None,
     "ISSUER": None,
@@ -39,14 +37,14 @@ SIMPLE_JWT = {
 REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "lib.api.authentication.CustomJWTAuthentication",
+        "apps.api.base.authentication.CustomJWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
     "DEFAULT_PARSER_CLASSES": [
         "rest_framework.parsers.JSONParser",
         "rest_framework.parsers.FormParser",
         "rest_framework.parsers.MultiPartParser",
-        "lib.api.parsers.PlainTextParser",
+        "apps.api.base.parsers.PlainTextParser",
     ],
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.AcceptHeaderVersioning",
     "DEFAULT_VERSION": "1.0",

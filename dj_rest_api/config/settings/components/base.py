@@ -1,15 +1,7 @@
-"""Base settings file
-
-This file contains the base settings for the Django project.
-Default values are assigned to base settings that can be overridden by other settings files.
-"""
-
 SECRET_KEY = NotImplemented
 DEBUG = False
 
 ALLOWED_HOSTS = []
-
-# Application definition
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -19,9 +11,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_filters",
-    # Created apps
     "apps.authentication.apps.AuthenticationConfig",
     "apps.accounts.apps.AccountsConfig",
+    "apps.api.apps.ApiConfig",
 ]
 
 MIDDLEWARE = [
@@ -75,25 +67,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
-
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
 AUTH_USER_MODEL = "accounts.User"
-
-# OTP number's expiratoin time configuration (in seconds)
-OTP_EXPIRATION = 300  # seconds
-
-# Django Superuser configuration
-ROOT_USER_EMAIL = "admin@gmail.com"
-ROOT_USER_FIRSTNAME = "admin"
-ROOT_USER_LASTNAME = "admin"
-ROOT_USER_PASSWORD = "admin"

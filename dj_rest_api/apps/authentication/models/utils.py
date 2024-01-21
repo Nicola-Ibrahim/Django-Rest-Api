@@ -2,7 +2,7 @@ import random
 import string
 
 
-def generate_random_number(length=6) -> str:
+def generate_random_number(length: int = 6) -> str:
     """generates a string of random digits encoded as string.
 
     Args:
