@@ -1,0 +1,59 @@
+name: Continuous Integration
+
+on: [push, pull_request, workflow_call]
+
+jobs:
+  continuous-integration:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+    container: python:3.11-buster
+
+    services:
+      db:
+        image: postgres:15.3-alpine
+        env:
+          POSTGRES_DB: ${{ secrets.DB_NAME }}
+          POSTGRES_USER: ${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+
+      # Install poetry
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: 1.5.1
+
+      # Load cached venv if cache exists
+      - name: Cache Poetry dependencies
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}  # cache name or id for later accessing
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+
+      # Install dependencies if cache does not exist
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: make install && make install-pre-commit
+
+
+      # Lint code
+      - name: Lint code
+        run: make lint
+
+      # Test code
+      - name: Test code
+        run: |
+          export PYTHONPATH=$PWD
+          make test
+        env:
+          DREST_SETTINGS_DATABASES: '{"default":{"HOST":"${{ secrets.DB_HOST }}"}}'

@@ -5,9 +5,10 @@ description = ""
 authors = ["Nicola Ibrahim <nicolaibrahim969@gmail.com>"]
 license = "MIT"
 readme = "README.md"
+packages = [{include = "dj_rest_api"}]
 
 [tool.poetry.dependencies]
-python = "^3.11.4"
+python = "^3.12.1"
 django = "^4.1.6"
 djangorestframework = "^3.14.0"
 psycopg2 = "^2.9.5"
@@ -23,6 +24,7 @@ django-cors-headers = "^3.13.0"
 django-split-settings = "^1.2.0"
 gunicorn = "^21.1.0"
 pyyaml = "^6.0.1"
+celery = "^5.3.6"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -36,6 +38,7 @@ django-debug-toolbar = "^4.0.0"
 django-extensions = "^3.2.1"
 colorlog = "^6.7.0"
 pylint-django = "^2.5.3"
+sphinx = "^7.2.6"
 
 
 [tool.poetry.group.test.dependencies]
@@ -87,8 +90,8 @@ dedent_closing_brackets = true
 DJANGO_SETTINGS_MODULE = "config.settings"
 django_find_project = true
 python_files = "test_*.py"
-testpaths = ["."]
-pythonpath = ["." ,"dj-rest-api"]
+testpaths = ["dj_rest_api"]
+pythonpath = ["." ,"dj_rest_api"]
 filterwarnings = "ignore::DeprecationWarning:^(?!node\\.).*:"
 # addopts = "-vv -x --lf --cov"
 
