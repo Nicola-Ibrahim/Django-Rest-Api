@@ -37,20 +37,21 @@ SIMPLE_JWT = {
 REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "apps.api.base.authentication.CustomJWTAuthentication",
+        "apps.authentication.auth.CustomJWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
     "DEFAULT_PARSER_CLASSES": [
         "rest_framework.parsers.JSONParser",
         "rest_framework.parsers.FormParser",
         "rest_framework.parsers.MultiPartParser",
-        "apps.api.base.parsers.PlainTextParser",
+        "core.api.parsers.PlainTextParser",
     ],
-    "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.AcceptHeaderVersioning",
+    "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.NamespaceVersioning",
     "DEFAULT_VERSION": "1.0",
     "ALLOWED_VERSIONS": ["1.0", "2.0"],
 }
 
+API_VERSION = "1.0"
 
 # Celery configurations
 CELERY_BROKER_URL = "redis://localhost:6379/0"  # Adjust this URL to your Redis server.

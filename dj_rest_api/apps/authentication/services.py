@@ -1,9 +1,9 @@
 from apps.accounts import models as accounts_models
+from apps.authentication import exceptions
 from apps.authentication import models as auth_models
+from apps.authentication import tokens
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-
-from ..api.authentication import exceptions, tokens
 
 # def get_user_from_access_token(token: str):
 #     token_obj = tokens.JWTAccessToken(token, verify=True)
@@ -160,23 +160,10 @@ def validate_access_token(token: str) -> bool:
     return True
 
 
-def get_refresh_token_for_user(user: accounts_models.User) -> str:
-    """
-    Retrieve the refresh token's access token for a given user.
+def get_tokens_for_user(user: accounts_models.User) -> dict:
+    token = RefreshToken.for_user(user)
 
-    Args:
-        user (accounts_models.User): The user for whom to retrieve the refresh token.
-
-    Returns:
-        str: The access token associated with the user's refresh token.
-
-    Example:
-        Assuming 'user' is an instance of your User model:
-        ```python
-        user = User.objects.get(username='example_user')
-        token = get_refresh_token_for_user(user)
-        print(token)
-        ```
-    """
-    token = RefreshToken.for_user(user).access_token
-    return token
+    return {
+        "refresh_token": str(token),
+        "access_token": str(token.access_token),
+    }

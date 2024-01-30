@@ -13,7 +13,6 @@ INSTALLED_APPS = [
     "django_filters",
     "apps.authentication.apps.AuthenticationConfig",
     "apps.accounts.apps.AccountsConfig",
-    "apps.api.apps.ApiConfig",
 ]
 
 MIDDLEWARE = [

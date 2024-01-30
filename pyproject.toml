@@ -8,7 +8,7 @@ readme = "README.md"
 packages = [{include = "dj_rest_api"}]
 
 [tool.poetry.dependencies]
-python = "^3.11.4"
+python = "^3.12.1"
 django = "^4.1.6"
 djangorestframework = "^3.14.0"
 psycopg2 = "^2.9.5"

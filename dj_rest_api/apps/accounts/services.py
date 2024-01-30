@@ -1,13 +1,13 @@
 from typing import Any
 
 from apps.accounts import models as accounts_models
-from apps.authentication.services import get_refresh_token_for_user
+from apps.authentication.services import get_tokens_for_user
 from django.contrib.sites.shortcuts import get_current_site
 from django.db import transaction
 from django.db.models import ManyToManyField
 from rest_framework.reverse import reverse
 
-from ..api.accounts.exceptions import UserNotCreatedAPIException, UserNotFoundAPIException
+from .exceptions import UserNotCreatedAPIException, UserNotFoundAPIException
 
 
 def create_user(data) -> accounts_models.User:
@@ -43,7 +43,7 @@ def create_user(data) -> accounts_models.User:
             many_to_many = {}
             for field_name in data.keys():
                 try:
-                    field = getattr(user.User, field_name)
+                    field = getattr(accounts_models.User, field_name)
                     if isinstance(field, ManyToManyField):
                         many_to_many[field_name] = data.pop(field_name)
                 except AttributeError:
@@ -117,7 +117,7 @@ def get_user_by_id(user_id: int) -> accounts_models.User:
         user = accounts_models.User.objects.get(pk=user_id)
         return user
     except accounts_models.User.DoesNotExist as exc:
-        raise UserNotFoundAPIException(detail=f"User with ID {user_id} does not exist.") from exc
+        raise accounts_models.User.DoesNotExist(detail=f"User with ID {user_id} does not exist.") from exc
 
 
 def get_user_by_email(email: str) -> accounts_models.User:
@@ -143,7 +143,7 @@ def get_user_by_email(email: str) -> accounts_models.User:
         user = accounts_models.User.objects.get(email=email)
         return user
     except accounts_models.User.DoesNotExist as exc:
-        raise UserNotFoundAPIException(detail=f"User with email: {email} does not exist.") from exc
+        raise accounts_models.User.DoesNotExist(detail=f"User with email: {email} does not exist.") from exc
 
 
 def delete_user(user_id: int) -> None:
@@ -218,7 +218,7 @@ def get_verification_url(request, email: str) -> str:
     """
     user = get_user_by_email(email)  # Get the user by the inserted email
 
-    token = get_refresh_token_for_user(user)  # Get refresh token to this user
+    token = get_tokens_for_user(user)["access_token"]  # Get refresh token to this user
 
     current_site = get_current_site(request).domain  # Get the current site domain
 
@@ -238,3 +238,10 @@ def verify_user_account(user: accounts_models.User) -> bool:
         user.save()
 
     return True
+
+
+def get_user_details(user: accounts_models.User):
+    return {
+        "name": user.get_full_name(),
+        "tokens": get_tokens_for_user(user=user),
+    }

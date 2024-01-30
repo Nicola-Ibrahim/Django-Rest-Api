@@ -1,4 +1,4 @@
-from .accounts import Admin, AdminProfile, Student, StudentProfile, Teacher, TeacherProfile, User
+from .users import Admin, AdminProfile, Student, StudentProfile, Teacher, TeacherProfile, User
 
 __all__ = [
     "User",

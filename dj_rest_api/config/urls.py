@@ -3,11 +3,9 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-app_name = "accounts"
-
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/", include("apps.api.urls", namespace="api")),
+    path("api/", include("core.api.urls")),
 ]
 
 
@@ -29,16 +27,8 @@ if settings.DEBUG:
     )
 
     urlpatterns += [
-        path(
-            "swagger/",
-            schema_view.with_ui("swagger", cache_timeout=0),
-            name="schema-swagger-ui",
-        ),
-        path(
-            "redoc/",
-            schema_view.with_ui("redoc", cache_timeout=0),
-            name="schema-redoc",
-        ),
+        path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
+        path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
         path("__debug__/", include(debug_toolbar.urls)),
     ]
 

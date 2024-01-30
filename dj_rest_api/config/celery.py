@@ -4,7 +4,7 @@ from celery import Celery
 from django.conf import settings
 
 # Set the default Django settings module for the 'celery' program.
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dj_rest_api.config")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dj_rest_core.api.config")
 
 app = Celery("dj_rest_api")
 
@@ -13,7 +13,7 @@ app = Celery("dj_rest_api")
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
 # Load task modules from all registered Django apps.
-app.autodiscover_tasks("apps.core.tasks", related_name="tasks")
+app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 
 @app.task(bind=True)
