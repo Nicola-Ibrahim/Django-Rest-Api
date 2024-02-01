@@ -4,17 +4,14 @@ from core.api.views import BaseGenericAPIView
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
 from rest_framework.mixins import (
-    CreateModelMixin,
-    DestroyModelMixin,
-    ListModelMixin,
-    RetrieveModelMixin,
-    UpdateModelMixin,
+    CreateModelMixin, DestroyModelMixin, ListModelMixin, RetrieveModelMixin, UpdateModelMixin,
 )
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 
-from . import filters, permissions, responses, serializers
+from .. import permissions
+from . import filters, responses, serializers
 
 
 class UserListCreateView(
@@ -279,4 +276,4 @@ class ProfileDetailsUpdateView(RetrieveModelMixin, UpdateModelMixin, BaseGeneric
         """
         user = self.get_object()
         serializer = self.get_serializer(instance=user, context={"request": request})
-        return responses.UserDetailsAPIResponse(user_data=serializer.data)
+        return responses.UserDetailsAPIResponse(data=serializer.data)

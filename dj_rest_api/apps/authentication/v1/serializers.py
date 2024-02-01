@@ -1,11 +1,11 @@
+from apps.accounts.exceptions import UserNotFoundAPIException
 from apps.accounts.models import User
 from apps.authentication import models as auth_models
 from core.api.serializers import BaseSerializer
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from ..accounts.exceptions import UserNotFoundAPIException
-from . import exceptions
+from .. import exceptions
 
 
 class LoginSerializer(BaseSerializer):

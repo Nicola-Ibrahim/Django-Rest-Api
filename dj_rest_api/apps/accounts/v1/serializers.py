@@ -7,7 +7,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.utils.serializer_helpers import ReturnDict
 
-from . import exceptions
+from .. import exceptions
 
 
 class AdminProfileSerializer(BaseModelSerializer):

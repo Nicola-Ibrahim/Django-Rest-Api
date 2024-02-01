@@ -1,13 +1,12 @@
 from typing import Any
 
 from apps.accounts import models as accounts_models
+from dj_rest_api.apps.accounts.exceptions import UserNotCreatedAPIException, UserNotFoundAPIException
 from apps.authentication.services import get_tokens_for_user
 from django.contrib.sites.shortcuts import get_current_site
 from django.db import transaction
 from django.db.models import ManyToManyField
 from rest_framework.reverse import reverse
-
-from .exceptions import UserNotCreatedAPIException, UserNotFoundAPIException
 
 
 def create_user(data) -> accounts_models.User:

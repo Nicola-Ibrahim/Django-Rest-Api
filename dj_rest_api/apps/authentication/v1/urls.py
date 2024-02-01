@@ -11,7 +11,7 @@ from .views import (
     VerifyOTPNumberView,
 )
 
-app_name = "auth-api"
+app_name = "auth-api-v1"
 
 urlpatterns = [
     path("login/", LoginView.as_view(), name="login"),

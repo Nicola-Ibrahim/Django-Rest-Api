@@ -2,7 +2,7 @@ from django.urls import path
 
 from .views import ProfileDetailsUpdateView, UserDetailsUpdateDestroyView, UserListCreateView, VerifyUserAccount
 
-app_name = "accounts-api"
+app_name = "accounts-api-v1"
 
 urlpatterns = [
     path("", UserListCreateView.as_view(), name="list-create-users"),

@@ -10,7 +10,6 @@ exclude =
     docs,
     node_modules,
     venv,
-    .venv,
     .script-venv
 filename = *.py
 accept-encodings = utf-8

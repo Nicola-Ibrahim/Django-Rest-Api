@@ -1,5 +1,4 @@
 from apps.accounts import models as accounts_models
-from apps.authentication import exceptions
 from apps.authentication import models as auth_models
 from apps.authentication import tokens
 from django.contrib.auth import authenticate
@@ -34,7 +33,7 @@ def login(request, email: str, password: str) -> accounts_models.User:
     )
 
     if not user:
-        raise exceptions.CredentialsNotValidAPIException()
+        raise Exception()
 
     return user
 
