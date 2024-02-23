@@ -1,10 +1,20 @@
+from apps.accounts.models import User
+from hypothesis import HealthCheck, Verbosity, given, settings
+from hypothesis import strategies as st
+from hypothesis.extra.django import from_model
 from rest_framework import status
 from rest_framework.reverse import reverse
 
 
-def test_list_users_returns_all_users(api_client, users, authenticated_superuser_api_client):
+@settings(
+    suppress_health_check=[HealthCheck.function_scoped_fixture],
+    verbosity=Verbosity.verbose,
+    max_examples=1,
+)
+@given(users=st.lists(from_model(User), min_size=3))
+def test_list_users_returns_all_users(users, authenticated_superuser_api_client):
     # Ensure that the endpoint returns all users
-    url = reverse("api:accounts-api:list-create-users")
+    url = reverse("accounts:v1:list-create-users")
 
     # Perform the request
     response = authenticated_superuser_api_client.get(path=url)
@@ -13,25 +23,34 @@ def test_list_users_returns_all_users(api_client, users, authenticated_superuser
     assert response.status_code == status.HTTP_200_OK
 
     # Check that the correct number of users is returned
-    assert len(response.data) == len(users)
+    assert len(response.data["data"]) == len(users)
 
 
-def test_retrieve_user(one_user, authenticated_superuser_api_client):
-    url = reverse("api:accounts-api:user-details-update-destroy", args=[one_user.id])
+@settings(
+    suppress_health_check=[HealthCheck.function_scoped_fixture],
+    verbosity=Verbosity.verbose,
+    max_examples=5,
+)
+@given(user=from_model(User))
+def test_retrieve_user(user, authenticated_superuser_api_client):
+    url = reverse("accounts:v1:user-details-update-destroy", args=[user.id])
     response = authenticated_superuser_api_client.get(url)
 
     expected_data = {
-        "email": one_user.email,
-        "first_name": one_user.first_name,
-        "last_name": one_user.last_name,
-        "is_staff": one_user.is_staff,
-        "is_active": one_user.is_active,
-        "is_verified": one_user.is_verified,
-        "is_superuser": one_user.is_superuser,
+        "id": user.id,
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "is_staff": user.is_staff,
+        "is_active": user.is_active,
+        "is_verified": user.is_verified,
+        "is_superuser": user.is_superuser,
+        "groups": user.groups,
+        "profile": user.profile,
     }
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.data == expected_data
+    assert response.data["data"] == expected_data
 
 
 # def test_create_user(self, api_client):

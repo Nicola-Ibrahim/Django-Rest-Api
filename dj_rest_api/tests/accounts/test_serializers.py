@@ -1,9 +1,8 @@
 from apps.accounts.models import Teacher, User
+from apps.accounts.v1.serializers import UserCreateSerializer, UserListSerializer
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra.django import from_model
-
-from .serializers import UserCreateSerializer, UserListSerializer
 
 
 @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])

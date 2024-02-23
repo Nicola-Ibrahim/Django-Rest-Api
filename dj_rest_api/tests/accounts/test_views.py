@@ -1,5 +1,5 @@
-from   import views
 from apps.accounts.models import User
+from apps.accounts.v1 import views
 from django.urls import reverse
 from hypothesis import HealthCheck, Verbosity, example, given, settings
 from hypothesis import strategies as st
@@ -46,7 +46,7 @@ class TestAccountsViews:
     @given(user=user_strategy)
     def test_retrieve_user_view(self, user, mocker, rf):
         # Arrange
-        url = reverse("api:accounts-api:user-details-update-destroy", kwargs={"id": user.id})
+        url = reverse("api:accounts-api-v1:user-details-update-destroy", kwargs={"id": user.id})
         request = rf.get(url)
         view = views.UserDetailsUpdateDestroyView.as_view()
 
@@ -69,7 +69,7 @@ class TestAccountsViews:
     @given(user=user_strategy)
     def test_delete_user_view(self, user, mocker, rf):
         # Arrange
-        url = reverse("api:accounts-api:user-details-update-destroy", kwargs={"id": user.id})
+        url = reverse("api:accounts-api-v1:user-details-update-destroy", kwargs={"id": user.id})
         request = rf.delete(url)
         view = views.UserDetailsUpdateDestroyView.as_view()
 

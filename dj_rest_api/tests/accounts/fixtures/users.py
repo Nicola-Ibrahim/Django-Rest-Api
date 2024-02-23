@@ -1,9 +1,8 @@
 from unittest import mock
 
 import pytest
+from apps.accounts.models.factory import AdminUserFactory, StudentUserFactory, TeacherUserFactory, UserFactory
 from rest_framework.permissions import IsAuthenticated
-
-from . import factories
 
 
 @pytest.fixture
@@ -17,7 +16,7 @@ def one_user(db):
     Returns:
         User: A user instance with first name "Django" and last name "D".
     """
-    return factories.UserFactory.create(first_name="Django", last_name="D")
+    return UserFactory.create(first_name="Django", last_name="D")
 
 
 @pytest.fixture(autouse=True)
@@ -31,7 +30,7 @@ def one_admin_user(db):
     Returns:
         AdminUser: A created admin user instance.
     """
-    return factories.AdminUserFactory.create()
+    return AdminUserFactory.create()
 
 
 @pytest.fixture
@@ -45,7 +44,7 @@ def one_teacher_user(db):
     Returns:
         TeacherUser: A created teacher user instance.
     """
-    return factories.TeacherUserFactory.create()
+    return TeacherUserFactory.create()
 
 
 @pytest.fixture
@@ -59,7 +58,7 @@ def one_student_user(db):
     Returns:
         StudentUser: A created student user instance.
     """
-    return factories.StudentUserFactory.create()
+    return StudentUserFactory.create()
 
 
 @pytest.fixture
@@ -73,7 +72,7 @@ def users(db):
     Returns:
         List[User]: A list containing three user instances.
     """
-    return factories.UserFactory.create_batch(3)
+    return UserFactory.create_batch(3)
 
 
 @pytest.fixture(scope="session", autouse=True)
