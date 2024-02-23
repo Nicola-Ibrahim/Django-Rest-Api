@@ -25,7 +25,6 @@ django-split-settings = "^1.2.0"
 gunicorn = "^21.1.0"
 pyyaml = "^6.0.1"
 celery = "^5.3.6"
-django-debug-toolbar = "^4.2.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -37,8 +36,8 @@ yapf = "^0.32.0"
 django-extensions = "^3.2.1"
 colorlog = "^6.7.0"
 pylint-django = "^2.5.3"
-sphinx = "^7.2.6"
 drf-yasg = "^1.21.7"
+django-debug-toolbar = "^4.3.0"
 
 
 [tool.poetry.group.test.dependencies]
