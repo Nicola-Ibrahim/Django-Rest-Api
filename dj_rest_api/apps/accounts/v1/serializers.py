@@ -37,8 +37,9 @@ class StudentProfileSerializer(BaseModelSerializer):
 class UserListSerializer(BaseModelSerializer):
     """Serializer for listing user details."""
 
+    # TODO: FIX THE ERROR OF `Could not resolve URL for hyperlinked relationship using view name`
     url = serializers.HyperlinkedIdentityField(
-        view_name="api:accounts-api:user-details-update-destroy",
+        view_name="accounts-v1:user-details-update-destroy",
         lookup_field="id",
         read_only=True,
     )
@@ -53,18 +54,19 @@ class UserListSerializer(BaseModelSerializer):
         allow_null=True,
     )
 
-    profile = serializers.HyperlinkedIdentityField(
-        view_name="api:accounts-api:profile-details-update",
-        lookup_field="id",
-        read_only=True,
-    )
+    # TODO: FIX THE ERROR OF `Could not resolve URL for hyperlinked relationship using view name`
+    # profile = serializers.HyperlinkedIdentityField(
+    #     view_name="accounts:v1:profile-details-update",
+    #     lookup_field="id",
+    #     read_only=True,
+    # )
 
     class Meta:
         model = get_user_model()
 
         fields = [
             "id",
-            "url",
+            "url",  # Uncomment this when the Error of URL reversing has been solved
             "email",
             "first_name",
             "last_name",
@@ -75,7 +77,7 @@ class UserListSerializer(BaseModelSerializer):
             "groups",
             "manager",
             "type",
-            "profile",
+            # "profile", # Uncomment this when the Error of URL reversing has been solved
         ]
 
 

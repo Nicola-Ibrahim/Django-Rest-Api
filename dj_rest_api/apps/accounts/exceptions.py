@@ -13,7 +13,7 @@ class ErrorCode(enum.Enum):
 
 
 class PasswordNotValidAPIException(BaseAPIException):
-    detail_ = {
+    default_detail = {
         "code": ErrorCode.Not_Valid.value,
         "detail": _("The password is not valid"),
         "data": "",
@@ -25,7 +25,7 @@ class PasswordNotValidAPIException(BaseAPIException):
 
 
 class UserNotCreatedAPIException(BaseAPIException):
-    detail_ = {
+    default_detail = {
         "code": ErrorCode.Failed.value,
         "detail": _("The user has not been created. please try again!"),
     }
@@ -34,9 +34,13 @@ class UserNotCreatedAPIException(BaseAPIException):
 
 
 class UserNotFoundAPIException(BaseAPIException):
-    detail_ = {
+    default_detail = {
         "code": ErrorCode.Not_Exists.value,
         "detail": _("The user does not exist"),
+        "data": "",
     }
 
     status_code = status.HTTP_404_NOT_FOUND
+
+    def format_default_detail(self, detail: T | None = None) -> T | None:
+        self.default_detail["data"] = detail

@@ -1,12 +1,15 @@
 from typing import Any
 
 from apps.accounts import models as accounts_models
-from dj_rest_api.apps.accounts.exceptions import UserNotCreatedAPIException, UserNotFoundAPIException
 from apps.authentication.services import get_tokens_for_user
+from apps.authentication.tokens import JWTAccessToken
 from django.contrib.sites.shortcuts import get_current_site
 from django.db import transaction
 from django.db.models import ManyToManyField
+from django.http import HttpRequest
 from rest_framework.reverse import reverse
+
+from .exceptions import UserNotCreatedAPIException, UserNotFoundAPIException
 
 
 def create_user(data) -> accounts_models.User:
@@ -26,10 +29,11 @@ def create_user(data) -> accounts_models.User:
     Example:
         ```python
         data = {
-            'username': 'john_doe',
-            'password': 'secure_password',
-            'email': 'john@example.com',
-            'type' : 'teacher'
+            "first_name": "Django",
+            "last_name": "D",
+            "password": "secure_password",
+            "email": "john@example.com",
+            "type" : "teacher"
         }
         create_user(data)
         ```
@@ -58,8 +62,8 @@ def create_user(data) -> accounts_models.User:
 
             return user
 
-    except Exception:
-        raise UserNotCreatedAPIException(detail="The user could not be inserted")
+    except Exception as exc:
+        raise UserNotCreatedAPIException(detail="The user could not be inserted") from exc
 
 
 def update_user(user_id: int, data: dict[str:Any]) -> accounts_models.User:
@@ -93,30 +97,30 @@ def update_user(user_id: int, data: dict[str:Any]) -> accounts_models.User:
         return user
 
 
-def get_user_by_id(user_id: int) -> accounts_models.User:
+def get_user_by_id(pk: int) -> accounts_models.User:
     """
     Retrieve a user by their ID.
 
     Args:
-        user_id (int): The ID of the user to retrieve.
+        pk (int): The ID of the user to retrieve.
 
     Returns:
         accounts_models.User: The user object.
 
     Raises:
-        UserNotFoundException: If no user with the specified ID is found, a
-            `UserNotFoundException` exception is raised.
+        UserNotFoundAPIException: If no user with the specified ID is found, a
+            `UserNotFoundAPIException` exception is raised.
 
     Example:
         ```python
-        user_id = 42
-        get_user_by_id(user_id)
+        pk = 42
+        get_user_by_id(pk)
     """
     try:
-        user = accounts_models.User.objects.get(pk=user_id)
+        user = accounts_models.User.objects.get(pk=pk)
         return user
     except accounts_models.User.DoesNotExist as exc:
-        raise accounts_models.User.DoesNotExist(detail=f"User with ID {user_id} does not exist.") from exc
+        raise UserNotFoundAPIException(detail=f"User with ID '{pk}' does not exist.") from exc
 
 
 def get_user_by_email(email: str) -> accounts_models.User:
@@ -130,8 +134,8 @@ def get_user_by_email(email: str) -> accounts_models.User:
         accounts_models.User: The user object.
 
     Raises:
-        UserNotFoundException: If no user with the specified email is found, a
-            `UserNotFoundException` exception is raised.
+        UserNotFoundAPIException: If no user with the specified email is found, a
+            `UserNotFoundAPIException` exception is raised.
 
     Example:
         ```python
@@ -142,7 +146,7 @@ def get_user_by_email(email: str) -> accounts_models.User:
         user = accounts_models.User.objects.get(email=email)
         return user
     except accounts_models.User.DoesNotExist as exc:
-        raise accounts_models.User.DoesNotExist(detail=f"User with email: {email} does not exist.") from exc
+        raise UserNotFoundAPIException(detail=f"User with email '{email}' does not exist.") from exc
 
 
 def delete_user(user_id: int) -> None:
@@ -193,7 +197,7 @@ def get_user_sub_model(user_type: str) -> accounts_models.User:
     return sub_model
 
 
-def get_verification_url(request, email: str) -> str:
+def get_verification_url(request: HttpRequest, email: str) -> str:
     """
     Generate a verification URL for the email verification process.
 
@@ -205,7 +209,7 @@ def get_verification_url(request, email: str) -> str:
         str: The absolute URL for email verification.
 
     Example:
-        Assuming the view name for email verification is 'accounts-api:email-verify',
+        Assuming the view name for email verification is 'accounts-api:verify-account',
         this function can be used as follows:
 
         ```python
@@ -214,24 +218,54 @@ def get_verification_url(request, email: str) -> str:
         verification_url = get_verification_url(request, email)
         print(verification_url)
         ```
+
+    Expected Output:
+        Assuming the current site domain is 'example.com' and the relative link for
+        email verification is '/api/v1/accounts/verify/', the expected output
+        should be something like:
+
+        ```
+        'http://example.com/api/v1/accounts/verify/?token=your_access_token_here'
+
+        ```
     """
-    user = get_user_by_email(email)  # Get the user by the inserted email
+    # Get the user by the inserted email
+    user = get_user_by_email(email)
 
-    token = get_tokens_for_user(user)["access_token"]  # Get refresh token to this user
+    # Get refresh token for this user
+    token = get_tokens_for_user(user)["access"]
 
-    current_site = get_current_site(request).domain  # Get the current site domain
+    # Get the current site domain
+    current_site = get_current_site(request).domain
 
-    # Get the url of the "email-verify" view : /api/auth/verify_email/
-    relativeLink = reverse("accounts-api:email-verify")
+    # Get the URL of the "verify-account" view
+    relative_link = reverse("accounts:v1:verify-account")
 
-    # Sum up the final url for verification
-    absurl = "http://" + current_site + relativeLink + "?token=" + str(token)
+    # Determine protocol based on whether the request is secure (HTTPS)
+    protocol = "https" if request.is_secure() else "http"
 
-    return absurl
+    # Construct the final URL for verification
+    abs_url = f"{protocol}://{current_site}{relative_link}?token={token}"  # type:ignore # noqa:E231
+
+    return abs_url
 
 
 def verify_user_account(user: accounts_models.User) -> bool:
-    # Check if the user is not verified
+    """
+    Verify a user's account.
+
+    Args:
+        user (User): The user object to verify.
+
+    Returns:
+        bool: True if the user's account is successfully verified.
+
+    Example:
+        ```python
+        user = User.objects.get(username='example_user')
+        verify_user_account(user)
+        ```
+    """
     if not user.is_verified:
         user.is_verified = True
         user.save()
@@ -240,7 +274,31 @@ def verify_user_account(user: accounts_models.User) -> bool:
 
 
 def get_user_details(user: accounts_models.User):
+    """
+    Retrieve details of a user.
+
+    Args:
+        user (User): The user object for which to retrieve details.
+
+    Returns:
+        dict: A dictionary containing the user's name and tokens.
+
+    Example:
+        ```python
+        user = User.objects.get(username='example_user')
+        user_details = get_user_details(user)
+        print(user_details)
+        # Output: {'name': 'Example User', 'tokens': {'access_token': '...', 'refresh_token': '...'}}
+        ```
+    """
     return {
         "name": user.get_full_name(),
         "tokens": get_tokens_for_user(user=user),
     }
+
+
+def get_user_from_access_token(token: str):
+    token_obj = JWTAccessToken(token, verify=True)
+    user_id = token_obj["user_id"]
+    user = get_user_by_id(pk=user_id)
+    return user

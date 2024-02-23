@@ -4,7 +4,11 @@ from core.api.views import BaseGenericAPIView
 from django.contrib.auth import get_user_model
 from django.db.models.query import QuerySet
 from rest_framework.mixins import (
-    CreateModelMixin, DestroyModelMixin, ListModelMixin, RetrieveModelMixin, UpdateModelMixin,
+    CreateModelMixin,
+    DestroyModelMixin,
+    ListModelMixin,
+    RetrieveModelMixin,
+    UpdateModelMixin,
 )
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -30,7 +34,7 @@ class UserListCreateView(
         To create a user, send a POST request with the required data.
     """
 
-    permission_classes = [permissions.UserListCreatePermission]
+    # permission_classes = [permissions.UserListCreatePermission]
     filterset_class = filters.UserFilter
 
     def get_queryset(self):

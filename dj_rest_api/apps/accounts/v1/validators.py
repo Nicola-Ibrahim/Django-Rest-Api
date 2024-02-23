@@ -1,6 +1,7 @@
-from   import exceptions
 from django.contrib.auth.password_validation import get_default_password_validators
 from django.core.exceptions import ValidationError
+
+from .. import exceptions
 
 
 def user_validate_password(password: str, user=None, password_validators=None):
