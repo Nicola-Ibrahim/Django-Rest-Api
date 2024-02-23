@@ -11,7 +11,7 @@ from .views import (
     VerifyOTPNumberView,
 )
 
-app_name = "auth-api-v1"
+app_name = "auth-v1"
 
 urlpatterns = [
     path("login/", LoginView.as_view(), name="login"),
@@ -20,6 +20,6 @@ urlpatterns = [
     path("forget_password/", ForgetPasswordView.as_view(), name="forget-password"),
     path("change_password/", ChangePasswordView.as_view(), name="change-password"),
     path("first_time_password/", FirstTimePasswordView.as_view(), name="first-time-password"),
-    path("otp/verify/", VerifyOTPNumberView.as_view(), name="verify-top"),
+    path("otp/verify/", VerifyOTPNumberView.as_view(), name="verify-otp"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]

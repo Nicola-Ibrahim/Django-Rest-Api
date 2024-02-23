@@ -46,6 +46,7 @@ class LoginView(BaseGenericAPIView):
         email, password = serializer.data.get("email"), serializer.data.get("password")
 
         user = services.login(request=request, email=email, password=password)
+        from rest_framework.response import Response
 
         return responses.LoginAPIResponse(data=get_user_details(user=user))
 

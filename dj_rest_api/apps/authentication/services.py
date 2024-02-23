@@ -4,12 +4,6 @@ from apps.authentication import tokens
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 
-# def get_user_from_access_token(token: str):
-#     token_obj = tokens.JWTAccessToken(token, verify=True)
-#     user_id = token_obj["user_id"]
-#     user = get_user_by_id(user_id=user_id)
-#     return user
-
 
 def login(request, email: str, password: str) -> accounts_models.User:
     """
@@ -163,6 +157,6 @@ def get_tokens_for_user(user: accounts_models.User) -> dict:
     token = RefreshToken.for_user(user)
 
     return {
-        "refresh_token": str(token),
-        "access_token": str(token.access_token),
+        "refresh": str(token),
+        "access": str(token.access_token),
     }
