@@ -1,7 +1,5 @@
 from datetime import timedelta
 
-import sentry_sdk
-
 INSTALLED_APPS += (  # type: ignore # noqa: F821
     "rest_framework",
     "rest_framework_simplejwt",
@@ -39,7 +37,7 @@ SIMPLE_JWT = {
 REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "apps.authentication.auth.CustomJWTAuthentication",
+        "apps.authentication.backend.CustomJWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
     "DEFAULT_PARSER_CLASSES": [
@@ -67,15 +65,3 @@ CELERY_RESULT_BACKEND = "django-db"
 CELERY_CACHE_BACKEND = "django-cache"
 
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
-
-
-sentry_sdk.init(
-    dsn="https://b3ec8fae83397e7ef72e7250de981284@o4506671367913472.ingest.sentry.io/4506671369420800",
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # We recommend adjusting this value in production.
-    profiles_sample_rate=1.0,
-)

@@ -11,8 +11,10 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_filters",
+    # Custom apps
     "apps.authentication.apps.AuthenticationConfig",
     "apps.accounts.apps.AccountsConfig",
+    "core.apps.CoreConfig",
 ]
 
 MIDDLEWARE = [
@@ -31,7 +33,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
