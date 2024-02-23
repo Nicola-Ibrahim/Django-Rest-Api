@@ -1,5 +1,5 @@
 import enum
-from typing import Any, Optional, T
+from typing import Any, T
 
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status as rest_status

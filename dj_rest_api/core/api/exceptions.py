@@ -17,7 +17,7 @@ class BaseAPIException(APIException):
     Base class for custom API exceptions in the application.
 
     Attributes:
-        detail_ (str): Default detail message for the exception.
+        default_detail (str): Default detail message for the exception.
         status_code (int): HTTP status code associated with the exception.
 
     Usage Example:
@@ -87,7 +87,7 @@ class SerializerFieldsAPIException(BaseAPIException):
             for field, error in errors.items():
                 if isinstance(error, list):
                     # self.default_detail["code"] = _get_error_code(error)
-                    self.default_detail["detail"].append(f"Error in {field} : {_get_error_message(error)}")
+                    self.default_detail["detail"].append(f"Error in {field}: {_get_error_message(error)}")
 
                 if isinstance(error, dict):
                     return _create_error_list(error)
@@ -96,7 +96,7 @@ class SerializerFieldsAPIException(BaseAPIException):
 
 
 class PermissionDeniedAPIException(BaseAPIException):
-    detail_ = {
+    default_detail = {
         "code": ErrorCode.Permission_Denied.value,
         "detail": "You do not have permission to perform this action.",
     }
